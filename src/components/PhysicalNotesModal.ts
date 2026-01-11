@@ -250,14 +250,7 @@ export class PhysicalNotesModal extends Modal {
     contentEl.empty();
 
     // Stop upload server if running
-    if (this.uploadServer) {
-      console.log("[PhysicalNotesModal] Stopping upload server");
-      await this.uploadServer.stop();
-      this.uploadServer = undefined;
-      console.log("[PhysicalNotesModal] Upload server stopped");
-    } else {
-      console.log("[PhysicalNotesModal] No upload server to stop");
-    }
+    await this.stopUploadServer();
 
     // Revoke data URLs
     this.images.forEach((img) => {
@@ -294,10 +287,28 @@ export class PhysicalNotesModal extends Modal {
     cameraTab.addEventListener("click", () => this.switchTab("camera"));
   }
 
-  private switchTab(tab: "direct" | "camera"): void {
+  private async switchTab(tab: "direct" | "camera"): Promise<void> {
+    // Stop upload server when leaving camera tab
+    if (this.currentTab === "camera" && tab !== "camera") {
+      await this.stopUploadServer();
+    }
+
     this.currentTab = tab;
     this.renderTabs();
     this.renderContent();
+  }
+
+  /**
+   * Stop the upload server if running
+   */
+  private async stopUploadServer(): Promise<void> {
+    if (this.uploadServer) {
+      console.log("[PhysicalNotesModal] Stopping upload server (tab switch)");
+      await this.uploadServer.stop();
+      this.uploadServer = undefined;
+      this.qrDisplay = undefined;
+      console.log("[PhysicalNotesModal] Upload server stopped");
+    }
   }
 
   private renderContent(): void {
@@ -394,7 +405,7 @@ export class PhysicalNotesModal extends Modal {
       // Display QR code
       await this.qrDisplay.display(serverInfo);
 
-      new Notice("Server started. Scan QR code with your phone.");
+      new Notice("Ready! Scan QR code with your phone.");
     } catch (error) {
       console.error("Failed to start server:", error);
       this.qrDisplay.showError("Failed to start server");

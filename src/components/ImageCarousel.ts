@@ -14,6 +14,14 @@ export class ImageCarousel {
   private deleteBtn?: HTMLButtonElement;
   private thumbnailStrip?: HTMLElement;
   private draggedIndex: number = -1;
+  private zoomLevel: number = 1;
+  private zoomSlider?: HTMLInputElement;
+  private imageContainer?: HTMLElement;
+  private panX: number = 0;
+  private panY: number = 0;
+  private isPanning: boolean = false;
+  private lastPanX: number = 0;
+  private lastPanY: number = 0;
 
   constructor(
     container: HTMLElement,
@@ -75,7 +83,7 @@ export class ImageCarousel {
 
     // Delete button
     this.deleteBtn = nav.createEl("button", {
-      text: "🗑️",
+      text: "Delete",
       cls: "carousel-button carousel-delete-btn",
       attr: { title: "Remove this image" },
     });
@@ -85,11 +93,59 @@ export class ImageCarousel {
       }
     });
 
-    // Image display
-    const imageContainer = mainArea.createEl("div", {
+    // Image display with zoom controls
+    this.imageContainer = mainArea.createEl("div", {
       cls: "carousel-image-container",
     });
-    this.imageEl = imageContainer.createEl("img", { cls: "carousel-image" });
+
+    const imageWrapper = this.imageContainer.createEl("div", {
+      cls: "carousel-image-wrapper",
+    });
+    this.imageEl = imageWrapper.createEl("img", { cls: "carousel-image" });
+
+    // Zoom slider overlay
+    const zoomOverlay = this.imageContainer.createEl("div", {
+      cls: "zoom-slider-overlay",
+    });
+
+    const zoomIcon = zoomOverlay.createEl("span", {
+      cls: "zoom-icon",
+      text: "🔍",
+    });
+
+    this.zoomSlider = zoomOverlay.createEl("input", {
+      cls: "zoom-slider",
+      attr: {
+        type: "range",
+        min: "0.5",
+        max: "3",
+        step: "0.1",
+        value: "1",
+      },
+    }) as HTMLInputElement;
+
+    const zoomValue = zoomOverlay.createEl("span", {
+      cls: "zoom-value",
+      text: "100%",
+    });
+
+    // Zoom slider event
+    this.zoomSlider.addEventListener("input", () => {
+      this.zoomLevel = parseFloat(this.zoomSlider!.value);
+      zoomValue.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+      this.applyZoom();
+    });
+
+    // Reset button
+    const resetBtn = zoomOverlay.createEl("button", {
+      cls: "zoom-reset-btn",
+      text: "Reset",
+      attr: { title: "Reset zoom" },
+    });
+    resetBtn.addEventListener("click", () => this.resetZoom());
+
+    // Setup zoom gestures
+    this.setupZoomGestures();
 
     // Initial render
     this.updateDisplay();
@@ -236,6 +292,9 @@ export class ImageCarousel {
 
     const currentImage = this.images[this.currentIndex];
 
+    // Reset zoom when changing images
+    this.resetZoom();
+
     // Update image
     if (currentImage.dataUrl) {
       this.imageEl.src = currentImage.dataUrl;
@@ -271,6 +330,168 @@ export class ImageCarousel {
         this.next();
       }
     });
+  }
+
+  private setupZoomGestures(): void {
+    if (!this.imageContainer) return;
+
+    // Wheel zoom (mouse wheel / trackpad pinch)
+    this.imageContainer.addEventListener(
+      "wheel",
+      (e) => {
+        // Check if it's a pinch gesture (ctrlKey is true for trackpad pinch on most browsers)
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const delta = e.deltaY > 0 ? -0.1 : 0.1;
+          this.setZoom(this.zoomLevel + delta);
+        }
+      },
+      { passive: false }
+    );
+
+    // Touch pinch zoom
+    let initialDistance = 0;
+    let initialZoom = 1;
+
+    this.imageContainer.addEventListener(
+      "touchstart",
+      (e) => {
+        if (e.touches.length === 2) {
+          e.preventDefault();
+          initialDistance = this.getTouchDistance(e.touches);
+          initialZoom = this.zoomLevel;
+        } else if (e.touches.length === 1 && this.zoomLevel > 1) {
+          // Start panning when zoomed in
+          this.isPanning = true;
+          this.lastPanX = e.touches[0].clientX;
+          this.lastPanY = e.touches[0].clientY;
+        }
+      },
+      { passive: false }
+    );
+
+    this.imageContainer.addEventListener(
+      "touchmove",
+      (e) => {
+        if (e.touches.length === 2 && initialDistance > 0) {
+          e.preventDefault();
+          const currentDistance = this.getTouchDistance(e.touches);
+          const scale = currentDistance / initialDistance;
+          this.setZoom(initialZoom * scale);
+        } else if (e.touches.length === 1 && this.isPanning) {
+          e.preventDefault();
+          const deltaX = e.touches[0].clientX - this.lastPanX;
+          const deltaY = e.touches[0].clientY - this.lastPanY;
+          this.panX += deltaX;
+          this.panY += deltaY;
+          this.lastPanX = e.touches[0].clientX;
+          this.lastPanY = e.touches[0].clientY;
+          this.applyZoom();
+        }
+      },
+      { passive: false }
+    );
+
+    this.imageContainer.addEventListener("touchend", (e) => {
+      if (e.touches.length < 2) {
+        initialDistance = 0;
+      }
+      if (e.touches.length === 0) {
+        this.isPanning = false;
+      }
+    });
+
+    // Mouse panning when zoomed
+    this.imageContainer.addEventListener("mousedown", (e) => {
+      if (this.zoomLevel > 1) {
+        this.isPanning = true;
+        this.lastPanX = e.clientX;
+        this.lastPanY = e.clientY;
+        this.imageContainer!.style.cursor = "grabbing";
+      }
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (this.isPanning && this.zoomLevel > 1) {
+        const deltaX = e.clientX - this.lastPanX;
+        const deltaY = e.clientY - this.lastPanY;
+        this.panX += deltaX;
+        this.panY += deltaY;
+        this.lastPanX = e.clientX;
+        this.lastPanY = e.clientY;
+        this.applyZoom();
+      }
+    });
+
+    document.addEventListener("mouseup", () => {
+      this.isPanning = false;
+      if (this.imageContainer) {
+        this.imageContainer.style.cursor =
+          this.zoomLevel > 1 ? "grab" : "default";
+      }
+    });
+
+    // Double-click to toggle zoom
+    this.imageContainer.addEventListener("dblclick", () => {
+      if (this.zoomLevel === 1) {
+        this.setZoom(2);
+      } else {
+        this.resetZoom();
+      }
+    });
+  }
+
+  private getTouchDistance(touches: TouchList): number {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  private setZoom(level: number): void {
+    this.zoomLevel = Math.max(0.5, Math.min(3, level));
+    if (this.zoomSlider) {
+      this.zoomSlider.value = this.zoomLevel.toString();
+      const zoomValue =
+        this.zoomSlider.parentElement?.querySelector(".zoom-value");
+      if (zoomValue) {
+        zoomValue.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+      }
+    }
+    this.applyZoom();
+  }
+
+  private applyZoom(): void {
+    if (!this.imageEl) return;
+
+    // Constrain panning based on zoom level
+    if (this.zoomLevel <= 1) {
+      this.panX = 0;
+      this.panY = 0;
+    }
+
+    this.imageEl.style.transform = `scale(${this.zoomLevel}) translate(${
+      this.panX / this.zoomLevel
+    }px, ${this.panY / this.zoomLevel}px)`;
+
+    if (this.imageContainer) {
+      this.imageContainer.style.cursor =
+        this.zoomLevel > 1 ? "grab" : "default";
+    }
+  }
+
+  private resetZoom(): void {
+    this.zoomLevel = 1;
+    this.panX = 0;
+    this.panY = 0;
+    if (this.zoomSlider) {
+      this.zoomSlider.value = "1";
+      const zoomValue =
+        this.zoomSlider.parentElement?.querySelector(".zoom-value");
+      if (zoomValue) {
+        zoomValue.textContent = "100%";
+      }
+    }
+    this.applyZoom();
   }
 
   next(): void {

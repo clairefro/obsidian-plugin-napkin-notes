@@ -53,7 +53,10 @@ function parseCodeBlock(source: string): ParsedImage[] {
       if (currentImage) {
         if (descriptionLines.length > 0) {
           // Remove trailing blank lines from description
-          while (descriptionLines.length > 0 && descriptionLines[descriptionLines.length - 1] === "") {
+          while (
+            descriptionLines.length > 0 &&
+            descriptionLines[descriptionLines.length - 1] === ""
+          ) {
             descriptionLines.pop();
           }
           currentImage.description = descriptionLines.join("\n");
@@ -79,7 +82,10 @@ function parseCodeBlock(source: string): ParsedImage[] {
       if (consecutiveBlankLines >= 2 && currentImage) {
         if (descriptionLines.length > 0) {
           // Remove trailing blank lines from description
-          while (descriptionLines.length > 0 && descriptionLines[descriptionLines.length - 1] === "") {
+          while (
+            descriptionLines.length > 0 &&
+            descriptionLines[descriptionLines.length - 1] === ""
+          ) {
             descriptionLines.pop();
           }
           currentImage.description = descriptionLines.join("\n");
@@ -111,7 +117,10 @@ function parseCodeBlock(source: string): ParsedImage[] {
   if (currentImage) {
     if (descriptionLines.length > 0) {
       // Remove trailing blank lines from description
-      while (descriptionLines.length > 0 && descriptionLines[descriptionLines.length - 1] === "") {
+      while (
+        descriptionLines.length > 0 &&
+        descriptionLines[descriptionLines.length - 1] === ""
+      ) {
         descriptionLines.pop();
       }
       currentImage.description = descriptionLines.join("\n");
@@ -132,12 +141,65 @@ function renderCarousel(
 
   let currentIndex = 0;
   let descriptionExpanded = false;
+  let zoomLevel = 1;
+  let panX = 0;
+  let panY = 0;
+  let isPanning = false;
+  let lastPanX = 0;
+  let lastPanY = 0;
 
-  // Carousel container
-  const carouselDiv = container.createEl("div", { cls: "carousel-reading" });
+  // Main carousel layout: thumbnails on left, main content on right
+  const carouselLayout = container.createEl("div", { cls: "carousel-layout" });
+
+  // Thumbnail strip (left side) - collapsed by default
+  const thumbnailStrip = carouselLayout.createEl("div", {
+    cls: "thumbnail-strip collapsed",
+  });
+
+  // Toggle button for expand/collapse
+  const toggleBtn = thumbnailStrip.createEl("button", {
+    cls: "thumbnail-toggle-btn",
+    attr: { title: "Toggle thumbnails" },
+  });
+  toggleBtn.createEl("span", { cls: "toggle-icon", text: "›" });
+
+  // Thumbnail content (header + thumbnails)
+  const thumbnailContent = thumbnailStrip.createEl("div", {
+    cls: "thumbnail-content",
+  });
+
+  // Thumbnail header
+  const thumbHeader = thumbnailContent.createEl("div", {
+    cls: "thumbnail-header",
+  });
+  thumbHeader.createEl("span", {
+    text: `${images.length} image${images.length !== 1 ? "s" : ""}`,
+    cls: "thumbnail-count",
+  });
+
+  // Thumbnails container
+  const thumbsContainer = thumbnailContent.createEl("div", {
+    cls: "thumbnails-container",
+  });
+
+  // Toggle expand/collapse
+  toggleBtn.addEventListener("click", () => {
+    thumbnailStrip.classList.toggle("collapsed");
+    const icon = toggleBtn.querySelector(".toggle-icon");
+    if (icon) {
+      icon.textContent = thumbnailStrip.classList.contains("collapsed")
+        ? "›"
+        : "‹";
+    }
+  });
+
+  // Main content area (right side)
+  const mainArea = carouselLayout.createEl("div", {
+    cls: "carousel-main-area",
+  });
 
   // Navigation
-  const nav = carouselDiv.createEl("div", { cls: "carousel-navigation" });
+  const nav = mainArea.createEl("div", { cls: "carousel-navigation" });
 
   const prevBtn = nav.createEl("button", {
     text: "←",
@@ -151,50 +213,232 @@ function renderCarousel(
     cls: "carousel-button",
   });
 
-  // Image container
-  const imageContainer = carouselDiv.createEl("div", {
+  // Image container with zoom support
+  const imageContainer = mainArea.createEl("div", {
     cls: "carousel-image-container",
   });
-  const imageEl = imageContainer.createEl("img", { cls: "carousel-image" });
 
-  // Metadata container
-  const metadataDiv = carouselDiv.createEl("div", { cls: "carousel-metadata" });
-
-  // Add zoom buttons
-  const zoomControls = carouselDiv.createEl("div", {
-    cls: "carousel-zoom-controls",
+  const imageWrapper = imageContainer.createEl("div", {
+    cls: "carousel-image-wrapper",
   });
 
-  const zoomInBtn = zoomControls.createEl("button", {
-    text: "+",
-    cls: "carousel-zoom-button",
+  const imageEl = imageWrapper.createEl("img", { cls: "carousel-image" });
+
+  // Zoom slider overlay
+  const zoomOverlay = imageContainer.createEl("div", {
+    cls: "zoom-slider-overlay",
   });
 
-  const zoomOutBtn = zoomControls.createEl("button", {
-    text: "-",
-    cls: "carousel-zoom-button",
+  zoomOverlay.createEl("span", {
+    cls: "zoom-icon",
+    text: "🔍",
   });
 
-  let zoomLevel = 1;
+  const zoomSlider = zoomOverlay.createEl("input", {
+    cls: "zoom-slider",
+    attr: {
+      type: "range",
+      min: "0.5",
+      max: "3",
+      step: "0.1",
+      value: "1",
+    },
+  }) as HTMLInputElement;
 
-  const updateZoom = () => {
-    imageEl.style.transform = `scale(${zoomLevel})`;
+  const zoomValue = zoomOverlay.createEl("span", {
+    cls: "zoom-value",
+    text: "100%",
+  });
+
+  const resetBtn = zoomOverlay.createEl("button", {
+    cls: "zoom-reset-btn",
+    text: "Reset",
+    attr: { title: "Reset zoom" },
+  });
+
+  // Metadata container (description + filepath)
+  const metadataDiv = mainArea.createEl("div", { cls: "carousel-metadata" });
+
+  // Zoom functions
+  const applyZoom = () => {
+    if (zoomLevel <= 1) {
+      panX = 0;
+      panY = 0;
+    }
+    imageEl.style.transform = `scale(${zoomLevel}) translate(${
+      panX / zoomLevel
+    }px, ${panY / zoomLevel}px)`;
+    imageContainer.style.cursor = zoomLevel > 1 ? "grab" : "default";
   };
 
-  zoomInBtn.addEventListener("click", () => {
-    zoomLevel = Math.min(zoomLevel + 0.1, 3); // Limit max zoom level to 3x
-    updateZoom();
-  });
+  const setZoom = (level: number) => {
+    zoomLevel = Math.max(0.5, Math.min(3, level));
+    zoomSlider.value = zoomLevel.toString();
+    zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
+    applyZoom();
+  };
 
-  zoomOutBtn.addEventListener("click", () => {
-    zoomLevel = Math.max(zoomLevel - 0.1, 0.5); // Limit min zoom level to 0.5x
-    updateZoom();
-  });
-
-  // Reset zoom level when slide changes
   const resetZoom = () => {
     zoomLevel = 1;
-    updateZoom();
+    panX = 0;
+    panY = 0;
+    zoomSlider.value = "1";
+    zoomValue.textContent = "100%";
+    applyZoom();
+  };
+
+  // Zoom slider event
+  zoomSlider.addEventListener("input", () => {
+    zoomLevel = parseFloat(zoomSlider.value);
+    zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
+    applyZoom();
+  });
+
+  resetBtn.addEventListener("click", resetZoom);
+
+  // Wheel zoom (mouse wheel / trackpad pinch)
+  imageContainer.addEventListener(
+    "wheel",
+    (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        setZoom(zoomLevel + delta);
+      }
+    },
+    { passive: false }
+  );
+
+  // Touch pinch zoom
+  let initialDistance = 0;
+  let initialZoom = 1;
+
+  imageContainer.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialDistance = Math.sqrt(dx * dx + dy * dy);
+        initialZoom = zoomLevel;
+      } else if (e.touches.length === 1 && zoomLevel > 1) {
+        isPanning = true;
+        lastPanX = e.touches[0].clientX;
+        lastPanY = e.touches[0].clientY;
+      }
+    },
+    { passive: false }
+  );
+
+  imageContainer.addEventListener(
+    "touchmove",
+    (e) => {
+      if (e.touches.length === 2 && initialDistance > 0) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const currentDistance = Math.sqrt(dx * dx + dy * dy);
+        const scale = currentDistance / initialDistance;
+        setZoom(initialZoom * scale);
+      } else if (e.touches.length === 1 && isPanning) {
+        e.preventDefault();
+        const deltaX = e.touches[0].clientX - lastPanX;
+        const deltaY = e.touches[0].clientY - lastPanY;
+        panX += deltaX;
+        panY += deltaY;
+        lastPanX = e.touches[0].clientX;
+        lastPanY = e.touches[0].clientY;
+        applyZoom();
+      }
+    },
+    { passive: false }
+  );
+
+  imageContainer.addEventListener("touchend", (e) => {
+    if (e.touches.length < 2) {
+      initialDistance = 0;
+    }
+    if (e.touches.length === 0) {
+      isPanning = false;
+    }
+  });
+
+  // Mouse panning when zoomed
+  imageContainer.addEventListener("mousedown", (e) => {
+    if (zoomLevel > 1) {
+      isPanning = true;
+      lastPanX = e.clientX;
+      lastPanY = e.clientY;
+      imageContainer.style.cursor = "grabbing";
+    }
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (isPanning && zoomLevel > 1) {
+      const deltaX = e.clientX - lastPanX;
+      const deltaY = e.clientY - lastPanY;
+      panX += deltaX;
+      panY += deltaY;
+      lastPanX = e.clientX;
+      lastPanY = e.clientY;
+      applyZoom();
+    }
+  });
+
+  document.addEventListener("mouseup", () => {
+    isPanning = false;
+    if (imageContainer) {
+      imageContainer.style.cursor = zoomLevel > 1 ? "grab" : "default";
+    }
+  });
+
+  // Double-click to toggle zoom
+  imageContainer.addEventListener("dblclick", () => {
+    if (zoomLevel === 1) {
+      setZoom(2);
+    } else {
+      resetZoom();
+    }
+  });
+
+  // Render thumbnails
+  const renderThumbnails = () => {
+    thumbsContainer.empty();
+
+    images.forEach((image, index) => {
+      const thumbWrapper = thumbsContainer.createEl("div", {
+        cls: `thumbnail-wrapper ${index === currentIndex ? "active" : ""}`,
+      });
+
+      // Page number
+      thumbWrapper.createEl("div", {
+        cls: "thumbnail-number",
+        text: (index + 1).toString(),
+      });
+
+      // Thumbnail image
+      const thumbImg = thumbWrapper.createEl("img", {
+        cls: "thumbnail-image",
+      });
+
+      // Get vault file for thumbnail
+      const vault = plugin.app.vault;
+      const file = vault.getAbstractFileByPath(image.filepath) as TFile;
+      if (file) {
+        thumbImg.src = plugin.app.vault.getResourcePath(file);
+        thumbImg.alt = `Page ${index + 1}`;
+      }
+
+      // Click to select
+      thumbWrapper.addEventListener("click", () => {
+        currentIndex = index;
+        descriptionExpanded = false;
+        resetZoom();
+        updateDisplay();
+        renderThumbnails();
+      });
+    });
   };
 
   // Update display function
@@ -237,6 +481,17 @@ function renderCarousel(
     prevBtn.disabled = currentIndex === 0;
     nextBtn.disabled = currentIndex === images.length - 1;
 
+    // Update thumbnail selection
+    const thumbs = thumbsContainer.querySelectorAll(".thumbnail-wrapper");
+    thumbs.forEach((thumb, index) => {
+      if (index === currentIndex) {
+        thumb.addClass("active");
+        thumb.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } else {
+        thumb.removeClass("active");
+      }
+    });
+
     // Update metadata
     metadataDiv.empty();
 
@@ -245,13 +500,16 @@ function renderCarousel(
       const descriptionContainer = metadataDiv.createEl("div");
 
       const descDiv = descriptionContainer.createEl("div", {
-        cls: `carousel-description ${descriptionExpanded ? "expanded" : "collapsed"}`,
+        cls: `carousel-description ${
+          descriptionExpanded ? "expanded" : "collapsed"
+        }`,
       });
       descDiv.setText(currentImage.description);
 
       // Check if description is long enough to need expand button (more than 3 lines)
       const lineCount = currentImage.description.split("\n").length;
-      const needsExpand = lineCount > 3 || currentImage.description.length > 150;
+      const needsExpand =
+        lineCount > 3 || currentImage.description.length > 150;
 
       if (needsExpand) {
         const toggleBtn = descriptionContainer.createEl("button", {
@@ -261,8 +519,12 @@ function renderCarousel(
 
         toggleBtn.addEventListener("click", () => {
           descriptionExpanded = !descriptionExpanded;
-          descDiv.className = `carousel-description ${descriptionExpanded ? "expanded" : "collapsed"}`;
-          toggleBtn.setText(descriptionExpanded ? "Show less ▲" : "Show more ▼");
+          descDiv.className = `carousel-description ${
+            descriptionExpanded ? "expanded" : "collapsed"
+          }`;
+          toggleBtn.setText(
+            descriptionExpanded ? "Show less ▲" : "Show more ▼"
+          );
         });
       }
     }
@@ -278,7 +540,7 @@ function renderCarousel(
   prevBtn.addEventListener("click", () => {
     if (currentIndex > 0) {
       currentIndex--;
-      descriptionExpanded = false; // Reset collapse state
+      descriptionExpanded = false;
       resetZoom();
       updateDisplay();
     }
@@ -287,7 +549,7 @@ function renderCarousel(
   nextBtn.addEventListener("click", () => {
     if (currentIndex < images.length - 1) {
       currentIndex++;
-      descriptionExpanded = false; // Reset collapse state
+      descriptionExpanded = false;
       resetZoom();
       updateDisplay();
     }
@@ -297,20 +559,21 @@ function renderCarousel(
   const handleKeydown = (e: KeyboardEvent) => {
     if (e.key === "ArrowLeft" && currentIndex > 0) {
       currentIndex--;
-      descriptionExpanded = false; // Reset collapse state
+      descriptionExpanded = false;
       resetZoom();
       updateDisplay();
     } else if (e.key === "ArrowRight" && currentIndex < images.length - 1) {
       currentIndex++;
-      descriptionExpanded = false; // Reset collapse state
+      descriptionExpanded = false;
       resetZoom();
       updateDisplay();
     }
   };
 
-  carouselDiv.addEventListener("keydown", handleKeydown);
-  carouselDiv.setAttribute("tabindex", "0"); // Make it focusable for keyboard nav
+  carouselLayout.addEventListener("keydown", handleKeydown);
+  carouselLayout.setAttribute("tabindex", "0");
 
   // Initial render
+  renderThumbnails();
   updateDisplay();
 }
