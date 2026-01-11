@@ -35,6 +35,7 @@ export class PhysicalNotesModal extends Modal {
   private carouselContainer?: HTMLElement;
   private annotationContainer?: HTMLElement;
   private imageCountEl?: HTMLElement;
+  private insertBtn?: HTMLButtonElement;
 
   constructor(app: App, plugin: PhysicalNoteScannerPlugin, editor: Editor) {
     super(app);
@@ -61,7 +62,7 @@ export class PhysicalNotesModal extends Modal {
     const uploadHeader = uploadSection.createEl("div", {
       cls: "section-header",
     });
-    uploadHeader.createEl("h3", { text: "📤 Upload" });
+    uploadHeader.createEl("h3", { text: "Upload" });
 
     // Tabs for upload method
     this.tabContainer = uploadSection.createEl("div", {
@@ -83,7 +84,7 @@ export class PhysicalNotesModal extends Modal {
     const reviewHeader = this.reviewSection.createEl("div", {
       cls: "section-header",
     });
-    reviewHeader.createEl("h3", { text: "📋 Review" });
+    reviewHeader.createEl("h3", { text: "Review" });
     this.imageCountEl = reviewHeader.createEl("span", {
       cls: "image-count",
       text: "No images",
@@ -114,6 +115,9 @@ export class PhysicalNotesModal extends Modal {
       },
       (index) => {
         this.deleteImage(index);
+      },
+      (reorderedImages) => {
+        this.images = reorderedImages;
       }
     );
     this.carousel.render();
@@ -134,11 +138,15 @@ export class PhysicalNotesModal extends Modal {
     const cancelBtn = buttonContainer.createEl("button", { text: "Cancel" });
     cancelBtn.addEventListener("click", () => this.close());
 
-    const insertBtn = buttonContainer.createEl("button", {
+    this.insertBtn = buttonContainer.createEl("button", {
       text: "Insert Notes",
       cls: "mod-cta",
+      attr: {
+        "aria-label": "Upload image(s) first",
+      },
     });
-    insertBtn.addEventListener("click", () => this.insertNotes());
+    this.insertBtn.disabled = true;
+    this.insertBtn.addEventListener("click", () => this.insertNotes());
   }
 
   /**
@@ -158,12 +166,24 @@ export class PhysicalNotesModal extends Modal {
     );
 
     if (this.images.length === 0) {
-      // Show empty state, hide carousel and annotation
-      if (emptyState) emptyState.style.display = "block";
-      if (carouselSection) carouselSection.style.display = "none";
-      if (annotationSection) annotationSection.style.display = "none";
-      if (this.imageCountEl) this.imageCountEl.textContent = "No images";
+      // Hide entire review section when no images
+      this.reviewSection.style.display = "none";
+
+      // Disable insert button
+      if (this.insertBtn) {
+        this.insertBtn.disabled = true;
+        this.insertBtn.setAttribute("aria-label", "Upload image(s) first");
+      }
     } else {
+      // Show review section
+      this.reviewSection.style.display = "block";
+
+      // Enable insert button
+      if (this.insertBtn) {
+        this.insertBtn.disabled = false;
+        this.insertBtn.removeAttribute("aria-label");
+      }
+
       // Hide empty state, show carousel and annotation
       if (emptyState) emptyState.style.display = "none";
       if (carouselSection) carouselSection.style.display = "block";
