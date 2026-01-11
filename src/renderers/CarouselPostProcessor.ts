@@ -4,7 +4,6 @@ import { CODE_BLOCK_LANGUAGE } from "../constants";
 
 interface ParsedImage {
   filepath: string;
-  keywords: string[];
   description?: string;
 }
 
@@ -40,56 +39,83 @@ function parseCodeBlock(source: string): ParsedImage[] {
   const images: ParsedImage[] = [];
   const lines = source.split("\n");
   let currentImage: ParsedImage | null = null;
+  let descriptionLines: string[] = [];
+  let consecutiveBlankLines = 0;
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const trimmed = line.trim();
-
-    if (trimmed === "") {
-      // Blank line - save current image if exists
-      if (currentImage) {
-        images.push(currentImage);
-        currentImage = null;
-      }
-      continue;
-    }
 
     // Check for wikilink: [[path/to/image.jpg]]
     const wikilinkMatch = trimmed.match(/^\[\[([^\]]+)\]\]$/);
     if (wikilinkMatch) {
       // Save previous image if exists
       if (currentImage) {
+        if (descriptionLines.length > 0) {
+          // Remove trailing blank lines from description
+          while (descriptionLines.length > 0 && descriptionLines[descriptionLines.length - 1] === "") {
+            descriptionLines.pop();
+          }
+          currentImage.description = descriptionLines.join("\n");
+          descriptionLines = [];
+        }
         images.push(currentImage);
       }
 
       // Start new image
       currentImage = {
         filepath: wikilinkMatch[1],
-        keywords: [],
         description: undefined,
       };
+      consecutiveBlankLines = 0;
       continue;
     }
 
-    // Check for keywords metadata
-    const keywordsMatch = trimmed.match(/^keywords:\s*(.+)$/i);
-    if (keywordsMatch && currentImage) {
-      currentImage.keywords = keywordsMatch[1]
-        .split(",")
-        .map((k) => k.trim())
-        .filter((k) => k.length > 0);
+    // Handle blank lines
+    if (trimmed === "") {
+      consecutiveBlankLines++;
+
+      // Two consecutive blank lines end the current image
+      if (consecutiveBlankLines >= 2 && currentImage) {
+        if (descriptionLines.length > 0) {
+          // Remove trailing blank lines from description
+          while (descriptionLines.length > 0 && descriptionLines[descriptionLines.length - 1] === "") {
+            descriptionLines.pop();
+          }
+          currentImage.description = descriptionLines.join("\n");
+          descriptionLines = [];
+        }
+        images.push(currentImage);
+        currentImage = null;
+        consecutiveBlankLines = 0;
+        continue;
+      }
+
+      // Single blank line within description - preserve it
+      if (currentImage && descriptionLines.length > 0) {
+        descriptionLines.push("");
+      }
       continue;
     }
 
-    // Check for description metadata
-    const descMatch = trimmed.match(/^description:\s*(.+)$/i);
-    if (descMatch && currentImage) {
-      currentImage.description = descMatch[1].trim();
-      continue;
+    // Non-blank line resets counter
+    consecutiveBlankLines = 0;
+
+    // Any other line is part of the description
+    if (currentImage) {
+      descriptionLines.push(trimmed);
     }
   }
 
   // Save last image if exists
   if (currentImage) {
+    if (descriptionLines.length > 0) {
+      // Remove trailing blank lines from description
+      while (descriptionLines.length > 0 && descriptionLines[descriptionLines.length - 1] === "") {
+        descriptionLines.pop();
+      }
+      currentImage.description = descriptionLines.join("\n");
+    }
     images.push(currentImage);
   }
 
@@ -105,6 +131,7 @@ function renderCarousel(
   container.addClass("physical-notes-carousel-reading");
 
   let currentIndex = 0;
+  let descriptionExpanded = false;
 
   // Carousel container
   const carouselDiv = container.createEl("div", { cls: "carousel-reading" });
@@ -213,48 +240,45 @@ function renderCarousel(
     // Update metadata
     metadataDiv.empty();
 
-    if (currentImage.keywords.length > 0) {
-      const keywordsDiv = metadataDiv.createEl("div", {
-        cls: "carousel-keywords-section",
-      });
-      keywordsDiv.createEl("strong", { text: "Keywords: " });
-
-      const keywordsList = keywordsDiv.createEl("span", {
-        cls: "carousel-keywords",
-      });
-      currentImage.keywords.forEach((keyword, i) => {
-        keywordsList.createEl("span", {
-          text: keyword,
-          cls: "carousel-keyword-tag",
-        });
-        if (i < currentImage.keywords.length - 1) {
-          keywordsList.appendText(", ");
-        }
-      });
-    }
-
+    // Show description in muted text with expand/collapse
     if (currentImage.description) {
-      const descDiv = metadataDiv.createEl("div", {
-        cls: "carousel-description-section",
+      const descriptionContainer = metadataDiv.createEl("div");
+
+      const descDiv = descriptionContainer.createEl("div", {
+        cls: `carousel-description ${descriptionExpanded ? "expanded" : "collapsed"}`,
       });
-      descDiv.createEl("strong", { text: "Description: " });
-      descDiv.appendText(currentImage.description);
+      descDiv.setText(currentImage.description);
+
+      // Check if description is long enough to need expand button (more than 3 lines)
+      const lineCount = currentImage.description.split("\n").length;
+      const needsExpand = lineCount > 3 || currentImage.description.length > 150;
+
+      if (needsExpand) {
+        const toggleBtn = descriptionContainer.createEl("button", {
+          cls: "carousel-description-toggle",
+        });
+        toggleBtn.setText(descriptionExpanded ? "Show less ▲" : "Show more ▼");
+
+        toggleBtn.addEventListener("click", () => {
+          descriptionExpanded = !descriptionExpanded;
+          descDiv.className = `carousel-description ${descriptionExpanded ? "expanded" : "collapsed"}`;
+          toggleBtn.setText(descriptionExpanded ? "Show less ▲" : "Show more ▼");
+        });
+      }
     }
 
-    // Show filename
+    // Show file path in small muted text
     const filenameDiv = metadataDiv.createEl("div", {
-      cls: "carousel-filename-section",
+      cls: "carousel-filepath",
     });
-    filenameDiv.createEl("small", {
-      text: currentImage.filepath,
-      cls: "carousel-filename",
-    });
+    filenameDiv.setText(currentImage.filepath);
   };
 
   // Navigation handlers
   prevBtn.addEventListener("click", () => {
     if (currentIndex > 0) {
       currentIndex--;
+      descriptionExpanded = false; // Reset collapse state
       resetZoom();
       updateDisplay();
     }
@@ -263,6 +287,7 @@ function renderCarousel(
   nextBtn.addEventListener("click", () => {
     if (currentIndex < images.length - 1) {
       currentIndex++;
+      descriptionExpanded = false; // Reset collapse state
       resetZoom();
       updateDisplay();
     }
@@ -272,10 +297,12 @@ function renderCarousel(
   const handleKeydown = (e: KeyboardEvent) => {
     if (e.key === "ArrowLeft" && currentIndex > 0) {
       currentIndex--;
+      descriptionExpanded = false; // Reset collapse state
       resetZoom();
       updateDisplay();
     } else if (e.key === "ArrowRight" && currentIndex < images.length - 1) {
       currentIndex++;
+      descriptionExpanded = false; // Reset collapse state
       resetZoom();
       updateDisplay();
     }

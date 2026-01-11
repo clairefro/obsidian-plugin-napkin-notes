@@ -1,5 +1,5 @@
 import { ImageWithFile } from '../types';
-import { CODE_BLOCK_LANGUAGE, METADATA_KEYWORDS, METADATA_DESCRIPTION } from '../constants';
+import { CODE_BLOCK_LANGUAGE } from '../constants';
 
 export class MarkdownGenerator {
 	/**
@@ -14,31 +14,28 @@ export class MarkdownGenerator {
 		lines.push(`\`\`\`${CODE_BLOCK_LANGUAGE}`);
 
 		// Add each image with its annotations
-		for (const img of images) {
+		for (let i = 0; i < images.length; i++) {
+			const img = images[i];
+
 			// Image wikilink
 			lines.push(`[[${img.vaultFile.path}]]`);
 
-			// Keywords metadata
-			if (img.annotation.keywords.length > 0) {
-				const keywords = img.annotation.keywords.join(', ');
-				lines.push(`${METADATA_KEYWORDS}: ${keywords}`);
-			}
-
-			// Description metadata
+			// Description - support multiline by adding each line below the image path
 			if (img.annotation.description && img.annotation.description.trim() !== '') {
-				// Replace newlines with spaces to keep it on one line
-				const description = img.annotation.description.replace(/\n/g, ' ').trim();
-				lines.push(`${METADATA_DESCRIPTION}: ${description}`);
+				const descriptionLines = img.annotation.description.trim().split('\n');
+				descriptionLines.forEach(line => {
+					lines.push(line);
+				});
 			}
 
-			// Blank line between images
-			lines.push('');
+			// Two blank lines between images (allows single blank lines within descriptions)
+			// Don't add separators after the last image
+			if (i < images.length - 1) {
+				lines.push('');
+				lines.push('');
+			}
 		}
 
-		// Remove trailing blank line and add code block end
-		if (lines[lines.length - 1] === '') {
-			lines.pop();
-		}
 		lines.push('```');
 
 		return lines.join('\n');

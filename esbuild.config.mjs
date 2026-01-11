@@ -41,18 +41,6 @@ const context = await esbuild.context({
   treeShaking: true,
   minify: prod,
   outfile: "main.js",
-  plugins: [
-    {
-      name: "hot-reload",
-      setup(build) {
-        build.onEnd(() => {
-          if (!prod) {
-            fs.writeFileSync(".hotreload", new Date().toString());
-          }
-        });
-      },
-    },
-  ],
 });
 
 if (prod) {
@@ -60,5 +48,4 @@ if (prod) {
   process.exit(0);
 } else {
   await context.watch();
-  console.log("Watching for changes...");
 }

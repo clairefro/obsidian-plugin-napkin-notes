@@ -1,6 +1,7 @@
 import * as http from "http";
 import { IncomingMessage, ServerResponse } from "http";
 import * as crypto from "crypto";
+const Busboy = require("busboy");
 import { UploadEvent } from "../types";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "../constants";
 
@@ -23,7 +24,7 @@ function serveUploadPage(res: ServerResponse): void {
 		}
 		body {
 			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			background: #1e1e1e;
 			min-height: 100vh;
 			display: flex;
 			align-items: center;
@@ -31,38 +32,39 @@ function serveUploadPage(res: ServerResponse): void {
 			padding: 20px;
 		}
 		.container {
-			background: white;
-			border-radius: 20px;
+			background: #2d2d30;
+			border-radius: 12px;
 			padding: 40px;
 			max-width: 500px;
 			width: 100%;
-			box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+			box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+			border: 1px solid #3e3e42;
 		}
 		h1 {
-			color: #333;
+			color: #dcddde;
 			margin-bottom: 10px;
 			font-size: 28px;
 		}
 		p {
-			color: #666;
+			color: #969696;
 			margin-bottom: 30px;
 		}
 		.upload-area {
-			border: 3px dashed #667eea;
-			border-radius: 15px;
+			border: 2px dashed #7f6df2;
+			border-radius: 12px;
 			padding: 40px;
 			text-align: center;
 			cursor: pointer;
 			transition: all 0.3s ease;
-			background: #f8f9ff;
+			background: #252526;
 		}
 		.upload-area:hover {
-			background: #eef1ff;
-			border-color: #764ba2;
+			background: #2d2d30;
+			border-color: #8875ff;
 		}
 		.upload-area.dragover {
-			background: #e0e7ff;
-			border-color: #764ba2;
+			background: #363638;
+			border-color: #8875ff;
 			transform: scale(1.02);
 		}
 		.upload-icon {
@@ -73,24 +75,26 @@ function serveUploadPage(res: ServerResponse): void {
 			display: none;
 		}
 		.btn {
-			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-			color: white;
+			background: #7f6df2;
+			color: #ffffff;
 			border: none;
 			padding: 15px 30px;
-			border-radius: 10px;
+			border-radius: 8px;
 			font-size: 16px;
 			font-weight: 600;
 			cursor: pointer;
 			margin-top: 20px;
 			width: 100%;
-			transition: transform 0.2s;
+			transition: all 0.2s;
 		}
 		.btn:hover {
-			transform: translateY(-2px);
+			background: #8875ff;
+			transform: translateY(-1px);
 		}
 		.btn:disabled {
-			opacity: 0.5;
+			opacity: 0.4;
 			cursor: not-allowed;
+			background: #5a5a5d;
 		}
 		.preview {
 			margin-top: 20px;
@@ -102,28 +106,31 @@ function serveUploadPage(res: ServerResponse): void {
 			width: 100%;
 			height: 100px;
 			object-fit: cover;
-			border-radius: 10px;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+			border-radius: 8px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+			border: 1px solid #3e3e42;
 		}
 		.status {
 			margin-top: 20px;
 			padding: 15px;
-			border-radius: 10px;
+			border-radius: 8px;
 			text-align: center;
 			font-weight: 600;
 		}
 		.status.success {
-			background: #d4edda;
-			color: #155724;
+			background: #1a4d2e;
+			color: #4ecca3;
+			border: 1px solid #4ecca3;
 		}
 		.status.error {
-			background: #f8d7da;
-			color: #721c24;
+			background: #4d1a1a;
+			color: #ff6b6b;
+			border: 1px solid #ff6b6b;
 		}
 		.count {
 			margin-top: 15px;
 			text-align: center;
-			color: #667eea;
+			color: #7f6df2;
 			font-weight: 600;
 		}
 	</style>
@@ -138,7 +145,7 @@ function serveUploadPage(res: ServerResponse): void {
 			<p><strong>Tap to select photos</strong><br>or drag and drop here</p>
 		</div>
 
-		<input type="file" id="fileInput" accept="image/*" multiple capture="environment">
+		<input type="file" id="fileInput" accept="image/*" multiple>
 
 		<button class="btn" id="uploadBtn" disabled>Upload Images</button>
 
@@ -156,8 +163,16 @@ function serveUploadPage(res: ServerResponse): void {
 		const count = document.getElementById('count');
 		let selectedFiles = [];
 
-		// Click to select files
-		dropZone.addEventListener('click', () => fileInput.click());
+		// Click to select files - handle both click and touch
+		dropZone.addEventListener('click', (e) => {
+			e.preventDefault();
+			fileInput.click();
+		});
+
+		dropZone.addEventListener('touchend', (e) => {
+			e.preventDefault();
+			fileInput.click();
+		});
 
 		// File selection
 		fileInput.addEventListener('change', (e) => {
@@ -188,17 +203,38 @@ function serveUploadPage(res: ServerResponse): void {
 				return;
 			}
 
-			// Show preview
+			// Show preview - limit preview generation to save memory
 			preview.innerHTML = '';
-			selectedFiles.forEach(file => {
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					const img = document.createElement('img');
-					img.src = e.target.result;
-					preview.appendChild(img);
-				};
-				reader.readAsDataURL(file);
-			});
+			const maxPreviews = Math.min(selectedFiles.length, 6); // Limit to 6 previews
+
+			for (let i = 0; i < maxPreviews; i++) {
+				const file = selectedFiles[i];
+				try {
+					const reader = new FileReader();
+					reader.onload = (e) => {
+						try {
+							const img = document.createElement('img');
+							img.src = e.target.result;
+							preview.appendChild(img);
+						} catch (err) {
+							console.error('Failed to create preview:', err);
+						}
+					};
+					reader.onerror = () => {
+						console.error('Failed to read file for preview');
+					};
+					reader.readAsDataURL(file);
+				} catch (err) {
+					console.error('Failed to generate preview:', err);
+				}
+			}
+
+			if (selectedFiles.length > maxPreviews) {
+				const moreText = document.createElement('div');
+				moreText.style.cssText = 'grid-column: 1 / -1; text-align: center; color: #666;';
+				moreText.textContent = \`+\${selectedFiles.length - maxPreviews} more\`;
+				preview.appendChild(moreText);
+			}
 
 			// Enable upload button
 			uploadBtn.disabled = false;
@@ -213,15 +249,23 @@ function serveUploadPage(res: ServerResponse): void {
 			uploadBtn.textContent = 'Uploading...';
 
 			try {
+				// Get token from URL
+				const urlParams = new URLSearchParams(window.location.search);
+				const token = urlParams.get('token');
+
 				for (let i = 0; i < selectedFiles.length; i++) {
 					const file = selectedFiles[i];
 					const formData = new FormData();
 					formData.append('image', file);
 
-					await fetch('/upload', {
+					const response = await fetch(\`/upload?token=\${token}\`, {
 						method: 'POST',
 						body: formData
 					});
+
+					if (!response.ok) {
+						throw new Error(\`Upload failed with status \${response.status}\`);
+					}
 
 					count.textContent = \`Uploaded \${i + 1}/\${selectedFiles.length}\`;
 				}
@@ -261,37 +305,64 @@ async function handleUpload(
   res: ServerResponse,
   onUpload: (event: UploadEvent) => void
 ): Promise<void> {
-  const chunks: Uint8Array[] = [];
+  try {
+    console.log("[UploadServer] Starting handleUpload");
+    const busboy = Busboy({ headers: req.headers });
+    let fileCount = 0;
 
-  req.on("data", (chunk) => {
-    chunks.push(chunk);
-  });
+    busboy.on("file", (fieldname: string, file: NodeJS.ReadableStream, info: any) => {
+      const { filename, encoding, mimeType } = info;
+      fileCount++;
 
-  req.on("end", () => {
-    const buffer = Buffer.concat(chunks);
+      console.log(`[UploadServer] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`);
 
-    // Here you would parse the form data and extract the file
-    // For simplicity, we're assuming the entire request body is the file
-    const file = {
-      buffer,
-      originalFilename: "upload.jpg", // You might want to extract this from the request
-    };
+      const chunks: Buffer[] = [];
 
-    // Emit upload event
-    onUpload({
-      buffer: file.buffer.buffer, // Convert Buffer to ArrayBuffer
-      filename: file.originalFilename || "image.jpg",
+      file.on("data", (chunk: Buffer) => {
+        chunks.push(chunk);
+      });
+
+      file.on("end", () => {
+        const buffer = Buffer.concat(chunks);
+        console.log(`[UploadServer] File received: ${filename}, size: ${buffer.length} bytes`);
+
+        try {
+          // Emit upload event
+          const uploadEvent = {
+            buffer: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+            filename: filename || "image.jpg",
+          };
+          console.log(`[UploadServer] Calling onUpload callback for ${filename}`);
+          onUpload(uploadEvent);
+          console.log(`[UploadServer] onUpload callback completed for ${filename}`);
+        } catch (err) {
+          console.error(`[UploadServer] Error in onUpload callback:`, err);
+        }
+      });
+
+      file.on("error", (err: Error) => {
+        console.error("[UploadServer] File stream error:", err);
+      });
     });
 
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("Upload successful");
-  });
+    busboy.on("finish", () => {
+      console.log(`[UploadServer] Upload finished. Total files: ${fileCount}`);
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.end("Upload successful");
+    });
 
-  req.on("error", (err) => {
-    console.error("Upload error:", err);
+    busboy.on("error", (err: Error) => {
+      console.error("[UploadServer] Busboy error:", err);
+      res.writeHead(500, { "Content-Type": "text/plain" });
+      res.end("Server error");
+    });
+
+    req.pipe(busboy);
+  } catch (err) {
+    console.error("[UploadServer] Upload error:", err);
     res.writeHead(500, { "Content-Type": "text/plain" });
     res.end("Server error");
-  });
+  }
 }
 
 /**
@@ -301,6 +372,142 @@ function generateToken(): string {
   return crypto.randomBytes(16).toString("hex");
 }
 
-// Removed the UploadServer class as part of removing the Upload via QR Code feature.
+/**
+ * Upload server for receiving images from mobile devices
+ */
+export class UploadServer {
+  private server: http.Server | null = null;
+  private port: number = 0;
+  private token: string = "";
+  private onUpload: (event: UploadEvent) => void;
+
+  constructor(onUpload: (event: UploadEvent) => void) {
+    this.onUpload = onUpload;
+  }
+
+  /**
+   * Start the server on an available port
+   */
+  async start(portRange: [number, number]): Promise<{ port: number; token: string; url: string }> {
+    console.log(`[UploadServer] Starting server, port range: ${portRange[0]}-${portRange[1]}`);
+    this.token = generateToken();
+
+    for (let port = portRange[0]; port <= portRange[1]; port++) {
+      try {
+        await this.tryStartServer(port);
+        this.port = port;
+        const url = `http://${this.getLocalIP()}:${port}?token=${this.token}`;
+        console.log(`[UploadServer] Server started successfully on ${url}`);
+        return { port, token: this.token, url };
+      } catch (err) {
+        // Port in use, try next one
+        continue;
+      }
+    }
+
+    throw new Error(`No available ports in range ${portRange[0]}-${portRange[1]}`);
+  }
+
+  /**
+   * Try to start server on a specific port
+   */
+  private tryStartServer(port: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.server = http.createServer((req, res) => {
+        this.handleRequest(req, res);
+      });
+
+      this.server.on("error", (err: any) => {
+        if (err.code === "EADDRINUSE") {
+          reject(err);
+        }
+      });
+
+      this.server.listen(port, () => {
+        resolve();
+      });
+    });
+  }
+
+  /**
+   * Handle incoming HTTP requests
+   */
+  private handleRequest(req: IncomingMessage, res: ServerResponse): void {
+    // Enable CORS
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    if (req.method === "OPTIONS") {
+      res.writeHead(200);
+      res.end();
+      return;
+    }
+
+    const url = new URL(req.url || "", `http://${req.headers.host}`);
+    const token = url.searchParams.get("token");
+
+    // Verify token
+    if (token !== this.token) {
+      res.writeHead(403, { "Content-Type": "text/plain" });
+      res.end("Forbidden");
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/") {
+      serveUploadPage(res);
+    } else if (req.method === "POST" && url.pathname === "/upload") {
+      handleUpload(req, res, this.onUpload);
+    } else {
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      res.end("Not found");
+    }
+  }
+
+  /**
+   * Get local IP address
+   */
+  private getLocalIP(): string {
+    const os = require("os");
+    const interfaces = os.networkInterfaces();
+
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        // Skip internal and non-IPv4 addresses
+        if (iface.family === "IPv4" && !iface.internal) {
+          return iface.address;
+        }
+      }
+    }
+
+    return "localhost";
+  }
+
+  /**
+   * Stop the server
+   */
+  stop(): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.server) {
+        console.log(`[UploadServer] Stopping server on port ${this.port}`);
+        this.server.close(() => {
+          console.log(`[UploadServer] Server stopped successfully`);
+          this.server = null;
+          resolve();
+        });
+      } else {
+        console.log(`[UploadServer] No server to stop`);
+        resolve();
+      }
+    });
+  }
+
+  /**
+   * Check if server is running
+   */
+  isRunning(): boolean {
+    return this.server !== null;
+  }
+}
 
 export { serveUploadPage, handleUpload, generateToken };

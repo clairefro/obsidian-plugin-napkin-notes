@@ -4,7 +4,6 @@ import { TFile } from 'obsidian';
  * Annotation data for a single image
  */
 export interface ImageAnnotation {
-	keywords: string[];
 	description?: string;
 }
 
@@ -33,7 +32,6 @@ export interface ImageWithFile {
 export interface PhysicalNoteScannerSettings {
 	uploadFolder: string;                  // Custom folder path or empty for default
 	serverPortRange: [number, number];     // Port range for upload server
-	defaultKeywords: string[];             // Template keywords for suggestions
 	enableCarousel: boolean;               // Show carousel in reading view
 }
 
@@ -43,7 +41,6 @@ export interface PhysicalNoteScannerSettings {
 export const DEFAULT_SETTINGS: PhysicalNoteScannerSettings = {
 	uploadFolder: '',
 	serverPortRange: [8080, 8090],
-	defaultKeywords: ['meeting', 'notes', 'diagram', 'sketch'],
 	enableCarousel: true,
 };
 

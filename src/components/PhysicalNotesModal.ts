@@ -1,13 +1,16 @@
 import { App, Modal, Notice, Editor } from "obsidian";
 import PhysicalNoteScannerPlugin from "../../main";
-import { ImageData, ImageAnnotation } from "../types";
+import { ImageData, ImageAnnotation, UploadEvent } from "../types";
 import { ImageCarousel } from "./ImageCarousel";
 import { AnnotationEditor } from "./AnnotationEditor";
 import { ImageProcessor } from "../services/ImageProcessor";
 import { MarkdownGenerator } from "../services/MarkdownGenerator";
+import { UploadServer } from "../server/UploadServer";
+import { QRCodeDisplay } from "./QRCodeDisplay";
 import {
   MODAL_TITLE,
   TAB_DIRECT_UPLOAD,
+  TAB_CAMERA,
   ALLOWED_MIME_TYPES,
 } from "../constants";
 
@@ -15,19 +18,23 @@ export class PhysicalNotesModal extends Modal {
   private plugin: PhysicalNoteScannerPlugin;
   private editor: Editor;
   private images: ImageData[] = [];
-  private currentTab: "direct" | "qr" = "direct";
+  private currentTab: "direct" | "camera" = "direct";
 
   // Components
   private carousel?: ImageCarousel;
   private annotationEditor?: AnnotationEditor;
   private imageProcessor: ImageProcessor;
   private markdownGenerator: MarkdownGenerator;
+  private uploadServer?: UploadServer;
+  private qrDisplay?: QRCodeDisplay;
 
   // UI Elements
   private tabContainer?: HTMLElement;
   private contentContainer?: HTMLElement;
+  private reviewSection?: HTMLElement;
   private carouselContainer?: HTMLElement;
   private annotationContainer?: HTMLElement;
+  private imageCountEl?: HTMLElement;
 
   constructor(app: App, plugin: PhysicalNoteScannerPlugin, editor: Editor) {
     super(app);
@@ -46,39 +53,78 @@ export class PhysicalNotesModal extends Modal {
     // Title
     contentEl.createEl("h2", { text: MODAL_TITLE });
 
-    // Tabs
-    this.tabContainer = contentEl.createEl("div", {
+    // ========== UPLOAD SECTION ==========
+    const uploadSection = contentEl.createEl("div", {
+      cls: "modal-section upload-section",
+    });
+
+    const uploadHeader = uploadSection.createEl("div", {
+      cls: "section-header",
+    });
+    uploadHeader.createEl("h3", { text: "📤 Upload" });
+
+    // Tabs for upload method
+    this.tabContainer = uploadSection.createEl("div", {
       cls: "physical-notes-tabs",
     });
     this.renderTabs();
 
-    // Content area
-    this.contentContainer = contentEl.createEl("div", {
+    // Upload content area
+    this.contentContainer = uploadSection.createEl("div", {
       cls: "physical-notes-content",
     });
     this.renderContent();
 
-    // Carousel section (shared)
-    this.carouselContainer = contentEl.createEl("div", {
+    // ========== REVIEW SECTION ==========
+    this.reviewSection = contentEl.createEl("div", {
+      cls: "modal-section review-section",
+    });
+
+    const reviewHeader = this.reviewSection.createEl("div", {
+      cls: "section-header",
+    });
+    reviewHeader.createEl("h3", { text: "📋 Review" });
+    this.imageCountEl = reviewHeader.createEl("span", {
+      cls: "image-count",
+      text: "No images",
+    });
+
+    // Empty state message
+    const emptyState = this.reviewSection.createEl("div", {
+      cls: "review-empty-state",
+    });
+    emptyState.createEl("p", {
+      text: "Upload images to review them here",
+      cls: "empty-state-text",
+    });
+
+    // Carousel section
+    this.carouselContainer = this.reviewSection.createEl("div", {
       cls: "physical-notes-carousel-section",
     });
-    contentEl.createEl("h3", { text: "Image Review" });
 
     const carouselDiv = this.carouselContainer.createEl("div", {
       cls: "carousel-wrapper",
     });
-    this.carousel = new ImageCarousel(carouselDiv, this.images, (index) => {
-      this.onCarouselChange(index);
-    });
+    this.carousel = new ImageCarousel(
+      carouselDiv,
+      this.images,
+      (index) => {
+        this.onCarouselChange(index);
+      },
+      (index) => {
+        this.deleteImage(index);
+      }
+    );
     this.carousel.render();
 
     // Annotation section
-    this.annotationContainer = contentEl.createEl("div", {
+    this.annotationContainer = this.reviewSection.createEl("div", {
       cls: "physical-notes-annotation-section",
     });
-    if (this.images.length > 0) {
-      this.renderAnnotationEditor();
-    }
+
+    // Update review section visibility
+    this.updateReviewSection();
 
     // Buttons
     const buttonContainer = contentEl.createEl("div", {
@@ -95,9 +141,103 @@ export class PhysicalNotesModal extends Modal {
     insertBtn.addEventListener("click", () => this.insertNotes());
   }
 
-  onClose() {
+  /**
+   * Update the review section visibility and content
+   */
+  private updateReviewSection(): void {
+    if (!this.reviewSection) return;
+
+    const emptyState = this.reviewSection.querySelector<HTMLElement>(
+      ".review-empty-state"
+    );
+    const carouselSection = this.reviewSection.querySelector<HTMLElement>(
+      ".physical-notes-carousel-section"
+    );
+    const annotationSection = this.reviewSection.querySelector<HTMLElement>(
+      ".physical-notes-annotation-section"
+    );
+
+    if (this.images.length === 0) {
+      // Show empty state, hide carousel and annotation
+      if (emptyState) emptyState.style.display = "block";
+      if (carouselSection) carouselSection.style.display = "none";
+      if (annotationSection) annotationSection.style.display = "none";
+      if (this.imageCountEl) this.imageCountEl.textContent = "No images";
+    } else {
+      // Hide empty state, show carousel and annotation
+      if (emptyState) emptyState.style.display = "none";
+      if (carouselSection) carouselSection.style.display = "block";
+      if (annotationSection) annotationSection.style.display = "block";
+      if (this.imageCountEl) {
+        this.imageCountEl.textContent = `${this.images.length} image${
+          this.images.length !== 1 ? "s" : ""
+        }`;
+      }
+
+      // Render annotation editor if not already rendered
+      if (!this.annotationEditor) {
+        this.renderAnnotationEditor();
+      }
+    }
+  }
+
+  /**
+   * Delete an image from the list
+   */
+  private deleteImage(index: number): void {
+    if (index < 0 || index >= this.images.length) return;
+
+    const removed = this.images.splice(index, 1)[0];
+
+    // Revoke data URL
+    if (removed.dataUrl) {
+      URL.revokeObjectURL(removed.dataUrl);
+    }
+
+    // Update carousel
+    this.carousel?.updateImages(this.images);
+
+    // Update annotation editor
+    if (this.images.length > 0) {
+      const newIndex = Math.min(index, this.images.length - 1);
+      this.carousel?.setCurrentIndex(newIndex);
+      this.onCarouselChange(newIndex);
+    } else {
+      this.annotationEditor = undefined;
+      if (this.annotationContainer) {
+        this.annotationContainer.empty();
+      }
+    }
+
+    // Update review section
+    this.updateReviewSection();
+
+    new Notice("Image removed");
+  }
+
+  /**
+   * Scroll to the review section
+   */
+  private scrollToReviewSection(): void {
+    if (this.reviewSection) {
+      this.reviewSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  async onClose() {
+    console.log("[PhysicalNotesModal] onClose called");
     const { contentEl } = this;
     contentEl.empty();
+
+    // Stop upload server if running
+    if (this.uploadServer) {
+      console.log("[PhysicalNotesModal] Stopping upload server");
+      await this.uploadServer.stop();
+      this.uploadServer = undefined;
+      console.log("[PhysicalNotesModal] Upload server stopped");
+    } else {
+      console.log("[PhysicalNotesModal] No upload server to stop");
+    }
 
     // Revoke data URLs
     this.images.forEach((img) => {
@@ -105,6 +245,7 @@ export class PhysicalNotesModal extends Modal {
         URL.revokeObjectURL(img.dataUrl);
       }
     });
+    console.log("[PhysicalNotesModal] onClose completed");
   }
 
   private renderTabs(): void {
@@ -121,9 +262,19 @@ export class PhysicalNotesModal extends Modal {
       directTab.addClass("active");
     }
     directTab.addEventListener("click", () => this.switchTab("direct"));
+
+    // Camera upload tab
+    const cameraTab = this.tabContainer.createEl("div", {
+      text: TAB_CAMERA,
+      cls: "physical-notes-tab",
+    });
+    if (this.currentTab === "camera") {
+      cameraTab.addClass("active");
+    }
+    cameraTab.addEventListener("click", () => this.switchTab("camera"));
   }
 
-  private switchTab(tab: "direct" | "qr"): void {
+  private switchTab(tab: "direct" | "camera"): void {
     this.currentTab = tab;
     this.renderTabs();
     this.renderContent();
@@ -136,6 +287,8 @@ export class PhysicalNotesModal extends Modal {
 
     if (this.currentTab === "direct") {
       this.renderDirectUpload();
+    } else if (this.currentTab === "camera") {
+      this.renderCameraUpload();
     }
   }
 
@@ -147,7 +300,7 @@ export class PhysicalNotesModal extends Modal {
     });
 
     uploadZone.createEl("p", {
-      text: "📁 Drop files or click to upload",
+      text: "📁 Drop images or click to upload",
       cls: "upload-zone-text",
     });
 
@@ -197,6 +350,102 @@ export class PhysicalNotesModal extends Modal {
     });
   }
 
+  private async renderCameraUpload(): Promise<void> {
+    if (!this.contentContainer) return;
+
+    const qrContainer = this.contentContainer.createEl("div", {
+      cls: "qr-upload-container",
+    });
+
+    // Initialize QR display
+    this.qrDisplay = new QRCodeDisplay(qrContainer);
+
+    try {
+      // Initialize upload server
+      this.uploadServer = new UploadServer((event: UploadEvent) => {
+        this.handleServerUpload(event);
+      });
+
+      // Start server
+      const serverInfo = await this.uploadServer.start(
+        this.plugin.settings.serverPortRange
+      );
+
+      // Display QR code
+      await this.qrDisplay.display(serverInfo);
+
+      new Notice("Server started. Scan QR code with your phone.");
+    } catch (error) {
+      console.error("Failed to start server:", error);
+      this.qrDisplay.showError("Failed to start server");
+      new Notice("Failed to start upload server");
+    }
+  }
+
+  private async handleServerUpload(event: UploadEvent): Promise<void> {
+    console.log(
+      `[PhysicalNotesModal] handleServerUpload called for ${event.filename}`
+    );
+    try {
+      // Convert ArrayBuffer to Blob
+      const blob = new Blob([event.buffer], { type: "image/jpeg" });
+      const file = new File([blob], event.filename, { type: "image/jpeg" });
+      console.log(
+        `[PhysicalNotesModal] Created File object, size: ${file.size}`
+      );
+
+      // Process the uploaded file
+      const buffer = await this.imageProcessor.fileToArrayBuffer(file);
+      const dataUrl = this.imageProcessor.createDataUrl(buffer, file.type);
+      console.log(
+        `[PhysicalNotesModal] Processed image, dataUrl length: ${dataUrl.length}`
+      );
+
+      const imageData: ImageData = {
+        file: file,
+        buffer: buffer,
+        filename: event.filename,
+        dataUrl: dataUrl,
+        annotation: {
+          description: "",
+        },
+      };
+
+      this.images.push(imageData);
+      console.log(
+        `[PhysicalNotesModal] Added image, total images: ${this.images.length}`
+      );
+
+      // Update carousel
+      this.carousel?.updateImages(this.images);
+      console.log(`[PhysicalNotesModal] Updated carousel`);
+
+      // Update review section
+      this.updateReviewSection();
+      console.log(`[PhysicalNotesModal] Updated review section`);
+
+      // Update upload counter in QR display
+      if (this.qrDisplay) {
+        this.qrDisplay.updateCounter(this.images.length);
+        console.log(`[PhysicalNotesModal] Updated QR counter`);
+      }
+
+      // Scroll to review section
+      this.scrollToReviewSection();
+
+      new Notice(`Received image: ${event.filename}`);
+      console.log(
+        `[PhysicalNotesModal] handleServerUpload completed successfully`
+      );
+    } catch (error) {
+      console.error(
+        "[PhysicalNotesModal] Failed to process uploaded image:",
+        error
+      );
+      new Notice("Failed to process uploaded image");
+    }
+  }
+
   private async handleFiles(files: File[]): Promise<void> {
     const imageFiles = files.filter((f) => f.type.startsWith("image/"));
 
@@ -216,7 +465,6 @@ export class PhysicalNotesModal extends Modal {
           filename: file.name,
           dataUrl: dataUrl,
           annotation: {
-            keywords: [],
             description: "",
           },
         };
@@ -231,10 +479,11 @@ export class PhysicalNotesModal extends Modal {
     // Update carousel
     this.carousel?.updateImages(this.images);
 
-    // Render annotation editor if this is the first image
-    if (this.images.length > 0 && !this.annotationEditor) {
-      this.renderAnnotationEditor();
-    }
+    // Update review section
+    this.updateReviewSection();
+
+    // Scroll to review section
+    this.scrollToReviewSection();
 
     new Notice(`Added ${imageFiles.length} image(s)`);
   }
@@ -265,8 +514,7 @@ export class PhysicalNotesModal extends Modal {
         if (this.images[index]) {
           this.images[index].annotation = annotation;
         }
-      },
-      this.plugin.settings.defaultKeywords
+      }
     );
 
     this.annotationEditor.render();

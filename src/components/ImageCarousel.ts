@@ -1,150 +1,177 @@
-import { ImageData } from '../types';
+import { ImageData } from "../types";
 
 export class ImageCarousel {
-	private container: HTMLElement;
-	private images: ImageData[];
-	private currentIndex: number = 0;
-	private onImageChange?: (index: number) => void;
-	private imageEl?: HTMLImageElement;
-	private counterEl?: HTMLElement;
-	private prevBtn?: HTMLButtonElement;
-	private nextBtn?: HTMLButtonElement;
+  private container: HTMLElement;
+  private images: ImageData[];
+  private currentIndex: number = 0;
+  private onImageChange?: (index: number) => void;
+  private onDelete?: (index: number) => void;
+  private imageEl?: HTMLImageElement;
+  private counterEl?: HTMLElement;
+  private prevBtn?: HTMLButtonElement;
+  private nextBtn?: HTMLButtonElement;
+  private deleteBtn?: HTMLButtonElement;
 
-	constructor(
-		container: HTMLElement,
-		images: ImageData[],
-		onImageChange?: (index: number) => void
-	) {
-		this.container = container;
-		this.images = images;
-		this.onImageChange = onImageChange;
-	}
+  constructor(
+    container: HTMLElement,
+    images: ImageData[],
+    onImageChange?: (index: number) => void,
+    onDelete?: (index: number) => void
+  ) {
+    this.container = container;
+    this.images = images;
+    this.onImageChange = onImageChange;
+    this.onDelete = onDelete;
+  }
 
-	render(): void {
-		this.container.empty();
+  render(): void {
+    this.container.empty();
 
-		if (this.images.length === 0) {
-			this.container.createEl('p', {
-				text: 'No images uploaded yet',
-				cls: 'carousel-empty'
-			});
-			return;
-		}
+    if (this.images.length === 0) {
+      this.container.createEl("p", {
+        text: "No images uploaded yet",
+        cls: "carousel-empty",
+      });
+      return;
+    }
 
-		// Navigation controls
-		const nav = this.container.createEl('div', { cls: 'carousel-navigation' });
+    // Navigation controls
+    const nav = this.container.createEl("div", { cls: "carousel-navigation" });
 
-		this.prevBtn = nav.createEl('button', {
-			text: '←',
-			cls: 'carousel-button'
-		});
-		this.prevBtn.addEventListener('click', () => this.previous());
+    this.prevBtn = nav.createEl("button", {
+      text: "←",
+      cls: "carousel-button",
+    });
+    this.prevBtn.addEventListener("click", () => this.previous());
 
-		this.counterEl = nav.createEl('span', { cls: 'carousel-counter' });
+    this.counterEl = nav.createEl("span", { cls: "carousel-counter" });
 
-		this.nextBtn = nav.createEl('button', {
-			text: '→',
-			cls: 'carousel-button'
-		});
-		this.nextBtn.addEventListener('click', () => this.next());
+    this.nextBtn = nav.createEl("button", {
+      text: "→",
+      cls: "carousel-button",
+    });
+    this.nextBtn.addEventListener("click", () => this.next());
 
-		// Image display
-		const imageContainer = this.container.createEl('div', { cls: 'carousel-image-container' });
-		this.imageEl = imageContainer.createEl('img', { cls: 'carousel-image' });
+    // Delete button
+    this.deleteBtn = nav.createEl("button", {
+      text: "🗑️",
+      cls: "carousel-button carousel-delete-btn",
+      attr: { title: "Remove this image" },
+    });
+    this.deleteBtn.addEventListener("click", () => {
+      if (this.onDelete) {
+        this.onDelete(this.currentIndex);
+      }
+    });
 
-		// Initial render
-		this.updateDisplay();
+    // Image display
+    const imageContainer = this.container.createEl("div", {
+      cls: "carousel-image-container",
+    });
+    this.imageEl = imageContainer.createEl("img", { cls: "carousel-image" });
 
-		// Keyboard navigation
-		this.setupKeyboardNav();
-	}
+    // Initial render
+    this.updateDisplay();
 
-	private updateDisplay(): void {
-		if (this.images.length === 0 || !this.imageEl || !this.counterEl) {
-			return;
-		}
+    // Keyboard navigation
+    this.setupKeyboardNav();
+  }
 
-		const currentImage = this.images[this.currentIndex];
+  private updateDisplay(): void {
+    if (this.images.length === 0 || !this.imageEl || !this.counterEl) {
+      return;
+    }
 
-		// Update image
-		if (currentImage.dataUrl) {
-			this.imageEl.src = currentImage.dataUrl;
-		}
+    const currentImage = this.images[this.currentIndex];
 
-		// Update counter
-		this.counterEl.textContent = `${this.currentIndex + 1} / ${this.images.length}`;
+    // Update image
+    if (currentImage.dataUrl) {
+      this.imageEl.src = currentImage.dataUrl;
+    }
 
-		// Update buttons
-		if (this.prevBtn) {
-			this.prevBtn.disabled = this.currentIndex === 0;
-		}
-		if (this.nextBtn) {
-			this.nextBtn.disabled = this.currentIndex === this.images.length - 1;
-		}
+    // Update counter
+    this.counterEl.textContent = `${this.currentIndex + 1} / ${
+      this.images.length
+    }`;
 
-		// Notify change
-		if (this.onImageChange) {
-			this.onImageChange(this.currentIndex);
-		}
-	}
+    // Update buttons
+    if (this.prevBtn) {
+      this.prevBtn.disabled = this.currentIndex === 0;
+    }
+    if (this.nextBtn) {
+      this.nextBtn.disabled = this.currentIndex === this.images.length - 1;
+    }
 
-	private setupKeyboardNav(): void {
-		document.addEventListener('keydown', (e) => {
-			if (e.key === 'ArrowLeft') {
-				this.previous();
-			} else if (e.key === 'ArrowRight') {
-				this.next();
-			}
-		});
-	}
+    // Notify change
+    if (this.onImageChange) {
+      this.onImageChange(this.currentIndex);
+    }
+  }
 
-	next(): void {
-		if (this.currentIndex < this.images.length - 1) {
-			this.currentIndex++;
-			this.updateDisplay();
-		}
-	}
+  private setupKeyboardNav(): void {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") {
+        this.previous();
+      } else if (e.key === "ArrowRight") {
+        this.next();
+      }
+    });
+  }
 
-	previous(): void {
-		if (this.currentIndex > 0) {
-			this.currentIndex--;
-			this.updateDisplay();
-		}
-	}
+  next(): void {
+    if (this.currentIndex < this.images.length - 1) {
+      this.currentIndex++;
+      this.updateDisplay();
+    }
+  }
 
-	goTo(index: number): void {
-		if (index >= 0 && index < this.images.length) {
-			this.currentIndex = index;
-			this.updateDisplay();
-		}
-	}
+  previous(): void {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      this.updateDisplay();
+    }
+  }
 
-	addImage(image: ImageData): void {
-		this.images.push(image);
-		this.render();
-	}
+  goTo(index: number): void {
+    if (index >= 0 && index < this.images.length) {
+      this.currentIndex = index;
+      this.updateDisplay();
+    }
+  }
 
-	removeImage(index: number): void {
-		if (index >= 0 && index < this.images.length) {
-			this.images.splice(index, 1);
-			if (this.currentIndex >= this.images.length) {
-				this.currentIndex = Math.max(0, this.images.length - 1);
-			}
-			this.render();
-		}
-	}
+  addImage(image: ImageData): void {
+    this.images.push(image);
+    this.render();
+  }
 
-	getCurrentIndex(): number {
-		return this.currentIndex;
-	}
+  removeImage(index: number): void {
+    if (index >= 0 && index < this.images.length) {
+      this.images.splice(index, 1);
+      if (this.currentIndex >= this.images.length) {
+        this.currentIndex = Math.max(0, this.images.length - 1);
+      }
+      this.render();
+    }
+  }
 
-	getImages(): ImageData[] {
-		return this.images;
-	}
+  getCurrentIndex(): number {
+    return this.currentIndex;
+  }
 
-	updateImages(images: ImageData[]): void {
-		this.images = images;
-		this.currentIndex = 0;
-		this.render();
-	}
+  setCurrentIndex(index: number): void {
+    if (index >= 0 && index < this.images.length) {
+      this.currentIndex = index;
+      this.updateDisplay();
+    }
+  }
+
+  getImages(): ImageData[] {
+    return this.images;
+  }
+
+  updateImages(images: ImageData[]): void {
+    this.images = images;
+    this.currentIndex = 0;
+    this.render();
+  }
 }

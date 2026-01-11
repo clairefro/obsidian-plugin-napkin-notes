@@ -58,20 +58,5 @@ export class PhysicalNoteScannerSettingTab extends PluginSettingTab {
 					// Trigger re-render of reading views
 					this.app.workspace.trigger('css-change');
 				}));
-
-		// Default keywords
-		new Setting(containerEl)
-			.setName('Default keywords')
-			.setDesc('Comma-separated keywords to suggest when annotating images')
-			.addTextArea(text => text
-				.setPlaceholder('meeting, notes, diagram, sketch')
-				.setValue(this.plugin.settings.defaultKeywords.join(', '))
-				.onChange(async (value) => {
-					this.plugin.settings.defaultKeywords = value
-						.split(',')
-						.map(s => s.trim())
-						.filter(s => s.length > 0);
-					await this.plugin.saveSettings();
-				}));
 	}
 }

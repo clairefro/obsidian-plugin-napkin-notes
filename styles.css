@@ -2,10 +2,19 @@
 
 /* Modal */
 .physical-notes-modal {
-  width: 80vw;
-  max-width: 900px;
-  height: 80vh;
+  width: 90vw !important;
+  max-width: 800px !important; /* Set a reasonable max-width */
+  max-height: 85vh; /* Allow modal to shrink if content is smaller */
   overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.physical-notes-modal * {
+  width: 100%; /* Ensure all child elements fit within modal */
+  max-width: 100%;
+  overflow-x: hidden; /* Force horizontal overflow to be hidden */
+  white-space: normal; /* Prevent long text from overflowing */
 }
 
 .physical-notes-modal h2 {
@@ -18,6 +27,14 @@
   color: var(--text-normal);
 }
 
+/* Override Obsidian's .modal-content defaults for .physical-notes-modal */
+.modal-content.physical-notes-modal {
+  width: 100% !important; /* Override Obsidian's default width */
+  max-width: 800px !important; /* Constrain modal width */
+  overflow-x: hidden !important; /* Prevent horizontal scrolling */
+  box-sizing: border-box; /* Ensure padding and borders are included in width */
+}
+
 /* Tabs */
 .physical-notes-tabs {
   display: flex;
@@ -27,7 +44,8 @@
 }
 
 .physical-notes-tab {
-  padding: 0.75rem 1.5rem;
+  width: auto; /* Restore tab indicator width */
+  padding: 0.75rem 1.5rem; /* Adjust padding for better fit */
   cursor: pointer;
   border-bottom: 3px solid transparent;
   transition: all 0.2s ease;
@@ -45,10 +63,60 @@
   color: var(--text-normal);
 }
 
+/* Modal Sections */
+.modal-section {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1em;
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.image-count {
+  background: var(--background-modifier-border);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+/* Review Section */
+.review-section {
+  min-height: 200px;
+}
+
+.review-empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.empty-state-text {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* Content */
 .physical-notes-content {
+  width: 100%; /* Ensure content fits within the modal */
   min-height: 150px;
+  max-height: calc(85vh - 2rem); /* Adjust content height to fit within modal */
   margin-bottom: 1.5rem;
+  overflow: hidden; /* Prevent content overflow */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 /* Upload Zone */
@@ -174,6 +242,8 @@
   border-radius: 8px;
   padding: 1rem;
   background: var(--background-secondary);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .carousel-empty {
@@ -184,8 +254,9 @@
 
 .carousel-navigation {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
@@ -200,6 +271,7 @@
   font-weight: bold;
   transition: all 0.2s;
   min-width: 50px;
+  width: auto;
 }
 
 .carousel-button:hover:not(:disabled) {
@@ -210,6 +282,16 @@
 .carousel-button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.carousel-delete-btn {
+  background: var(--background-modifier-error);
+  color: var(--text-on-accent);
+  margin-left: 1rem;
+}
+
+.carousel-delete-btn:hover:not(:disabled) {
+  background: var(--text-error);
 }
 
 .carousel-counter {
@@ -226,6 +308,7 @@
   align-items: center;
   min-height: 300px;
   max-height: 400px;
+  max-width: 100%;
   background: var(--background-primary);
   border-radius: 8px;
   overflow: hidden;
@@ -246,6 +329,8 @@
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
   background: var(--background-secondary);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .annotation-section {
@@ -346,6 +431,7 @@
 
 .description-input {
   width: 100%;
+  max-width: 100%;
   min-height: 80px;
   padding: 0.75rem;
   border: 2px solid var(--background-modifier-border);
@@ -357,6 +443,7 @@
   resize: vertical;
   outline: none;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
 .description-input:focus {
@@ -369,16 +456,15 @@
 
 /* Modal Buttons */
 .modal-button-container {
+  width: auto; /* Restore button container width */
   display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--background-modifier-border);
+  justify-content: flex-end; /* Align buttons to the right */
+  gap: 1rem; /* Add spacing between buttons */
 }
 
 .modal-button-container button {
-  padding: 0.75rem 1.5rem;
+  width: auto; /* Restore button width */
+  padding: 0.75rem 1.5rem; /* Adjust padding for better fit */
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -425,47 +511,55 @@
   font-size: 0.95em;
 }
 
-.carousel-keywords-section {
-  margin-bottom: 0.75rem;
-}
-
-.carousel-keywords-section:last-child {
-  margin-bottom: 0;
-}
-
-.carousel-keywords {
-  display: inline;
-}
-
-.carousel-keyword-tag {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-  border-radius: 12px;
-  font-size: 0.85em;
-  font-weight: 500;
-  margin: 0.2rem;
-}
-
-.carousel-description-section {
+.carousel-description {
   color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  font-size: 0.85em;
+  position: relative;
 }
 
-.carousel-description-section strong {
-  color: var(--text-normal);
+.carousel-description.collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.carousel-filename-section {
+.carousel-description.expanded {
+  display: block;
+}
+
+.carousel-description-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 0.75em;
+  margin-top: 0.25rem;
+  padding: 0.25rem 0;
+  background: none;
+  border: none;
+  font-family: var(--font-interface);
+  transition: color 0.2s;
+  opacity: 0.7;
+}
+
+.carousel-description-toggle:hover {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.carousel-filepath {
+  font-family: var(--font-monospace);
+  color: var(--text-faint);
+  font-size: 0.7em;
   margin-top: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--background-modifier-border);
-}
-
-.carousel-filename {
-  font-family: var(--font-monospace);
-  color: var(--text-faint);
-  font-size: 0.8em;
 }
 
 .carousel-error {
@@ -479,6 +573,15 @@
   color: var(--text-error);
   padding: 1rem;
   font-style: italic;
+}
+
+/* Shared View */
+.shared-view {
+  display: none; /* Hide shared view by default */
+}
+
+.shared-view.visible {
+  display: block; /* Show shared view when images are uploaded */
 }
 
 /* Responsive adjustments */
