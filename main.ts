@@ -1,7 +1,7 @@
 import { Plugin, Notice, MarkdownView } from "obsidian";
 import { NapkinNotesSettings, DEFAULT_SETTINGS } from "./src/types";
 import { NapkinNotesSettingTab } from "./src/settings/SettingsTab";
-import { PhysicalNotesModal } from "./src/components/PhysicalNotesModal";
+import { UploadModal } from "./src/components/UploadModal";
 import { registerCarouselPostProcessor } from "./src/renderers/CarouselPostProcessor";
 
 export default class NapkinNotesPlugin extends Plugin {
@@ -50,7 +50,7 @@ export default class NapkinNotesPlugin extends Plugin {
       return;
     }
 
-    const modal = new PhysicalNotesModal(this.app, this, activeView.editor);
+    const modal = new UploadModal(this.app, this, activeView.editor);
     modal.open();
   }
 }
