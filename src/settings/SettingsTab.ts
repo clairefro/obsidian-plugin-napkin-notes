@@ -13,7 +13,7 @@ export class NapkinNotesSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Physical Note Scanner Settings" });
+    containerEl.createEl("h2", { text: "Napkin Notes Settings" });
 
     // Upload folder setting
     new Setting(containerEl)

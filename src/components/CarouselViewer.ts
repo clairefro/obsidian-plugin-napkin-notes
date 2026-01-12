@@ -315,12 +315,15 @@ export class CarouselViewer {
       });
       this.deleteBtn.addEventListener("click", () => this.handleDelete());
 
-      this.saveBtn = editControls.createEl("button", {
-        text: "Save",
-        cls: "carousel-button carousel-save-btn carousel-edit-btn",
-        attr: { title: "Save changes" },
-      });
-      this.saveBtn.addEventListener("click", () => this.handleSave());
+      // Only show Save button if showSaveButton is true (reading view)
+      if (this.options.showSaveButton !== false) {
+        this.saveBtn = editControls.createEl("button", {
+          text: "Save",
+          cls: "carousel-button carousel-save-btn carousel-edit-btn",
+          attr: { title: "Save changes" },
+        });
+        this.saveBtn.addEventListener("click", () => this.handleSave());
+      }
 
       // Only show Cancel button if not in UploadModal (detected by parent modal class)
       const isUploadModal =

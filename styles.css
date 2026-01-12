@@ -306,6 +306,8 @@
   background: var(--background-modifier-error);
   color: var(--text-on-accent);
   margin-left: 1rem;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
 }
 
 .napkin-notes-modal .carousel-delete-btn:hover:not(:disabled) {
@@ -1131,6 +1133,7 @@
 .napkin-notes-modal .shared-view.visible {
   display: block; /* Show shared view when images are uploaded */
 }
+
 .carousel-edit-controls {
   display: flex;
   justify-content: center;
@@ -1139,6 +1142,7 @@
 }
 .carousel-description-input {
   width: 100%;
+  margin-top: 1rem;
 }
 
 /* Responsive adjustments */
