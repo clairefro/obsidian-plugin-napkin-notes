@@ -1,6 +1,7 @@
-import { TFile } from "obsidian";
+import { TFile, MarkdownView, Notice } from "obsidian";
 import PhysicalNoteScannerPlugin from "../../main";
 import { CODE_BLOCK_LANGUAGE } from "../constants";
+import { CarouselViewer, CarouselImage } from "../components/CarouselViewer";
 
 interface ParsedImage {
   filepath: string;
@@ -17,7 +18,7 @@ export function registerCarouselPostProcessor(
         const images = parseCodeBlock(source);
 
         if (images.length > 0) {
-          renderCarousel(el, images, plugin);
+          renderCarousel(el, images, plugin, ctx.sourcePath, source);
         } else {
           el.createEl("p", {
             text: "No images found in physical-note-viewer block",
@@ -52,7 +53,6 @@ function parseCodeBlock(source: string): ParsedImage[] {
       // Save previous image if exists
       if (currentImage) {
         if (descriptionLines.length > 0) {
-          // Remove trailing blank lines from description
           while (
             descriptionLines.length > 0 &&
             descriptionLines[descriptionLines.length - 1] === ""
@@ -65,7 +65,6 @@ function parseCodeBlock(source: string): ParsedImage[] {
         images.push(currentImage);
       }
 
-      // Start new image
       currentImage = {
         filepath: wikilinkMatch[1],
         description: undefined,
@@ -74,14 +73,11 @@ function parseCodeBlock(source: string): ParsedImage[] {
       continue;
     }
 
-    // Handle blank lines
     if (trimmed === "") {
       consecutiveBlankLines++;
 
-      // Two consecutive blank lines end the current image
       if (consecutiveBlankLines >= 2 && currentImage) {
         if (descriptionLines.length > 0) {
-          // Remove trailing blank lines from description
           while (
             descriptionLines.length > 0 &&
             descriptionLines[descriptionLines.length - 1] === ""
@@ -97,26 +93,21 @@ function parseCodeBlock(source: string): ParsedImage[] {
         continue;
       }
 
-      // Single blank line within description - preserve it
       if (currentImage && descriptionLines.length > 0) {
         descriptionLines.push("");
       }
       continue;
     }
 
-    // Non-blank line resets counter
     consecutiveBlankLines = 0;
 
-    // Any other line is part of the description
     if (currentImage) {
       descriptionLines.push(trimmed);
     }
   }
 
-  // Save last image if exists
   if (currentImage) {
     if (descriptionLines.length > 0) {
-      // Remove trailing blank lines from description
       while (
         descriptionLines.length > 0 &&
         descriptionLines[descriptionLines.length - 1] === ""
@@ -131,449 +122,161 @@ function parseCodeBlock(source: string): ParsedImage[] {
   return images;
 }
 
+/**
+ * Generate code block content from carousel images
+ */
+function generateCodeBlockContent(images: CarouselImage[]): string {
+  const lines: string[] = [];
+
+  images.forEach((image, index) => {
+    // Add wikilink
+    lines.push(`[[${image.filepath}]]`);
+
+    // Add description if present
+    if (image.description) {
+      lines.push(image.description);
+    }
+
+    // Add separator between images (two blank lines)
+    if (index < images.length - 1) {
+      lines.push("");
+      lines.push("");
+    }
+  });
+
+  return lines.join("\n");
+}
+
 function renderCarousel(
   container: HTMLElement,
-  images: ParsedImage[],
-  plugin: PhysicalNoteScannerPlugin
+  parsedImages: ParsedImage[],
+  plugin: PhysicalNoteScannerPlugin,
+  sourcePath: string,
+  originalSource: string
 ): void {
   container.empty();
   container.addClass("physical-notes-carousel-reading");
 
-  let currentIndex = 0;
-  let descriptionExpanded = false;
-  let zoomLevel = 1;
-  let panX = 0;
-  let panY = 0;
-  let isPanning = false;
-  let lastPanX = 0;
-  let lastPanY = 0;
+  // Store original images for cancel functionality
+  const originalImages = parsedImages.map((img) => ({ ...img }));
 
-  // Main carousel layout: thumbnails on left, main content on right
-  const carouselLayout = container.createEl("div", { cls: "carousel-layout" });
+  // Convert ParsedImage to CarouselImage
+  const carouselImages: CarouselImage[] = parsedImages.map((img) => ({
+    filepath: img.filepath,
+    description: img.description,
+  }));
 
-  // Thumbnail strip (left side) - collapsed by default
-  const thumbnailStrip = carouselLayout.createEl("div", {
-    cls: "thumbnail-strip collapsed",
-  });
+  let currentMode: "view" | "edit" = "view";
+  let viewer: CarouselViewer;
 
-  // Toggle button for expand/collapse
-  const toggleBtn = thumbnailStrip.createEl("button", {
-    cls: "thumbnail-toggle-btn",
-    attr: { title: "Toggle thumbnails" },
-  });
-  toggleBtn.createEl("span", { cls: "toggle-icon", text: "›" });
+  const createViewer = (mode: "view" | "edit") => {
+    container.empty();
 
-  // Thumbnail content (header + thumbnails)
-  const thumbnailContent = thumbnailStrip.createEl("div", {
-    cls: "thumbnail-content",
-  });
+    viewer = new CarouselViewer({
+      app: plugin.app,
+      container,
+      images: mode === "view" ? carouselImages : [...carouselImages],
+      mode,
+      collapsibleThumbnails: true,
+      showEditButton: mode === "view",
+      showSaveButton: mode === "edit",
+      onModeChange: (newMode) => {
+        currentMode = newMode;
+        createViewer(newMode);
+      },
+      onDelete: (index) => {
+        carouselImages.splice(index, 1);
+        viewer.updateImages(carouselImages);
 
-  // Thumbnail header
-  const thumbHeader = thumbnailContent.createEl("div", {
-    cls: "thumbnail-header",
-  });
-  thumbHeader.createEl("span", {
-    text: `${images.length} image${images.length !== 1 ? "s" : ""}`,
-    cls: "thumbnail-count",
-  });
-
-  // Thumbnails container
-  const thumbsContainer = thumbnailContent.createEl("div", {
-    cls: "thumbnails-container",
-  });
-
-  // Toggle expand/collapse
-  toggleBtn.addEventListener("click", () => {
-    thumbnailStrip.classList.toggle("collapsed");
-    const icon = toggleBtn.querySelector(".toggle-icon");
-    if (icon) {
-      icon.textContent = thumbnailStrip.classList.contains("collapsed")
-        ? "›"
-        : "‹";
-    }
-  });
-
-  // Main content area (right side)
-  const mainArea = carouselLayout.createEl("div", {
-    cls: "carousel-main-area",
-  });
-
-  // Navigation
-  const nav = mainArea.createEl("div", { cls: "carousel-navigation" });
-
-  const prevBtn = nav.createEl("button", {
-    text: "←",
-    cls: "carousel-button",
-  });
-
-  const counter = nav.createEl("span", { cls: "carousel-counter" });
-
-  const nextBtn = nav.createEl("button", {
-    text: "→",
-    cls: "carousel-button",
-  });
-
-  // Image container with zoom support
-  const imageContainer = mainArea.createEl("div", {
-    cls: "carousel-image-container",
-  });
-
-  const imageWrapper = imageContainer.createEl("div", {
-    cls: "carousel-image-wrapper",
-  });
-
-  const imageEl = imageWrapper.createEl("img", { cls: "carousel-image" });
-
-  // Zoom slider overlay
-  const zoomOverlay = imageContainer.createEl("div", {
-    cls: "zoom-slider-overlay",
-  });
-
-  zoomOverlay.createEl("span", {
-    cls: "zoom-icon",
-    text: "🔍",
-  });
-
-  const zoomSlider = zoomOverlay.createEl("input", {
-    cls: "zoom-slider",
-    attr: {
-      type: "range",
-      min: "0.5",
-      max: "3",
-      step: "0.1",
-      value: "1",
-    },
-  }) as HTMLInputElement;
-
-  const zoomValue = zoomOverlay.createEl("span", {
-    cls: "zoom-value",
-    text: "100%",
-  });
-
-  const resetBtn = zoomOverlay.createEl("button", {
-    cls: "zoom-reset-btn",
-    text: "Reset",
-    attr: { title: "Reset zoom" },
-  });
-
-  // Metadata container (description + filepath)
-  const metadataDiv = mainArea.createEl("div", { cls: "carousel-metadata" });
-
-  // Zoom functions
-  const applyZoom = () => {
-    if (zoomLevel <= 1) {
-      panX = 0;
-      panY = 0;
-    }
-    imageEl.style.transform = `scale(${zoomLevel}) translate(${
-      panX / zoomLevel
-    }px, ${panY / zoomLevel}px)`;
-    imageContainer.style.cursor = zoomLevel > 1 ? "grab" : "default";
-  };
-
-  const setZoom = (level: number) => {
-    zoomLevel = Math.max(0.5, Math.min(3, level));
-    zoomSlider.value = zoomLevel.toString();
-    zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
-    applyZoom();
-  };
-
-  const resetZoom = () => {
-    zoomLevel = 1;
-    panX = 0;
-    panY = 0;
-    zoomSlider.value = "1";
-    zoomValue.textContent = "100%";
-    applyZoom();
-  };
-
-  // Zoom slider event
-  zoomSlider.addEventListener("input", () => {
-    zoomLevel = parseFloat(zoomSlider.value);
-    zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
-    applyZoom();
-  });
-
-  resetBtn.addEventListener("click", resetZoom);
-
-  // Wheel zoom (mouse wheel / trackpad pinch)
-  imageContainer.addEventListener(
-    "wheel",
-    (e) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -0.1 : 0.1;
-        setZoom(zoomLevel + delta);
-      }
-    },
-    { passive: false }
-  );
-
-  // Touch pinch zoom
-  let initialDistance = 0;
-  let initialZoom = 1;
-
-  imageContainer.addEventListener(
-    "touchstart",
-    (e) => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        initialDistance = Math.sqrt(dx * dx + dy * dy);
-        initialZoom = zoomLevel;
-      } else if (e.touches.length === 1 && zoomLevel > 1) {
-        isPanning = true;
-        lastPanX = e.touches[0].clientX;
-        lastPanY = e.touches[0].clientY;
-      }
-    },
-    { passive: false }
-  );
-
-  imageContainer.addEventListener(
-    "touchmove",
-    (e) => {
-      if (e.touches.length === 2 && initialDistance > 0) {
-        e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const currentDistance = Math.sqrt(dx * dx + dy * dy);
-        const scale = currentDistance / initialDistance;
-        setZoom(initialZoom * scale);
-      } else if (e.touches.length === 1 && isPanning) {
-        e.preventDefault();
-        const deltaX = e.touches[0].clientX - lastPanX;
-        const deltaY = e.touches[0].clientY - lastPanY;
-        panX += deltaX;
-        panY += deltaY;
-        lastPanX = e.touches[0].clientX;
-        lastPanY = e.touches[0].clientY;
-        applyZoom();
-      }
-    },
-    { passive: false }
-  );
-
-  imageContainer.addEventListener("touchend", (e) => {
-    if (e.touches.length < 2) {
-      initialDistance = 0;
-    }
-    if (e.touches.length === 0) {
-      isPanning = false;
-    }
-  });
-
-  // Mouse panning when zoomed
-  imageContainer.addEventListener("mousedown", (e) => {
-    if (zoomLevel > 1) {
-      isPanning = true;
-      lastPanX = e.clientX;
-      lastPanY = e.clientY;
-      imageContainer.style.cursor = "grabbing";
-    }
-  });
-
-  document.addEventListener("mousemove", (e) => {
-    if (isPanning && zoomLevel > 1) {
-      const deltaX = e.clientX - lastPanX;
-      const deltaY = e.clientY - lastPanY;
-      panX += deltaX;
-      panY += deltaY;
-      lastPanX = e.clientX;
-      lastPanY = e.clientY;
-      applyZoom();
-    }
-  });
-
-  document.addEventListener("mouseup", () => {
-    isPanning = false;
-    if (imageContainer) {
-      imageContainer.style.cursor = zoomLevel > 1 ? "grab" : "default";
-    }
-  });
-
-  // Double-click to toggle zoom
-  imageContainer.addEventListener("dblclick", () => {
-    if (zoomLevel === 1) {
-      setZoom(2);
-    } else {
-      resetZoom();
-    }
-  });
-
-  // Render thumbnails
-  const renderThumbnails = () => {
-    thumbsContainer.empty();
-
-    images.forEach((image, index) => {
-      const thumbWrapper = thumbsContainer.createEl("div", {
-        cls: `thumbnail-wrapper ${index === currentIndex ? "active" : ""}`,
-      });
-
-      // Page number
-      thumbWrapper.createEl("div", {
-        cls: "thumbnail-number",
-        text: (index + 1).toString(),
-      });
-
-      // Thumbnail image
-      const thumbImg = thumbWrapper.createEl("img", {
-        cls: "thumbnail-image",
-      });
-
-      // Get vault file for thumbnail
-      const vault = plugin.app.vault;
-      const file = vault.getAbstractFileByPath(image.filepath) as TFile;
-      if (file) {
-        thumbImg.src = plugin.app.vault.getResourcePath(file);
-        thumbImg.alt = `Page ${index + 1}`;
-      }
-
-      // Click to select
-      thumbWrapper.addEventListener("click", () => {
-        currentIndex = index;
-        descriptionExpanded = false;
-        resetZoom();
-        updateDisplay();
-        renderThumbnails();
-      });
-    });
-  };
-
-  // Update display function
-  const updateDisplay = () => {
-    const currentImage = images[currentIndex];
-
-    // Get vault file for image
-    const vault = plugin.app.vault;
-    const file = vault.getAbstractFileByPath(currentImage.filepath) as TFile;
-
-    if (file) {
-      const resourcePath = plugin.app.vault.getResourcePath(file);
-      imageEl.src = resourcePath;
-      imageEl.alt = file.name;
-    } else {
-      // Try to find file by name (in case it was moved)
-      const filename =
-        currentImage.filepath.split("/").pop() || currentImage.filepath;
-      const files = vault.getFiles();
-      const foundFile = files.find((f) => f.name === filename);
-
-      if (foundFile) {
-        const resourcePath = plugin.app.vault.getResourcePath(foundFile);
-        imageEl.src = resourcePath;
-        imageEl.alt = foundFile.name;
-      } else {
-        imageEl.alt = `Image not found: ${currentImage.filepath}`;
-        imageEl.style.display = "none";
-        imageContainer.createEl("p", {
-          text: `Image not found: ${currentImage.filepath}`,
-          cls: "carousel-error",
-        });
-      }
-    }
-
-    // Update counter
-    counter.textContent = `${currentIndex + 1} / ${images.length}`;
-
-    // Update buttons
-    prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === images.length - 1;
-
-    // Update thumbnail selection
-    const thumbs = thumbsContainer.querySelectorAll(".thumbnail-wrapper");
-    thumbs.forEach((thumb, index) => {
-      if (index === currentIndex) {
-        thumb.addClass("active");
-        thumb.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      } else {
-        thumb.removeClass("active");
-      }
-    });
-
-    // Update metadata
-    metadataDiv.empty();
-
-    // Show description in muted text with expand/collapse
-    if (currentImage.description) {
-      const descriptionContainer = metadataDiv.createEl("div");
-
-      const descDiv = descriptionContainer.createEl("div", {
-        cls: `carousel-description ${
-          descriptionExpanded ? "expanded" : "collapsed"
-        }`,
-      });
-      descDiv.setText(currentImage.description);
-
-      // Check if description is long enough to need expand button (more than 3 lines)
-      const lineCount = currentImage.description.split("\n").length;
-      const needsExpand =
-        lineCount > 3 || currentImage.description.length > 150;
-
-      if (needsExpand) {
-        const toggleBtn = descriptionContainer.createEl("button", {
-          cls: "carousel-description-toggle",
-        });
-        toggleBtn.setText(descriptionExpanded ? "Show less ▲" : "Show more ▼");
-
-        toggleBtn.addEventListener("click", () => {
-          descriptionExpanded = !descriptionExpanded;
-          descDiv.className = `carousel-description ${
-            descriptionExpanded ? "expanded" : "collapsed"
-          }`;
-          toggleBtn.setText(
-            descriptionExpanded ? "Show less ▲" : "Show more ▼"
+        if (carouselImages.length === 0) {
+          new Notice(
+            "All images removed. Save to update or cancel to restore."
           );
-        });
-      }
-    }
+        }
+      },
+      onReorder: (newImages) => {
+        carouselImages.length = 0;
+        carouselImages.push(...newImages);
+      },
+      onDescriptionChange: (index, description) => {
+        carouselImages[index].description = description;
+      },
+      onSave: async (images) => {
+        try {
+          // Generate new code block content
+          const newContent = generateCodeBlockContent(images);
 
-    // Show file path in small muted text
-    const filenameDiv = metadataDiv.createEl("div", {
-      cls: "carousel-filepath",
+          // Find and update the code block in the file
+          const file = plugin.app.vault.getAbstractFileByPath(sourcePath);
+          if (file && file instanceof TFile) {
+            const fileContent = await plugin.app.vault.read(file);
+
+            // Find the code block with the original source
+            const codeBlockRegex = new RegExp(
+              "```" + CODE_BLOCK_LANGUAGE + "\\n[\\s\\S]*?```",
+              "g"
+            );
+
+            let match;
+            let found = false;
+            let newFileContent = fileContent;
+
+            while ((match = codeBlockRegex.exec(fileContent)) !== null) {
+              const blockContent = match[0];
+              const blockSource = blockContent
+                .replace("```" + CODE_BLOCK_LANGUAGE + "\n", "")
+                .replace(/\n?```$/, "");
+
+              // Check if this is the right code block by comparing normalized content
+              if (
+                normalizeSource(blockSource) === normalizeSource(originalSource)
+              ) {
+                const newBlock =
+                  "```" + CODE_BLOCK_LANGUAGE + "\n" + newContent + "\n```";
+                newFileContent =
+                  fileContent.slice(0, match.index) +
+                  newBlock +
+                  fileContent.slice(match.index + match[0].length);
+                found = true;
+                break;
+              }
+            }
+
+            if (found) {
+              await plugin.app.vault.modify(file, newFileContent);
+              new Notice("Carousel updated successfully!");
+
+              // Update the stored images
+              carouselImages.length = 0;
+              carouselImages.push(...images);
+
+              // Switch back to view mode
+              currentMode = "view";
+              createViewer("view");
+            } else {
+              new Notice("Could not find the code block to update.");
+            }
+          }
+        } catch (error) {
+          console.error("Failed to save carousel:", error);
+          new Notice("Failed to save carousel changes.");
+        }
+      },
     });
-    filenameDiv.setText(currentImage.filepath);
+
+    viewer.render();
   };
 
-  // Navigation handlers
-  prevBtn.addEventListener("click", () => {
-    if (currentIndex > 0) {
-      currentIndex--;
-      descriptionExpanded = false;
-      resetZoom();
-      updateDisplay();
-    }
-  });
+  createViewer("view");
+}
 
-  nextBtn.addEventListener("click", () => {
-    if (currentIndex < images.length - 1) {
-      currentIndex++;
-      descriptionExpanded = false;
-      resetZoom();
-      updateDisplay();
-    }
-  });
-
-  // Keyboard navigation
-  const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "ArrowLeft" && currentIndex > 0) {
-      currentIndex--;
-      descriptionExpanded = false;
-      resetZoom();
-      updateDisplay();
-    } else if (e.key === "ArrowRight" && currentIndex < images.length - 1) {
-      currentIndex++;
-      descriptionExpanded = false;
-      resetZoom();
-      updateDisplay();
-    }
-  };
-
-  carouselLayout.addEventListener("keydown", handleKeydown);
-  carouselLayout.setAttribute("tabindex", "0");
-
-  // Initial render
-  renderThumbnails();
-  updateDisplay();
+/**
+ * Normalize source content for comparison (handle whitespace differences)
+ */
+function normalizeSource(source: string): string {
+  return source
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join("\n");
 }

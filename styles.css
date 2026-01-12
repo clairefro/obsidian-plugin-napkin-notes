@@ -325,6 +325,7 @@
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
   overflow: hidden;
+  transition: flex-direction 0.2s, width 0.2s, max-height 0.2s;
 }
 
 .physical-notes-modal .thumbnail-header {
@@ -349,6 +350,7 @@
   gap: 0.5rem;
 }
 
+
 .physical-notes-modal .thumbnail-wrapper {
   position: relative;
   cursor: pointer;
@@ -358,6 +360,14 @@
   background: var(--background-primary);
   padding: 4px;
   width: auto !important;
+}
+
+.physical-notes-modal .drop-indicator {
+  height: 0;
+  border-top: 3px solid var(--interactive-accent);
+  margin: 0.25rem 0;
+  border-radius: 2px;
+  transition: border-color 0.15s;
 }
 
 .physical-notes-modal .thumbnail-wrapper:hover {
@@ -720,6 +730,13 @@
   border: 2px solid var(--background-modifier-border);
   border-radius: 12px;
   background: var(--background-secondary);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Edit mode indicator for reading view only */
+.physical-notes-carousel-reading.carousel-mode-edit {
+  background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-secondary));
+  border-color: color-mix(in srgb, var(--interactive-accent) 30%, var(--background-modifier-border));
 }
 
 .physical-notes-carousel-reading .carousel-layout {
@@ -738,11 +755,52 @@
   border: 1px solid var(--background-modifier-border);
   overflow: visible;
   height: 100%;
-  transition: width 0.2s ease, min-width 0.2s ease, border-width 0.2s ease,
-    padding 0.2s ease;
+  transition: flex-direction 0.2s, width 0.2s, min-width 0.2s, border-width 0.2s, padding 0.2s;
   width: 120px;
   flex-shrink: 0;
   position: relative;
+@media (max-width: 600px) {
+  .physical-notes-carousel-reading .thumbnail-strip,
+  .physical-notes-modal .thumbnail-strip {
+    flex-direction: row !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    max-height: 80px !important;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 0.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .physical-notes-carousel-reading .thumbnail-content,
+  .physical-notes-modal .thumbnail-content {
+    flex-direction: row !important;
+    max-height: 80px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .physical-notes-carousel-reading .thumbnails-container,
+  .physical-notes-modal .thumbnails-container {
+    flex-direction: row !important;
+    gap: 0.5rem;
+    width: 100%;
+    max-height: 80px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .physical-notes-carousel-reading .thumbnail-wrapper,
+  .physical-notes-modal .thumbnail-wrapper {
+    min-width: 60px;
+    max-width: 80px;
+    height: 50px;
+  }
+  .physical-notes-carousel-reading .thumbnail-image,
+  .physical-notes-modal .thumbnail-image {
+    width: 60px;
+    height: 50px;
+  }
+}
 }
 
 .physical-notes-carousel-reading .thumbnail-strip.collapsed {
@@ -823,6 +881,7 @@
   gap: 0.5rem;
 }
 
+
 .physical-notes-carousel-reading .thumbnail-wrapper {
   position: relative;
   border-radius: 6px;
@@ -832,6 +891,14 @@
   transition: border-color 0.15s ease;
   background: var(--background-secondary);
   flex-shrink: 0;
+}
+
+.physical-notes-carousel-reading .drop-indicator {
+  height: 0;
+  border-top: 3px solid var(--interactive-accent);
+  margin: 0.25rem 0;
+  border-radius: 2px;
+  transition: border-color 0.15s;
 }
 
 .physical-notes-carousel-reading .thumbnail-wrapper:hover {
@@ -881,6 +948,65 @@
   gap: 1rem;
   margin-bottom: 0.75rem;
   flex-shrink: 0;
+}
+
+/* Reading view carousel buttons */
+.physical-notes-carousel-reading .carousel-button {
+  background: var(--interactive-normal);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: var(--text-normal);
+  font-size: 1.2rem;
+  font-weight: bold;
+  transition: all 0.2s;
+  min-width: 50px;
+  width: auto;
+}
+
+.physical-notes-carousel-reading .carousel-button:hover:not(:disabled) {
+  background: var(--interactive-hover);
+  transform: translateY(-1px);
+}
+
+.physical-notes-carousel-reading .carousel-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.physical-notes-carousel-reading .carousel-delete-btn {
+  background: var(--background-modifier-error);
+  color: var(--text-on-accent);
+  margin-left: 1rem;
+}
+
+.physical-notes-carousel-reading .carousel-delete-btn:hover:not(:disabled) {
+  background: var(--text-error);
+}
+
+.physical-notes-carousel-reading .carousel-counter {
+  color: var(--text-muted);
+  font-weight: bold;
+  font-size: 1rem;
+  min-width: 80px;
+  text-align: center;
+}
+
+.physical-notes-carousel-reading .carousel-edit-btn,
+.physical-notes-carousel-reading .carousel-save-btn,
+.physical-notes-carousel-reading .carousel-cancel-btn {
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+}
+
+.physical-notes-carousel-reading .carousel-save-btn {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.physical-notes-carousel-reading .carousel-save-btn:hover:not(:disabled) {
+  background: var(--interactive-accent-hover);
 }
 
 .physical-notes-carousel-reading .carousel-image-container {

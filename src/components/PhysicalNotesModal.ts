@@ -1,8 +1,7 @@
 import { App, Modal, Notice, Editor } from "obsidian";
 import PhysicalNoteScannerPlugin from "../../main";
-import { ImageData, ImageAnnotation, UploadEvent } from "../types";
-import { ImageCarousel } from "./ImageCarousel";
-import { AnnotationEditor } from "./AnnotationEditor";
+import { ImageData, UploadEvent } from "../types";
+import { CarouselViewer, CarouselImage } from "./CarouselViewer";
 import { ImageProcessor } from "../services/ImageProcessor";
 import { MarkdownGenerator } from "../services/MarkdownGenerator";
 import { UploadServer } from "../server/UploadServer";
@@ -21,8 +20,8 @@ export class PhysicalNotesModal extends Modal {
   private currentTab: "direct" | "camera" = "direct";
 
   // Components
-  private carousel?: ImageCarousel;
-  private annotationEditor?: AnnotationEditor;
+  private carouselViewer?: CarouselViewer;
+  // private annotationEditor?: AnnotationEditor;
   private imageProcessor: ImageProcessor;
   private markdownGenerator: MarkdownGenerator;
   private uploadServer?: UploadServer;
@@ -107,20 +106,7 @@ export class PhysicalNotesModal extends Modal {
     const carouselDiv = this.carouselContainer.createEl("div", {
       cls: "carousel-wrapper",
     });
-    this.carousel = new ImageCarousel(
-      carouselDiv,
-      this.images,
-      (index) => {
-        this.onCarouselChange(index);
-      },
-      (index) => {
-        this.deleteImage(index);
-      },
-      (reorderedImages) => {
-        this.images = reorderedImages;
-      }
-    );
-    this.carousel.render();
+    this.renderCarousel(carouselDiv);
 
     // Annotation section
     this.annotationContainer = this.reviewSection.createEl("div", {
@@ -194,10 +180,7 @@ export class PhysicalNotesModal extends Modal {
         }`;
       }
 
-      // Render annotation editor if not already rendered
-      if (!this.annotationEditor) {
-        this.renderAnnotationEditor();
-      }
+      // Annotation editor is now handled by CarouselViewer
     }
   }
 
@@ -215,15 +198,14 @@ export class PhysicalNotesModal extends Modal {
     }
 
     // Update carousel
-    this.carousel?.updateImages(this.images);
+    this.refreshCarousel();
 
     // Update annotation editor
     if (this.images.length > 0) {
       const newIndex = Math.min(index, this.images.length - 1);
-      this.carousel?.setCurrentIndex(newIndex);
+      this.carouselViewer?.setCurrentIndex(newIndex);
       this.onCarouselChange(newIndex);
     } else {
-      this.annotationEditor = undefined;
       if (this.annotationContainer) {
         this.annotationContainer.empty();
       }
@@ -285,6 +267,70 @@ export class PhysicalNotesModal extends Modal {
       cameraTab.addClass("active");
     }
     cameraTab.addEventListener("click", () => this.switchTab("camera"));
+  }
+
+  /**
+   * Render the carousel viewer using the unified CarouselViewer component
+   */
+  private renderCarousel(container: HTMLElement): void {
+    // Convert ImageData to CarouselImage format
+    const carouselImages: CarouselImage[] = this.images.map((img) => ({
+      dataUrl: img.dataUrl,
+      description: img.annotation?.description || "",
+    }));
+
+    this.carouselViewer = new CarouselViewer({
+      app: this.app,
+      container,
+      images: carouselImages,
+      mode: "edit", // Upload modal is always in edit mode
+      collapsibleThumbnails: false, // Keep thumbnails always visible in modal
+      showEditButton: false, // No edit button needed - always in edit mode
+      showSaveButton: false, // No save button - use modal's Insert button
+      onImageChange: (index) => {
+        this.onCarouselChange(index);
+      },
+      onDelete: (index) => {
+        this.deleteImage(index);
+      },
+      onReorder: (reorderedImages) => {
+        // Reorder the internal images array to match
+        const newImages: ImageData[] = [];
+        reorderedImages.forEach((carouselImg) => {
+          const originalImg = this.images.find(
+            (img) => img.dataUrl === carouselImg.dataUrl
+          );
+          if (originalImg) {
+            newImages.push(originalImg);
+          }
+        });
+        this.images = newImages;
+      },
+      onDescriptionChange: (index, description) => {
+        if (this.images[index]) {
+          if (!this.images[index].annotation) {
+            this.images[index].annotation = { description: "" };
+          }
+          this.images[index].annotation!.description = description;
+        }
+      },
+    });
+
+    this.carouselViewer.render();
+  }
+
+  /**
+   * Refresh the carousel with current images
+   */
+  private refreshCarousel(): void {
+    if (!this.carouselViewer) return;
+
+    const carouselImages: CarouselImage[] = this.images.map((img) => ({
+      dataUrl: img.dataUrl,
+      description: img.annotation?.description || "",
+    }));
+
+    this.carouselViewer.updateImages(carouselImages);
   }
 
   private async switchTab(tab: "direct" | "camera"): Promise<void> {
@@ -448,7 +494,7 @@ export class PhysicalNotesModal extends Modal {
       );
 
       // Update carousel
-      this.carousel?.updateImages(this.images);
+      this.refreshCarousel();
       console.log(`[PhysicalNotesModal] Updated carousel`);
 
       // Update review section
@@ -508,7 +554,7 @@ export class PhysicalNotesModal extends Modal {
     }
 
     // Update carousel
-    this.carousel?.updateImages(this.images);
+    this.refreshCarousel();
 
     // Update review section
     this.updateReviewSection();
@@ -521,35 +567,10 @@ export class PhysicalNotesModal extends Modal {
 
   private onCarouselChange(index: number): void {
     // Update annotation editor to show current image's annotations
-    if (this.annotationEditor && this.images[index]) {
-      this.annotationEditor.updateAnnotation(this.images[index].annotation);
-    }
+    // Annotation editor is now handled by CarouselViewer
   }
 
-  private renderAnnotationEditor(): void {
-    if (!this.annotationContainer) return;
-
-    this.annotationContainer.empty();
-
-    const currentIndex = this.carousel?.getCurrentIndex() || 0;
-    const currentImage = this.images[currentIndex];
-
-    if (!currentImage) return;
-
-    this.annotationEditor = new AnnotationEditor(
-      this.annotationContainer,
-      currentImage.annotation,
-      (annotation) => {
-        // Update the annotation in the images array
-        const index = this.carousel?.getCurrentIndex() || 0;
-        if (this.images[index]) {
-          this.images[index].annotation = annotation;
-        }
-      }
-    );
-
-    this.annotationEditor.render();
-  }
+  // Annotation editor is now handled by CarouselViewer
 
   private async insertNotes(): Promise<void> {
     if (this.images.length === 0) {
