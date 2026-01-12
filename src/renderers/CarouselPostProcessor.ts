@@ -1,4 +1,4 @@
-import { TFile, MarkdownView, Notice } from "obsidian";
+import { TFile, Notice } from "obsidian";
 import NapkinNotesPlugin from "../../main";
 import { CODE_BLOCK_LANGUAGE } from "../constants";
 import { CarouselViewer, CarouselImage } from "../components/CarouselViewer";
@@ -19,14 +19,14 @@ export function registerCarouselPostProcessor(plugin: NapkinNotesPlugin): void {
           renderCarousel(el, images, plugin, ctx.sourcePath, source);
         } else {
           el.createEl("p", {
-            text: "No images found in physical-note-viewer block",
+            text: "No images found in napkin-note block",
             cls: "napkin-notes-error",
           });
         }
       } catch (error) {
-        console.error("Failed to render physical notes carousel:", error);
+        console.error("Failed to render Napkin Notes viewer:", error);
         el.createEl("p", {
-          text: "Error rendering physical notes",
+          text: "Error rendering napkin notes",
           cls: "napkin-notes-error",
         });
       }

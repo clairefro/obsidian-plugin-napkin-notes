@@ -21,7 +21,6 @@ export class UploadModal extends Modal {
 
   // Components
   private carouselViewer?: CarouselViewer;
-  // private annotationEditor?: AnnotationEditor;
   private imageProcessor: ImageProcessor;
   private markdownGenerator: MarkdownGenerator;
   private uploadServer?: UploadServer;
@@ -32,7 +31,6 @@ export class UploadModal extends Modal {
   private contentContainer?: HTMLElement;
   private reviewSection?: HTMLElement;
   private carouselContainer?: HTMLElement;
-  private annotationContainer?: HTMLElement;
   private imageCountEl?: HTMLElement;
   private insertBtn?: HTMLButtonElement;
 
@@ -108,11 +106,6 @@ export class UploadModal extends Modal {
     });
     this.renderCarousel(carouselDiv);
 
-    // Annotation section
-    this.annotationContainer = this.reviewSection.createEl("div", {
-      cls: "napkin-notes-annotation-section",
-    });
-
     // Update review section visibility
     this.updateReviewSection();
 
@@ -147,9 +140,6 @@ export class UploadModal extends Modal {
     const carouselSection = this.reviewSection.querySelector<HTMLElement>(
       ".napkin-notes-carousel-section"
     );
-    const annotationSection = this.reviewSection.querySelector<HTMLElement>(
-      ".napkin-notes-annotation-section"
-    );
 
     if (this.images.length === 0) {
       // Hide entire review section when no images
@@ -170,17 +160,14 @@ export class UploadModal extends Modal {
         this.insertBtn.removeAttribute("aria-label");
       }
 
-      // Hide empty state, show carousel and annotation
+      // Hide empty state, show carousel
       if (emptyState) emptyState.style.display = "none";
       if (carouselSection) carouselSection.style.display = "block";
-      if (annotationSection) annotationSection.style.display = "block";
       if (this.imageCountEl) {
         this.imageCountEl.textContent = `${this.images.length} image${
           this.images.length !== 1 ? "s" : ""
         }`;
       }
-
-      // Annotation editor is now handled by CarouselViewer
     }
   }
 
@@ -200,17 +187,6 @@ export class UploadModal extends Modal {
     // Update carousel
     this.refreshCarousel();
 
-    // Update annotation editor
-    if (this.images.length > 0) {
-      const newIndex = Math.min(index, this.images.length - 1);
-      this.carouselViewer?.setCurrentIndex(newIndex);
-      this.onCarouselChange(newIndex);
-    } else {
-      if (this.annotationContainer) {
-        this.annotationContainer.empty();
-      }
-    }
-
     // Update review section
     this.updateReviewSection();
 
@@ -227,7 +203,6 @@ export class UploadModal extends Modal {
   }
 
   async onClose() {
-    console.log("[NapkinNotes] onClose called");
     const { contentEl } = this;
     contentEl.empty();
 
@@ -240,7 +215,6 @@ export class UploadModal extends Modal {
         URL.revokeObjectURL(img.dataUrl);
       }
     });
-    console.log("[NapkinNotes] onClose completed");
   }
 
   private renderTabs(): void {

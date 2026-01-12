@@ -10,11 +10,23 @@
   box-sizing: border-box;
 }
 
-.napkin-notes-modal * {
-  width: 100%; /* Ensure all child elements fit within modal */
+/* Only set width: 100% for block elements, not for all (fixes button sizing) */
+.napkin-notes-modal > *,
+.napkin-notes-modal .modal-section,
+.napkin-notes-modal .napkin-notes-content,
+.napkin-notes-modal .review-section {
+  width: 100%;
   max-width: 100%;
-  overflow-x: hidden; /* Force horizontal overflow to be hidden */
-  white-space: normal; /* Prevent long text from overflowing */
+  overflow-x: hidden;
+  white-space: normal;
+}
+
+/* Reduce button size in upload modal */
+.napkin-notes-modal .carousel-edit-controls button.upload-modal-btn {
+  font-size: 0.95rem;
+  padding: 0.35rem 0.9rem;
+  min-width: 0;
+  width: auto;
 }
 
 .napkin-notes-modal h2 {
@@ -820,7 +832,7 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  right: -10px;
+  right: -16px;
   width: 16px;
   height: 66px;
   display: flex;

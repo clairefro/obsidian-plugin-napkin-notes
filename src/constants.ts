@@ -1,7 +1,7 @@
 /**
  * Physical notes code block language
  */
-export const CODE_BLOCK_LANGUAGE = "physical-note-viewer";
+export const CODE_BLOCK_LANGUAGE = "napkin-notes";
 
 /**
  * Metadata field names
@@ -31,11 +31,11 @@ export const ALLOWED_MIME_TYPES = [
   "image/svg+xml",
   "image/x-icon", // For .ico files
 ];
-export const FILE_PREFIX = "physical-note";
+export const FILE_PREFIX = "napkin-note";
 
 /**
  * UI configuration
  */
-export const MODAL_TITLE = "Insert Physical Notes";
+export const MODAL_TITLE = "Insert Napkin Notes";
 export const TAB_DIRECT_UPLOAD = "Direct Upload";
 export const TAB_CAMERA = "From Camera";

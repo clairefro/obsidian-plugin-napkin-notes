@@ -322,12 +322,17 @@ export class CarouselViewer {
       });
       this.saveBtn.addEventListener("click", () => this.handleSave());
 
-      this.cancelBtn = editControls.createEl("button", {
-        text: "Cancel",
-        cls: "carousel-button carousel-edit-btn",
-        attr: { title: "Cancel editing" },
-      });
-      this.cancelBtn.addEventListener("click", () => this.cancelEditMode());
+      // Only show Cancel button if not in UploadModal (detected by parent modal class)
+      const isUploadModal =
+        this.container.closest(".napkin-notes-modal") !== null;
+      if (!isUploadModal) {
+        this.cancelBtn = editControls.createEl("button", {
+          text: "Cancel",
+          cls: "carousel-button carousel-edit-btn",
+          attr: { title: "Cancel editing" },
+        });
+        this.cancelBtn.addEventListener("click", () => this.cancelEditMode());
+      }
     }
 
     // --- PAGINATION CONTROLS ---
@@ -375,6 +380,25 @@ export class CarouselViewer {
     this.metadataDiv = this.mainArea.createEl("div", {
       cls: "carousel-metadata",
     });
+  }
+
+  private handleDelete(): void {
+    if (this.options.onDelete) {
+      this.options.onDelete(this.currentIndex);
+    }
+  }
+
+  private cancelEditMode(): void {
+    this.mode = "view";
+    if (this.options.onModeChange) {
+      this.options.onModeChange("view");
+    }
+    // Restore original images and re-render
+    this.images = [...this.options.images];
+    this.options.mode = "view";
+    this.options.showEditButton = true;
+    this.options.showSaveButton = false;
+    this.render();
   }
 
   private renderZoomControls(): void {
@@ -594,30 +618,7 @@ export class CarouselViewer {
     if (this.options.onModeChange) {
       this.options.onModeChange("edit");
     }
-    // Re-render with edit mode
-    this.options.mode = "edit";
-    this.options.showEditButton = false;
-    this.options.showSaveButton = true;
     this.render();
-  }
-
-  private cancelEditMode(): void {
-    this.mode = "view";
-    if (this.options.onModeChange) {
-      this.options.onModeChange("view");
-    }
-    // Restore original images and re-render
-    this.images = [...this.options.images];
-    this.options.mode = "view";
-    this.options.showEditButton = true;
-    this.options.showSaveButton = false;
-    this.render();
-  }
-
-  private handleDelete(): void {
-    if (this.options.onDelete) {
-      this.options.onDelete(this.currentIndex);
-    }
   }
 
   private handleSave(): void {
