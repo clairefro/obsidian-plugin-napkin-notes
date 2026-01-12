@@ -19,14 +19,14 @@ export function registerCarouselPostProcessor(plugin: NapkinNotesPlugin): void {
           renderCarousel(el, images, plugin, ctx.sourcePath, source);
         } else {
           el.createEl("p", {
-            text: "No images found in napkin-note block",
+            text: "No images found in napkin-notes block",
             cls: "napkin-notes-error",
           });
         }
       } catch (error) {
         console.error("Failed to render Napkin Notes viewer:", error);
         el.createEl("p", {
-          text: "Error rendering napkin notes",
+          text: "Error rendering Napkin Notes",
           cls: "napkin-notes-error",
         });
       }
@@ -242,7 +242,6 @@ function renderCarousel(
 
             if (found) {
               await plugin.app.vault.modify(file, newFileContent);
-              new Notice("Carousel updated successfully!");
 
               // Update the stored images
               carouselImages.length = 0;

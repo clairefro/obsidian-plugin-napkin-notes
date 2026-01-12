@@ -315,26 +315,19 @@ export class CarouselViewer {
       });
       this.deleteBtn.addEventListener("click", () => this.handleDelete());
 
-      // Only show Save button if showSaveButton is true (reading view)
-      if (this.options.showSaveButton !== false) {
-        this.saveBtn = editControls.createEl("button", {
-          text: "Save",
-          cls: "carousel-button carousel-save-btn carousel-edit-btn",
-          attr: { title: "Save changes" },
-        });
-        this.saveBtn.addEventListener("click", () => this.handleSave());
-      }
-
-      // Only show Cancel button if not in UploadModal (detected by parent modal class)
+      // Only show Done editing button in markdown note (reading view)
       const isUploadModal =
         this.container.closest(".napkin-notes-modal") !== null;
       if (!isUploadModal) {
         this.cancelBtn = editControls.createEl("button", {
-          text: "Cancel",
+          text: "Done editing",
           cls: "carousel-button carousel-edit-btn",
-          attr: { title: "Cancel editing" },
+          attr: { title: "Save and exit editing" },
         });
-        this.cancelBtn.addEventListener("click", () => this.cancelEditMode());
+        this.cancelBtn.addEventListener("click", () => {
+          this.handleSave();
+          this.cancelEditMode();
+        });
       }
     }
 
