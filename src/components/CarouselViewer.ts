@@ -302,7 +302,35 @@ export class CarouselViewer {
       cls: "carousel-main-area",
     });
 
-    // Navigation
+    // --- EDIT MODE CONTROLS (Delete, Save, Cancel) ---
+    if (this.mode === "edit") {
+      const editControls = this.mainArea.createEl("div", {
+        cls: "carousel-edit-controls",
+      });
+
+      this.deleteBtn = editControls.createEl("button", {
+        text: "Delete",
+        cls: "carousel-button carousel-delete-btn carousel-edit-btn",
+        attr: { title: "Remove this image" },
+      });
+      this.deleteBtn.addEventListener("click", () => this.handleDelete());
+
+      this.saveBtn = editControls.createEl("button", {
+        text: "Save",
+        cls: "carousel-button carousel-save-btn carousel-edit-btn",
+        attr: { title: "Save changes" },
+      });
+      this.saveBtn.addEventListener("click", () => this.handleSave());
+
+      this.cancelBtn = editControls.createEl("button", {
+        text: "Cancel",
+        cls: "carousel-button carousel-edit-btn",
+        attr: { title: "Cancel editing" },
+      });
+      this.cancelBtn.addEventListener("click", () => this.cancelEditMode());
+    }
+
+    // --- PAGINATION CONTROLS ---
     const nav = this.mainArea.createEl("div", { cls: "carousel-navigation" });
 
     this.prevBtn = nav.createEl("button", {
@@ -319,40 +347,14 @@ export class CarouselViewer {
     });
     this.nextBtn.addEventListener("click", () => this.next());
 
-    // Delete button (edit mode only)
-    if (this.mode === "edit") {
-      this.deleteBtn = nav.createEl("button", {
-        text: "Delete",
-        cls: "carousel-button carousel-delete-btn",
-        attr: { title: "Remove this image" },
-      });
-      this.deleteBtn.addEventListener("click", () => this.handleDelete());
-    }
-
-    // Edit/Save buttons (for reading view)
+    // Edit button (view mode only)
     if (this.options.showEditButton && this.mode === "view") {
       this.editBtn = nav.createEl("button", {
-        text: "✏️ Edit",
+        text: "Edit",
         cls: "carousel-button carousel-edit-btn",
         attr: { title: "Edit this carousel" },
       });
       this.editBtn.addEventListener("click", () => this.enterEditMode());
-    }
-
-    if (this.options.showSaveButton && this.mode === "edit") {
-      this.saveBtn = nav.createEl("button", {
-        text: "💾 Save",
-        cls: "carousel-button carousel-save-btn",
-        attr: { title: "Save changes" },
-      });
-      this.saveBtn.addEventListener("click", () => this.handleSave());
-
-      this.cancelBtn = nav.createEl("button", {
-        text: "Cancel",
-        cls: "carousel-button",
-        attr: { title: "Cancel editing" },
-      });
-      this.cancelBtn.addEventListener("click", () => this.cancelEditMode());
     }
 
     // Image container
@@ -497,16 +499,12 @@ export class CarouselViewer {
 
     if (this.mode === "edit") {
       // Editable description
-      const descLabel = this.metadataDiv.createEl("label", {
-        cls: "carousel-description-label",
-        text: "Description:",
-      });
 
       this.descriptionInput = this.metadataDiv.createEl("textarea", {
         cls: "carousel-description-input",
         attr: {
           placeholder:
-            "[Optional] Add a description or keywords for this image (helps with search)...",
+            "[Optional] Add a description or keywords for this image to help with search...",
           rows: "3",
         },
       }) as HTMLTextAreaElement;

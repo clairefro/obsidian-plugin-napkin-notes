@@ -246,7 +246,7 @@
 .physical-notes-modal .carousel-wrapper {
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.4rem 0.5rem;
   background: var(--background-secondary);
   max-width: 100%;
   overflow: hidden;
@@ -349,7 +349,6 @@
   flex-direction: column;
   gap: 0.5rem;
 }
-
 
 .physical-notes-modal .thumbnail-wrapper {
   position: relative;
@@ -725,8 +724,8 @@
 
 /* Reading View Carousel */
 .physical-notes-carousel-reading {
-  margin: 1.5rem 0;
-  padding: 1.5rem;
+  margin: 0.5rem 0;
+  padding: 0.3rem 0.5rem;
   border: 2px solid var(--background-modifier-border);
   border-radius: 12px;
   background: var(--background-secondary);
@@ -735,8 +734,16 @@
 
 /* Edit mode indicator for reading view only */
 .physical-notes-carousel-reading.carousel-mode-edit {
-  background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-secondary));
-  border-color: color-mix(in srgb, var(--interactive-accent) 30%, var(--background-modifier-border));
+  background: color-mix(
+    in srgb,
+    var(--interactive-accent) 10%,
+    var(--background-secondary)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--interactive-accent) 30%,
+    var(--background-modifier-border)
+  );
 }
 
 .physical-notes-carousel-reading .carousel-layout {
@@ -755,52 +762,53 @@
   border: 1px solid var(--background-modifier-border);
   overflow: visible;
   height: 100%;
-  transition: flex-direction 0.2s, width 0.2s, min-width 0.2s, border-width 0.2s, padding 0.2s;
+  transition: flex-direction 0.2s, width 0.2s, min-width 0.2s, border-width 0.2s,
+    padding 0.2s;
   width: 120px;
   flex-shrink: 0;
   position: relative;
-@media (max-width: 600px) {
-  .physical-notes-carousel-reading .thumbnail-strip,
-  .physical-notes-modal .thumbnail-strip {
-    flex-direction: row !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100vw !important;
-    max-height: 80px !important;
-    border-radius: 8px 8px 0 0;
-    margin-bottom: 0.5rem;
-    overflow-x: auto;
-    overflow-y: hidden;
+  @media (max-width: 600px) {
+    .physical-notes-carousel-reading .thumbnail-strip,
+    .physical-notes-modal .thumbnail-strip {
+      flex-direction: row !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100vw !important;
+      max-height: 80px !important;
+      border-radius: 8px 8px 0 0;
+      margin-bottom: 0.5rem;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .physical-notes-carousel-reading .thumbnail-content,
+    .physical-notes-modal .thumbnail-content {
+      flex-direction: row !important;
+      max-height: 80px;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .physical-notes-carousel-reading .thumbnails-container,
+    .physical-notes-modal .thumbnails-container {
+      flex-direction: row !important;
+      gap: 0.5rem;
+      width: 100%;
+      max-height: 80px;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .physical-notes-carousel-reading .thumbnail-wrapper,
+    .physical-notes-modal .thumbnail-wrapper {
+      min-width: 60px;
+      max-width: 80px;
+      height: 50px;
+    }
+    .physical-notes-carousel-reading .thumbnail-image,
+    .physical-notes-modal .thumbnail-image {
+      width: 60px;
+      height: 50px;
+    }
   }
-  .physical-notes-carousel-reading .thumbnail-content,
-  .physical-notes-modal .thumbnail-content {
-    flex-direction: row !important;
-    max-height: 80px;
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-  .physical-notes-carousel-reading .thumbnails-container,
-  .physical-notes-modal .thumbnails-container {
-    flex-direction: row !important;
-    gap: 0.5rem;
-    width: 100%;
-    max-height: 80px;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-  .physical-notes-carousel-reading .thumbnail-wrapper,
-  .physical-notes-modal .thumbnail-wrapper {
-    min-width: 60px;
-    max-width: 80px;
-    height: 50px;
-  }
-  .physical-notes-carousel-reading .thumbnail-image,
-  .physical-notes-modal .thumbnail-image {
-    width: 60px;
-    height: 50px;
-  }
-}
 }
 
 .physical-notes-carousel-reading .thumbnail-strip.collapsed {
@@ -814,9 +822,9 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  right: -16px;
-  width: 24px;
-  height: 48px;
+  right: -10px;
+  width: 16px;
+  height: 66px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -832,7 +840,7 @@
 .physical-notes-carousel-reading
   .thumbnail-strip.collapsed
   .thumbnail-toggle-btn {
-  right: -24px;
+  right: -16px;
   border-radius: 6px;
 }
 
@@ -880,7 +888,6 @@
   flex-direction: column;
   gap: 0.5rem;
 }
-
 
 .physical-notes-carousel-reading .thumbnail-wrapper {
   position: relative;
@@ -1114,6 +1121,15 @@
 .physical-notes-modal .shared-view.visible {
   display: block; /* Show shared view when images are uploaded */
 }
+.carousel-edit-controls {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem;
+  gap: 0.25rem;
+}
+.carousel-description-input {
+  width: 100%;
+}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -1165,7 +1181,7 @@
     transform: translateX(-50%);
     right: auto;
     width: 48px;
-    height: 24px;
+    height: px;
     border-radius: 0 0 6px 6px;
     border: 1px solid var(--background-modifier-border);
     z-index: 10;
