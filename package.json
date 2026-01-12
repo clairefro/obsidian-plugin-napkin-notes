@@ -1,36 +1,36 @@
 {
-	"name": "obsidian-plugin-physical-note-scanner",
-	"version": "1.0.0",
-	"description": "Scan and insert physical notes via camera phone",
-	"main": "main.js",
-	"scripts": {
-		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
-	},
-	"keywords": [
-		"obsidian",
-		"plugin",
-		"scanner",
-		"camera",
-		"notes"
-	],
-	"author": "Your Name",
-	"license": "MIT",
-	"devDependencies": {
-		"@types/busboy": "^1.5.4",
-		"@types/node": "^16.11.6",
-		"@types/qrcode": "^1.5.6",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
-		"builtin-modules": "3.3.0",
-		"esbuild": "0.17.3",
-		"obsidian": "latest",
-		"tslib": "2.4.0",
-		"typescript": "4.7.4"
-	},
-	"dependencies": {
-		"busboy": "^1.6.0",
-		"qrcode": "^1.5.3"
-	}
+  "name": "obsidian-plugin-napkin-notes",
+  "version": "1.0.0",
+  "description": "Turn handwritten notes, sketches, and whiteboard photos into PDF-style inline image carousels in Obsidian, with direct camera upload and searchable annotations",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "scanner",
+    "camera",
+    "notes"
+  ],
+  "author": "Claire Froelich",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/busboy": "^1.5.4",
+    "@types/node": "^16.11.6",
+    "@types/qrcode": "^1.5.6",
+    "@typescript-eslint/eslint-plugin": "5.29.0",
+    "@typescript-eslint/parser": "5.29.0",
+    "builtin-modules": "3.3.0",
+    "esbuild": "0.17.3",
+    "obsidian": "latest",
+    "tslib": "2.4.0",
+    "typescript": "4.7.4"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "qrcode": "^1.5.3"
+  }
 }

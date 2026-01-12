@@ -1,19 +1,19 @@
 import { Plugin, Notice, MarkdownView } from "obsidian";
-import { PhysicalNoteScannerSettings, DEFAULT_SETTINGS } from "./src/types";
-import { PhysicalNoteScannerSettingTab } from "./src/settings/SettingsTab";
+import { NapkinNotesSettings, DEFAULT_SETTINGS } from "./src/types";
+import { NapkinNotesSettingTab } from "./src/settings/SettingsTab";
 import { PhysicalNotesModal } from "./src/components/PhysicalNotesModal";
 import { registerCarouselPostProcessor } from "./src/renderers/CarouselPostProcessor";
 
-export default class PhysicalNoteScannerPlugin extends Plugin {
-  settings: PhysicalNoteScannerSettings;
+export default class NapkinNotesPlugin extends Plugin {
+  settings: NapkinNotesSettings;
 
   async onload() {
     await this.loadSettings();
 
     // Add command to insert physical notes
     this.addCommand({
-      id: "insert-physical-notes",
-      name: "Insert physical notes",
+      id: "insert-napkin-notes",
+      name: "Insert Napkin Notes",
       callback: () => {
         this.openUploadModal();
       },
@@ -25,7 +25,7 @@ export default class PhysicalNoteScannerPlugin extends Plugin {
     }
 
     // Add settings tab
-    this.addSettingTab(new PhysicalNoteScannerSettingTab(this.app, this));
+    this.addSettingTab(new NapkinNotesSettingTab(this.app, this));
 
     console.log("Physical Note Scanner plugin loaded");
   }

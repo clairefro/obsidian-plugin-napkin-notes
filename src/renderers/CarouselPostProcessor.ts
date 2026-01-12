@@ -1,5 +1,5 @@
 import { TFile, MarkdownView, Notice } from "obsidian";
-import PhysicalNoteScannerPlugin from "../../main";
+import NapkinNotesPlugin from "../../main";
 import { CODE_BLOCK_LANGUAGE } from "../constants";
 import { CarouselViewer, CarouselImage } from "../components/CarouselViewer";
 
@@ -8,9 +8,7 @@ interface ParsedImage {
   description?: string;
 }
 
-export function registerCarouselPostProcessor(
-  plugin: PhysicalNoteScannerPlugin
-): void {
+export function registerCarouselPostProcessor(plugin: NapkinNotesPlugin): void {
   plugin.registerMarkdownCodeBlockProcessor(
     CODE_BLOCK_LANGUAGE,
     (source, el, ctx) => {
@@ -22,14 +20,14 @@ export function registerCarouselPostProcessor(
         } else {
           el.createEl("p", {
             text: "No images found in physical-note-viewer block",
-            cls: "physical-notes-error",
+            cls: "napkin-notes-error",
           });
         }
       } catch (error) {
         console.error("Failed to render physical notes carousel:", error);
         el.createEl("p", {
           text: "Error rendering physical notes",
-          cls: "physical-notes-error",
+          cls: "napkin-notes-error",
         });
       }
     }
@@ -150,12 +148,12 @@ function generateCodeBlockContent(images: CarouselImage[]): string {
 function renderCarousel(
   container: HTMLElement,
   parsedImages: ParsedImage[],
-  plugin: PhysicalNoteScannerPlugin,
+  plugin: NapkinNotesPlugin,
   sourcePath: string,
   originalSource: string
 ): void {
   container.empty();
-  container.addClass("physical-notes-carousel-reading");
+  container.addClass("napkin-notes-carousel-reading");
 
   // Store original images for cancel functionality
   const originalImages = parsedImages.map((img) => ({ ...img }));

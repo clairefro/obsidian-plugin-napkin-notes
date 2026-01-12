@@ -1,10 +1,11 @@
 {
-	"id": "physical-note-scanner",
-	"name": "Physical Note Scanner",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Insert physical notes via camera phone or direct upload, with carousel viewing and keyword annotations",
-	"author": "Your Name",
-	"authorUrl": "https://github.com/yourusername",
-	"isDesktopOnly": true
+  "id": "napkin-notes",
+  "name": "Napkin Notes",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Turn handwritten notes, sketches, and whiteboard photos into PDF-style inline image carousels in Obsidian, with direct camera upload and searchable annotations.",
+  "author": "Claire Froelich",
+  "authorUrl": "https://github.com/clairefro",
+  "fundingUrl": "https://buymeacoffee.com/clairefro",
+  "isDesktopOnly": true
 }

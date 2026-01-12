@@ -1,5 +1,5 @@
 import { App, Modal, Notice, Editor } from "obsidian";
-import PhysicalNoteScannerPlugin from "../../main";
+import NapkinNotesPlugin from "../../main";
 import { ImageData, UploadEvent } from "../types";
 import { CarouselViewer, CarouselImage } from "./CarouselViewer";
 import { ImageProcessor } from "../services/ImageProcessor";
@@ -14,7 +14,7 @@ import {
 } from "../constants";
 
 export class PhysicalNotesModal extends Modal {
-  private plugin: PhysicalNoteScannerPlugin;
+  private plugin: NapkinNotesPlugin;
   private editor: Editor;
   private images: ImageData[] = [];
   private currentTab: "direct" | "camera" = "direct";
@@ -36,7 +36,7 @@ export class PhysicalNotesModal extends Modal {
   private imageCountEl?: HTMLElement;
   private insertBtn?: HTMLButtonElement;
 
-  constructor(app: App, plugin: PhysicalNoteScannerPlugin, editor: Editor) {
+  constructor(app: App, plugin: NapkinNotesPlugin, editor: Editor) {
     super(app);
     this.plugin = plugin;
     this.editor = editor;
@@ -48,7 +48,7 @@ export class PhysicalNotesModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("physical-notes-modal");
+    contentEl.addClass("napkin-notes-modal");
 
     // Title
     contentEl.createEl("h2", { text: MODAL_TITLE });
@@ -65,13 +65,13 @@ export class PhysicalNotesModal extends Modal {
 
     // Tabs for upload method
     this.tabContainer = uploadSection.createEl("div", {
-      cls: "physical-notes-tabs",
+      cls: "napkin-notes-tabs",
     });
     this.renderTabs();
 
     // Upload content area
     this.contentContainer = uploadSection.createEl("div", {
-      cls: "physical-notes-content",
+      cls: "napkin-notes-content",
     });
     this.renderContent();
 
@@ -100,7 +100,7 @@ export class PhysicalNotesModal extends Modal {
 
     // Carousel section
     this.carouselContainer = this.reviewSection.createEl("div", {
-      cls: "physical-notes-carousel-section",
+      cls: "napkin-notes-carousel-section",
     });
 
     const carouselDiv = this.carouselContainer.createEl("div", {
@@ -110,7 +110,7 @@ export class PhysicalNotesModal extends Modal {
 
     // Annotation section
     this.annotationContainer = this.reviewSection.createEl("div", {
-      cls: "physical-notes-annotation-section",
+      cls: "napkin-notes-annotation-section",
     });
 
     // Update review section visibility
@@ -145,10 +145,10 @@ export class PhysicalNotesModal extends Modal {
       ".review-empty-state"
     );
     const carouselSection = this.reviewSection.querySelector<HTMLElement>(
-      ".physical-notes-carousel-section"
+      ".napkin-notes-carousel-section"
     );
     const annotationSection = this.reviewSection.querySelector<HTMLElement>(
-      ".physical-notes-annotation-section"
+      ".napkin-notes-annotation-section"
     );
 
     if (this.images.length === 0) {
@@ -251,7 +251,7 @@ export class PhysicalNotesModal extends Modal {
     // Direct upload tab
     const directTab = this.tabContainer.createEl("div", {
       text: TAB_DIRECT_UPLOAD,
-      cls: "physical-notes-tab",
+      cls: "napkin-notes-tab",
     });
     if (this.currentTab === "direct") {
       directTab.addClass("active");
@@ -261,7 +261,7 @@ export class PhysicalNotesModal extends Modal {
     // Camera upload tab
     const cameraTab = this.tabContainer.createEl("div", {
       text: TAB_CAMERA,
-      cls: "physical-notes-tab",
+      cls: "napkin-notes-tab",
     });
     if (this.currentTab === "camera") {
       cameraTab.addClass("active");

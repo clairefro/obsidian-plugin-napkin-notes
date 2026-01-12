@@ -15,7 +15,7 @@ function serveUploadPage(res: ServerResponse): void {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Upload Physical Notes</title>
+	<title>Upload Images as Napkin Notes</title>
 	<style>
 		* {
 			margin: 0;
@@ -137,7 +137,7 @@ function serveUploadPage(res: ServerResponse): void {
 </head>
 <body>
 	<div class="container">
-		<h1>📸 Upload Physical Notes</h1>
+		<h1>📸 Upload Images as Napkin Notes</h1>
 		<p>Select or capture photos to send to Obsidian</p>
 
 		<div class="upload-area" id="dropZone">
@@ -310,40 +310,54 @@ async function handleUpload(
     const busboy = Busboy({ headers: req.headers });
     let fileCount = 0;
 
-    busboy.on("file", (fieldname: string, file: NodeJS.ReadableStream, info: any) => {
-      const { filename, encoding, mimeType } = info;
-      fileCount++;
+    busboy.on(
+      "file",
+      (fieldname: string, file: NodeJS.ReadableStream, info: any) => {
+        const { filename, encoding, mimeType } = info;
+        fileCount++;
 
-      console.log(`[UploadServer] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`);
+        console.log(
+          `[UploadServer] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`
+        );
 
-      const chunks: Buffer[] = [];
+        const chunks: Buffer[] = [];
 
-      file.on("data", (chunk: Buffer) => {
-        chunks.push(chunk);
-      });
+        file.on("data", (chunk: Buffer) => {
+          chunks.push(chunk);
+        });
 
-      file.on("end", () => {
-        const buffer = Buffer.concat(chunks);
-        console.log(`[UploadServer] File received: ${filename}, size: ${buffer.length} bytes`);
+        file.on("end", () => {
+          const buffer = Buffer.concat(chunks);
+          console.log(
+            `[UploadServer] File received: ${filename}, size: ${buffer.length} bytes`
+          );
 
-        try {
-          // Emit upload event
-          const uploadEvent = {
-            buffer: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
-            filename: filename || "image.jpg",
-          };
-          console.log(`[UploadServer] Calling onUpload callback for ${filename}`);
-          onUpload(uploadEvent);
-          console.log(`[UploadServer] onUpload callback completed for ${filename}`);
-        } catch (err) {
-          console.error(`[UploadServer] Error in onUpload callback:`, err);
-        }
-      });
+          try {
+            // Emit upload event
+            const uploadEvent = {
+              buffer: buffer.buffer.slice(
+                buffer.byteOffset,
+                buffer.byteOffset + buffer.byteLength
+              ),
+              filename: filename || "image.jpg",
+            };
+            console.log(
+              `[UploadServer] Calling onUpload callback for ${filename}`
+            );
+            onUpload(uploadEvent);
+            console.log(
+              `[UploadServer] onUpload callback completed for ${filename}`
+            );
+          } catch (err) {
+            console.error(`[UploadServer] Error in onUpload callback:`, err);
+          }
+        });
 
-      file.on("error", (err: Error) => {
-        console.error("[UploadServer] File stream error:", err);
-      });
-    });
+        file.on("error", (err: Error) => {
+          console.error("[UploadServer] File stream error:", err);
+        });
+      }
+    );
 
     busboy.on("finish", () => {
       console.log(`[UploadServer] Upload finished. Total files: ${fileCount}`);
@@ -388,8 +402,12 @@ export class UploadServer {
   /**
    * Start the server on an available port
    */
-  async start(portRange: [number, number]): Promise<{ port: number; token: string; url: string }> {
-    console.log(`[UploadServer] Starting server, port range: ${portRange[0]}-${portRange[1]}`);
+  async start(
+    portRange: [number, number]
+  ): Promise<{ port: number; token: string; url: string }> {
+    console.log(
+      `[UploadServer] Starting server, port range: ${portRange[0]}-${portRange[1]}`
+    );
     this.token = generateToken();
 
     for (let port = portRange[0]; port <= portRange[1]; port++) {
@@ -405,7 +423,9 @@ export class UploadServer {
       }
     }
 
-    throw new Error(`No available ports in range ${portRange[0]}-${portRange[1]}`);
+    throw new Error(
+      `No available ports in range ${portRange[0]}-${portRange[1]}`
+    );
   }
 
   /**

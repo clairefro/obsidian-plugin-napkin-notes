@@ -1,5 +1,5 @@
 import { App, Modal, Notice, Editor } from "obsidian";
-import PhysicalNoteScannerPlugin from "../../main";
+import NapkinNotesPlugin from "../../main";
 import { ImageData, UploadEvent } from "../types";
 import { CarouselViewer, CarouselImage } from "./CarouselViewer";
 import { ImageProcessor } from "../services/ImageProcessor";
@@ -14,7 +14,7 @@ import {
 } from "../constants";
 
 export class UploadModal extends Modal {
-  private plugin: PhysicalNoteScannerPlugin;
+  private plugin: NapkinNotesPlugin;
   private editor: Editor;
   private images: ImageData[] = [];
   private currentTab: "direct" | "camera" = "direct";
@@ -36,7 +36,7 @@ export class UploadModal extends Modal {
   private imageCountEl?: HTMLElement;
   private insertBtn?: HTMLButtonElement;
 
-  constructor(app: App, plugin: PhysicalNoteScannerPlugin, editor: Editor) {
+  constructor(app: App, plugin: NapkinNotesPlugin, editor: Editor) {
     super(app);
     this.plugin = plugin;
     this.editor = editor;
