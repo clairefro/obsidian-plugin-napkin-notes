@@ -130,7 +130,7 @@ export class CarouselViewer {
     const forceOpen = isCollapsible && this.mode === "edit";
     this.thumbnailStrip = this.carouselLayout.createEl("div", {
       cls: `napkin-thumbnail-strip${
-        isCollapsible && !forceOpen ? " napkin-collapsed" : ""
+        isCollapsible && !forceOpen ? " collapsed" : ""
       }`,
     });
 
@@ -567,7 +567,7 @@ export class CarouselViewer {
         const descContainer = this.metadataDiv.createEl("div");
         const descDiv = descContainer.createEl("div", {
           cls: `napkin-carousel-description ${
-            this.descriptionExpanded ? "napkin-expanded" : "napkin-collapsed"
+            this.descriptionExpanded ? "expanded" : "collapsed"
           }`,
         });
         descDiv.setText(desc);
