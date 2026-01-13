@@ -171,7 +171,6 @@ function serveUploadPage(res: ServerResponse): void {
 				<canvas id="previewCanvas" style="display:none;"></canvas>
 			</div>
 
-			<button class="btn" id="uploadBtn" disabled style="margin-top: 20px;">Upload Images</button>
 
 			<div class="count" id="count" style="display:none;"></div>
 			<div class="preview" id="preview"></div>
@@ -183,11 +182,29 @@ function serveUploadPage(res: ServerResponse): void {
 			const fileInput = document.getElementById('fileInput');
 			const cameraInput = document.getElementById('cameraInput');
 			const cameraBtn = document.getElementById('cameraBtn');
-			const uploadBtn = document.getElementById('uploadBtn');
 			const preview = document.getElementById('preview');
 			const status = document.getElementById('status');
 			const count = document.getElementById('count');
 			let selectedFiles = [];
+
+			// Helper to disable inputs and show transient status since uploads happen immediately
+			function setBusy(isBusy, text) {
+				if (fileInput) fileInput.disabled = isBusy;
+				if (cameraInput) cameraInput.disabled = isBusy;
+				const directEl = document.getElementById('directCameraInput');
+				if (directEl) directEl.disabled = isBusy;
+				const previewBtn = document.getElementById('openCameraPreviewBtn');
+				if (previewBtn) previewBtn.disabled = isBusy;
+				const directLabel = document.getElementById('directCameraLabel');
+				if (directLabel) directLabel.style.pointerEvents = isBusy ? 'none' : '';
+				if (text) {
+					status.textContent = text;
+					status.className = 'status';
+					status.style.display = 'block';
+				} else if (!isBusy) {
+					status.style.display = 'none';
+				}
+			}
 
 			// Drop zone click/touch opens gallery
 			dropZone.addEventListener('click', (e) => {
@@ -253,7 +270,7 @@ function serveUploadPage(res: ServerResponse): void {
 						previewCanvas.toBlob(async (blob) => {
 							if (!blob) { showStatus('Capture failed', 'error'); return; }
 							try {
-								uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading...';
+								setBusy(true, 'Uploading...');
 								const urlParams = new URLSearchParams(window.location.search);
 								const token = urlParams.get('token');
 								const formData = new FormData(); formData.append('image', blob, 'photo.jpg');
@@ -263,7 +280,7 @@ function serveUploadPage(res: ServerResponse): void {
 							} catch (error) {
 								showStatus('Upload failed: ' + error.message, 'error');
 							} finally {
-								uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Images';
+								setBusy(false, '');
 								cameraPreviewModal.style.display = 'none';
 								if (previewStream) { previewStream.getTracks().forEach(t => t.stop()); previewStream = null; }
 							}
@@ -285,10 +302,9 @@ function serveUploadPage(res: ServerResponse): void {
 					if (files && files.length > 0) {
 						const file = files[0];
 						try {
-							uploadBtn.disabled = true;
-							uploadBtn.textContent = 'Compressing...';
+							setBusy(true, 'Compressing...');
 							const compressed = await compressImage(file);
-							uploadBtn.textContent = 'Uploading...';
+							setBusy(true, 'Uploading...');
 							const urlParams = new URLSearchParams(window.location.search);
 							const token = urlParams.get('token');
 							const formData = new FormData();
@@ -299,7 +315,7 @@ function serveUploadPage(res: ServerResponse): void {
 						} catch (error) {
 							showStatus('Upload failed: ' + error.message, 'error');
 						} finally {
-							uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Images'; directCameraInputEl.value = '';
+							setBusy(false, ''); directCameraInputEl.value = '';
 						}
 					}
 				});
@@ -310,13 +326,13 @@ function serveUploadPage(res: ServerResponse): void {
 				const files = e.target.files;
 				if (files && files.length > 0) {
 					try {
-						uploadBtn.disabled = true; uploadBtn.textContent = 'Compressing...';
+						setBusy(true, 'Compressing...');
 						const urlParams = new URLSearchParams(window.location.search);
 						const token = urlParams.get('token');
 						for (let i = 0; i < files.length; i++) {
 							const compressed = await compressImage(files[i]);
 							const formData = new FormData(); formData.append('image', compressed, files[i].name);
-							uploadBtn.textContent = 'Uploading... (' + (i+1) + '/' + files.length + ')';
+							setBusy(true, 'Uploading... (' + (i+1) + '/' + files.length + ')');
 							const response = await fetch('/upload?token=' + token, { method: 'POST', body: formData });
 							if (!response.ok) { throw new Error('Upload failed with status ' + response.status); }
 						}
@@ -324,7 +340,7 @@ function serveUploadPage(res: ServerResponse): void {
 					} catch (error) {
 						showStatus('Upload failed: ' + error.message, 'error');
 					} finally {
-						uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Images'; fileInput.value = '';
+						setBusy(false, ''); fileInput.value = '';
 					}
 				}
 			});
