@@ -593,6 +593,9 @@ export class CarouselViewer {
             );
           });
         }
+        this.metadataDiv.style.display = "";
+      } else {
+        this.metadataDiv.style.display = "none";
       }
     }
   }
