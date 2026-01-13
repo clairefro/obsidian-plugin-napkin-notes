@@ -26,5 +26,5 @@ export const FILE_PREFIX = "napkin-note";
  * UI configuration
  */
 export const MODAL_TITLE = "Insert Napkin Notes";
-export const TAB_FILESYSTEM = "From filesystem";
+export const TAB_FILESYSTEM = "From Filesystem";
 export const TAB_CAMERA = "From Camera";
