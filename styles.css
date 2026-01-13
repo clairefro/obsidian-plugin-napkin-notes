@@ -1,19 +1,8 @@
-@media (max-width: 768px) {
-  .napkin-notes-carousel-reading.napkin-carousel-mode-edit
-    .napkin-nav-edit-absolute {
-    margin-top: 70px;
-  }
-}
-/* Show move cursor for thumbnails in edit mode */
-.napkin-notes-carousel-reading.napkin-carousel-mode-edit
-  .napkin-thumbnail-wrapper,
 .napkin-notes-carousel-reading.napkin-carousel-mode-edit
   .napkin-thumbnail-image {
   cursor: move !important;
 }
-/* Reading view Delete button (red) */
 
-/* Reading view Delete button (red, always) */
 .napkin-notes-carousel-reading .napkin-carousel-delete-btn {
   background: var(--text-error) !important;
   color: var(--background-primary) !important;
@@ -53,7 +42,6 @@
   border: none;
   word-break: break-all;
 }
-/* Physical Note Scanner Plugin Styles */
 
 /* Modal */
 .napkin-notes-upload-modal {
@@ -997,6 +985,7 @@
 }
 
 /* Responsive adjustments */
+/* ...existing code... */
 @media (max-width: 768px) {
   .napkin-notes-upload-modal {
     width: 95vw;
@@ -1013,6 +1002,11 @@
 
   .napkin-notes-tab {
     padding: 0.5rem 1rem;
+  }
+
+  .napkin-notes-carousel-reading .napkin-toggle-icon {
+    transform: rotate(90deg) !important;
+    transition: transform 0.2s !important;
   }
 
   /* Reading view carousel responsive */
@@ -1045,8 +1039,6 @@
     height: 0;
     min-height: 0;
     border-width: 0;
-    transition: flex-direction 0.2s, width 0.2s, min-width 0.2s,
-      border-width 0.2s, padding 0.2s;
   }
 
   .napkin-notes-carousel-reading .napkin-thumbnail-toggle-btn {
@@ -1105,15 +1097,5 @@
   .napkin-notes-carousel-reading .napkin-thumbnail-image {
     width: 60px;
     height: 50px;
-  }
-
-  .napkin-notes-carousel-reading .napkin-toggle-icon {
-    transform: rotate(90deg);
-  }
-
-  .napkin-notes-carousel-reading
-    .napkin-thumbnail-strip.collapsed
-    .napkin-toggle-icon {
-    transform: rotate(-90deg);
   }
 }

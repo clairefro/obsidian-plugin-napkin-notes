@@ -12,11 +12,12 @@ Minimal Obsidian plugin for turning handwritten notes, sketches, and whiteboard 
 
 ## Usage
 
-1. Open a note and run the command "Insert Napking Notes"
-2. Upload images directly or scan the QR code to upload from your phone
-3. Review, reorder, and annotate images
-4. Insert into your note
-5. View and navigate images in reading mode
+1. Open a note and open the command palette (Ctrl+P or Cmd+P)
+2. Run the command "Insert Napking Notes"
+3. Upload images directly or scan the QR code to upload from your phone
+4. Review, reorder, and annotate images
+5. Insert into your note
+6. View and navigate images in reading mode
 
 ## Markdown Format
 
