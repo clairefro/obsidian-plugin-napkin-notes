@@ -242,43 +242,27 @@ export class CarouselViewer {
 
     wrapper.addEventListener("dragover", (e) => {
       e.preventDefault();
-      if (this.draggedIndex !== index && this.draggedIndex !== -1) {
-        // Remove any existing drop indicators
-        this.thumbsContainer
-          ?.querySelectorAll(".drop-indicator")
-          .forEach((el) => el.remove());
-
-        // Insert a drop indicator before or after the hovered thumbnail
-        const indicator = document.createElement("div");
-        indicator.className = "drop-indicator";
-        indicator.className = "napkin-drop-indicator";
-        if (index > this.draggedIndex) {
-          // Dropping after
-          wrapper.after(indicator);
-        } else {
-          // Dropping before
-          wrapper.before(indicator);
-        }
+      if (this.draggedIndex !== -1 && this.draggedIndex !== index) {
+        // Remove drag-over from all others
+        this.thumbsContainer?.querySelectorAll(".drag-over").forEach((el) => {
+          if (el !== wrapper) el.removeClass("drag-over");
+        });
         wrapper.addClass("drag-over");
       }
     });
 
     wrapper.addEventListener("dragleave", () => {
       wrapper.removeClass("drag-over");
-      this.thumbsContainer
-        ?.querySelectorAll(".drop-indicator")
-        .forEach((el) => el.remove());
     });
 
     wrapper.addEventListener("drop", (e) => {
       e.preventDefault();
       wrapper.removeClass("drag-over");
-      this.thumbsContainer
-        ?.querySelectorAll(".drop-indicator")
-        .forEach((el) => el.remove());
       if (this.draggedIndex !== -1 && this.draggedIndex !== index) {
+        // Move dragged image to the hovered index
         this.reorderImages(this.draggedIndex, index);
       }
+      this.draggedIndex = -1;
     });
   }
 

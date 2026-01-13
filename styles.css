@@ -1,3 +1,16 @@
+@media (max-width: 768px) {
+  .napkin-notes-carousel-reading.napkin-carousel-mode-edit
+    .napkin-nav-edit-absolute {
+    margin-top: 70px;
+  }
+}
+/* Show move cursor for thumbnails in edit mode */
+.napkin-notes-carousel-reading.napkin-carousel-mode-edit
+  .napkin-thumbnail-wrapper,
+.napkin-notes-carousel-reading.napkin-carousel-mode-edit
+  .napkin-thumbnail-image {
+  cursor: move !important;
+}
 /* Reading view Delete button (red) */
 
 /* Reading view Delete button (red, always) */
@@ -8,7 +21,7 @@
   font-size: 0.9rem;
   padding: 0.4rem 0.8rem;
 }
-.napkin-nav-edit-absolute {
+.napkin-notes-carousel-reading .napkin-nav-edit-absolute {
   background: none !important;
   border: none !important;
   box-shadow: none !important;
@@ -24,6 +37,10 @@
   min-width: unset;
   width: auto;
   height: auto;
+  display: none;
+}
+.napkin-notes-carousel-reading:hover .napkin-nav-edit-absolute {
+  display: block;
 }
 /* Centered file path under image (reading view) */
 .napkin-carousel-filepath-centered {
@@ -289,7 +306,7 @@
   padding: 0.5rem 1rem;
   cursor: pointer;
   color: var(--text-normal);
-  font-size: 1.2rem;
+  font-size: 0.8rem;
   font-weight: bold;
   transition: all 0.2s;
   min-width: 50px;
@@ -690,7 +707,7 @@
   right: -16px;
   width: 16px;
   height: 66px;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   background: var(--background-secondary);
@@ -700,6 +717,15 @@
   transition: background 0.15s ease, right 0.2s ease;
   padding: 0;
   z-index: 10;
+}
+
+.napkin-notes-carousel-reading.napkin-carousel-mode-edit
+  .napkin-thumbnail-toggle-btn {
+  display: flex;
+}
+
+.napkin-notes-carousel-reading:hover .napkin-thumbnail-toggle-btn {
+  display: flex;
 }
 
 .napkin-notes-carousel-reading
@@ -767,14 +793,13 @@
   flex-shrink: 0;
 }
 
-.napkin-notes-carousel-reading .napkin-drop-indicator {
-  height: 0;
-  border-top: 3px solid var(--interactive-accent);
-  margin: 0.25rem 0;
-  border-radius: 2px;
-  transition: border-color 0.15s;
+/* Carousel edit mode: show dotted border on drag-over */
+.napkin-notes-carousel-reading .napkin-thumbnail-wrapper.drag-over {
+  border: 3px dashed var(--text-accent) !important;
+  background: rgba(255, 255, 150, 0.1);
+  box-sizing: border-box;
+  z-index: 2;
 }
-
 .napkin-notes-carousel-reading .napkin-thumbnail-wrapper:hover {
   border-color: var(--text-muted);
 }
@@ -800,6 +825,7 @@
   height: 60px;
   object-fit: cover;
   display: block;
+  border: 3px solid transparent;
 }
 
 .napkin-notes-carousel-reading .napkin-carousel-main-area {
@@ -810,6 +836,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding-right: 1rem !important; /* match the tray gap in wide mode */
 }
 
 .napkin-notes-carousel-reading .napkin-carousel-navigation {
@@ -829,7 +856,7 @@
   padding: 0.5rem 1rem;
   cursor: pointer;
   color: var(--text-normal);
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
   transition: all 0.2s;
   min-width: 50px;
@@ -854,7 +881,7 @@
 .napkin-notes-carousel-reading .napkin-carousel-counter {
   color: var(--text-muted);
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 0.8rem;
   min-width: 80px;
   text-align: center;
 }
@@ -862,7 +889,7 @@
 .napkin-notes-carousel-reading .napkin-carousel-edit-btn,
 .napkin-notes-carousel-reading .napkin-carousel-save-btn,
 .napkin-notes-carousel-reading .napkin-carousel-cancel-btn {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
 }
 
@@ -965,7 +992,8 @@
 }
 .napkin-carousel-description-input {
   width: 100%;
-  margin-top: 1rem;
+  height: 100%;
+  resize: vertical;
 }
 
 /* Responsive adjustments */
@@ -994,6 +1022,13 @@
     min-height: 350px;
   }
 
+  .napkin-notes-carousel-reading .napkin-carousel-main-area {
+    padding-right: 0 !important;
+  }
+
+  .napkin-carousel-edit-controls {
+    margin-top: 0;
+  }
   .napkin-notes-carousel-reading .napkin-thumbnail-strip {
     width: 100% !important;
     height: auto;
@@ -1001,6 +1036,8 @@
     max-height: none;
     position: relative;
     overflow: visible;
+    transition: flex-direction 0.2s, width 0.2s, min-width 0.2s,
+      border-width 0.2s, padding 0.2s;
   }
 
   .napkin-notes-carousel-reading .napkin-thumbnail-strip.collapsed {
@@ -1008,6 +1045,8 @@
     height: 0;
     min-height: 0;
     border-width: 0;
+    transition: flex-direction 0.2s, width 0.2s, min-width 0.2s,
+      border-width 0.2s, padding 0.2s;
   }
 
   .napkin-notes-carousel-reading .napkin-thumbnail-toggle-btn {
@@ -1030,6 +1069,14 @@
     bottom: -10px;
     border-radius: 6px;
     right: auto;
+  }
+  .napkin-notes-carousel-reading .napkin-nav-edit-absolute {
+    background: var(--background-primary) !important;
+    top: 16px;
+    display: none;
+  }
+  .napkin-notes-carousel-reading:hover .napkin-nav-edit-absolute {
+    display: block;
   }
 
   .napkin-notes-carousel-reading .napkin-thumbnail-content {
