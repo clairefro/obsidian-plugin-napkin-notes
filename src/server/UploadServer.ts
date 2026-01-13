@@ -141,7 +141,7 @@ function serveUploadPage(res: ServerResponse): void {
 			<p>Select or capture photos to send to Obsidian</p>
 
 			<div class="upload-area" id="dropZone">
-				<div class="upload-icon">📷</div>
+				<div class="upload-icon">📁</div>
 				<p><strong>Tap to select photos</strong></p>
 			</div>
 
@@ -188,117 +188,70 @@ function serveUploadPage(res: ServerResponse): void {
 			});
 
 
-			// Camera button is now a label for the hidden input, so no JS needed
-			// Optionally, you can still listen for changes on directCameraInput:
+			// Upload immediately after camera capture, no preview or processing
 			const directCameraInput = document.getElementById('directCameraInput');
 			if (directCameraInput) {
-				directCameraInput.addEventListener('change', (e) => {
-					handleFiles(e.target.files);
+				directCameraInput.addEventListener('change', async (e) => {
+					const files = e.target.files;
+					if (files && files.length > 0) {
+						const file = files[0];
+						try {
+							uploadBtn.disabled = true;
+							uploadBtn.textContent = 'Uploading...';
+							const urlParams = new URLSearchParams(window.location.search);
+							const token = urlParams.get('token');
+							const formData = new FormData();
+							formData.append('image', file);
+							const response = await fetch('/upload?token=' + token, {
+								method: 'POST',
+								body: formData
+							});
+							if (!response.ok) {
+								throw new Error('Upload failed with status ' + response.status);
+							}
+							showStatus('Image uploaded successfully!', 'success');
+						} catch (error) {
+							showStatus('Upload failed: ' + error.message, 'error');
+						} finally {
+							uploadBtn.disabled = false;
+							uploadBtn.textContent = 'Upload Images';
+							directCameraInput.value = '';
+						}
+					}
 				});
 			}
 
-			// File selection from gallery
-			fileInput.addEventListener('change', (e) => {
-				handleFiles(e.target.files);
-			});
-
-			// File selection from camera
-			cameraInput.addEventListener('change', (e) => {
-				handleFiles(e.target.files);
-			});
-
-			// Drag and drop
-			dropZone.addEventListener('dragover', (e) => {
-				e.preventDefault();
-				dropZone.classList.add('dragover');
-			});
-			dropZone.addEventListener('dragleave', () => {
-				dropZone.classList.remove('dragover');
-			});
-			dropZone.addEventListener('drop', (e) => {
-				e.preventDefault();
-				dropZone.classList.remove('dragover');
-				handleFiles(e.dataTransfer.files);
-			});
-
-			function handleFiles(files) {
-				selectedFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-				if (selectedFiles.length === 0) {
-					showStatus('Please select image files', 'error');
-					return;
-				}
-				// Show preview - limit preview generation to save memory
-				preview.innerHTML = '';
-				const maxPreviews = Math.min(selectedFiles.length, 6); // Limit to 6 previews
-				for (var i = 0; i < maxPreviews; i++) {
-					var file = selectedFiles[i];
+			// Upload immediately after gallery selection, no preview or processing
+			fileInput.addEventListener('change', async (e) => {
+				const files = e.target.files;
+				if (files && files.length > 0) {
 					try {
-						var reader = new FileReader();
-						reader.onload = function(e) {
-							try {
-								var img = document.createElement('img');
-								img.src = e.target.result;
-								preview.appendChild(img);
-							} catch (err) {
-								console.error('Failed to create preview:', err);
+						uploadBtn.disabled = true;
+						uploadBtn.textContent = 'Uploading...';
+						const urlParams = new URLSearchParams(window.location.search);
+						const token = urlParams.get('token');
+						for (let i = 0; i < files.length; i++) {
+							const formData = new FormData();
+							formData.append('image', files[i]);
+							const response = await fetch('/upload?token=' + token, {
+								method: 'POST',
+								body: formData
+							});
+							if (!response.ok) {
+								throw new Error('Upload failed with status ' + response.status);
 							}
-						};
-						reader.onerror = function() {
-							console.error('Failed to read file for preview');
-						};
-						reader.readAsDataURL(file);
-					} catch (err) {
-						console.error('Failed to generate preview:', err);
-					}
-				}
-				if (selectedFiles.length > maxPreviews) {
-					var moreText = document.createElement('div');
-					moreText.style.cssText = 'grid-column: 1 / -1; text-align: center; color: #666;';
-					moreText.textContent = '+' + (selectedFiles.length - maxPreviews) + ' more';
-					preview.appendChild(moreText);
-				}
-				// Enable upload button
-				uploadBtn.disabled = false;
-				count.style.display = 'block';
-				count.textContent = selectedFiles.length + ' image(s) selected';
-				status.style.display = 'none';
-			}
-
-			// Upload button
-			uploadBtn.addEventListener('click', async () => {
-				uploadBtn.disabled = true;
-				uploadBtn.textContent = 'Uploading...';
-				try {
-					// Get token from URL
-					const urlParams = new URLSearchParams(window.location.search);
-					const token = urlParams.get('token');
-					for (var i = 0; i < selectedFiles.length; i++) {
-						var file = selectedFiles[i];
-						var formData = new FormData();
-						formData.append('image', file);
-						var urlParams = new URLSearchParams(window.location.search);
-						var token = urlParams.get('token');
-						var response = await fetch('/upload?token=' + token, {
-							method: 'POST',
-							body: formData
-						});
-						if (!response.ok) {
-							throw new Error('Upload failed with status ' + response.status);
 						}
-						count.textContent = 'Uploaded ' + (i + 1) + '/' + selectedFiles.length;
+						showStatus('All images uploaded successfully!', 'success');
+					} catch (error) {
+						showStatus('Upload failed: ' + error.message, 'error');
+					} finally {
+						uploadBtn.disabled = false;
+						uploadBtn.textContent = 'Upload Images';
+						fileInput.value = '';
 					}
-					showStatus('All images uploaded successfully!', 'success');
-					selectedFiles = [];
-					preview.innerHTML = '';
-					fileInput.value = '';
-					cameraInput.value = '';
-					uploadBtn.textContent = 'Upload Images';
-				} catch (error) {
-					showStatus('Upload failed: ' + error.message, 'error');
-					uploadBtn.disabled = false;
-					uploadBtn.textContent = 'Upload Images';
 				}
 			});
+
 
 			function showStatus(message, type) {
 				status.textContent = message;
@@ -323,7 +276,7 @@ async function handleUpload(
   onUpload: (event: UploadEvent) => void
 ): Promise<void> {
   try {
-    console.log("[UploadServer] Starting handleUpload");
+    console.log("[Napkin Notes Upload Server] Starting handleUpload");
     const busboy = Busboy({ headers: req.headers });
     let fileCount = 0;
 
@@ -334,7 +287,7 @@ async function handleUpload(
         fileCount++;
 
         console.log(
-          `[UploadServer] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`
+          `[Napkin Notes Upload Server] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`
         );
 
         const chunks: Buffer[] = [];
@@ -346,7 +299,7 @@ async function handleUpload(
         file.on("end", () => {
           const buffer = Buffer.concat(chunks);
           console.log(
-            `[UploadServer] File received: ${filename}, size: ${buffer.length} bytes`
+            `[Napkin Notes Upload Server] File received: ${filename}, size: ${buffer.length} bytes`
           );
 
           try {
@@ -359,38 +312,43 @@ async function handleUpload(
               filename: filename || "image.jpg",
             };
             console.log(
-              `[UploadServer] Calling onUpload callback for ${filename}`
+              `[Napkin Notes Upload Server] Calling onUpload callback for ${filename}`
             );
             onUpload(uploadEvent);
             console.log(
-              `[UploadServer] onUpload callback completed for ${filename}`
+              `[Napkin Notes Upload Server] onUpload callback completed for ${filename}`
             );
           } catch (err) {
-            console.error(`[UploadServer] Error in onUpload callback:`, err);
+            console.error(
+              `[Napkin Notes Upload Server] Error in onUpload callback:`,
+              err
+            );
           }
         });
 
         file.on("error", (err: Error) => {
-          console.error("[UploadServer] File stream error:", err);
+          console.error("[Napkin Notes Upload Server] File stream error:", err);
         });
       }
     );
 
     busboy.on("finish", () => {
-      console.log(`[UploadServer] Upload finished. Total files: ${fileCount}`);
+      console.log(
+        `[Napkin Notes Upload Server] Upload finished. Total files: ${fileCount}`
+      );
       res.writeHead(200, { "Content-Type": "text/plain" });
       res.end("Upload successful");
     });
 
     busboy.on("error", (err: Error) => {
-      console.error("[UploadServer] Busboy error:", err);
+      console.error("[Napkin Notes Upload Server] Busboy error:", err);
       res.writeHead(500, { "Content-Type": "text/plain" });
       res.end("Server error");
     });
 
     req.pipe(busboy);
   } catch (err) {
-    console.error("[UploadServer] Upload error:", err);
+    console.error("[Napkin Notes Upload Server] Upload error:", err);
     res.writeHead(500, { "Content-Type": "text/plain" });
     res.end("Server error");
   }
@@ -423,7 +381,7 @@ export class UploadServer {
     portRange: [number, number]
   ): Promise<{ port: number; token: string; url: string }> {
     console.log(
-      `[UploadServer] Starting server, port range: ${portRange[0]}-${portRange[1]}`
+      `[Napkin Notes Upload Server] Starting server, port range: ${portRange[0]}-${portRange[1]}`
     );
     this.token = generateToken();
 
@@ -432,7 +390,9 @@ export class UploadServer {
         await this.tryStartServer(port);
         this.port = port;
         const url = `http://${this.getLocalIP()}:${port}?token=${this.token}`;
-        console.log(`[UploadServer] Server started successfully on ${url}`);
+        console.log(
+          `[Napkin Notes Upload Server] Server started successfully on ${url}`
+        );
         return { port, token: this.token, url };
       } catch (err) {
         // Port in use, try next one
@@ -526,14 +486,18 @@ export class UploadServer {
   stop(): Promise<void> {
     return new Promise((resolve) => {
       if (this.server) {
-        console.log(`[UploadServer] Stopping server on port ${this.port}`);
+        console.log(
+          `[Napkin Notes Upload Server] Stopping server on port ${this.port}`
+        );
         this.server.close(() => {
-          console.log(`[UploadServer] Server stopped successfully`);
+          console.log(
+            `[Napkin Notes Upload Server] Server stopped successfully`
+          );
           this.server = null;
           resolve();
         });
       } else {
-        console.log(`[UploadServer] No server to stop`);
+        console.log(`[Napkin Notes Upload Server] No server to stop`);
         resolve();
       }
     });
