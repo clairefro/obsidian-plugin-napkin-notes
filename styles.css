@@ -114,6 +114,10 @@
   padding: 1rem;
 }
 
+.napkin-notes-upload-modal .napkin-section-header {
+    margin-bottom: 1rem;
+}
+
 .napkin-notes-upload-modal .napkin-section-header h3 {
   margin: 0;
   text-align: center;
@@ -131,6 +135,7 @@
 /* Review Section */
 .napkin-notes-upload-modal .napkin-review-section {
   width: 100%;
+  margin-bottom: 1rem;
 }
 
 .napkin-notes-upload-modal .napkin-empty-state-text {
@@ -363,7 +368,7 @@
 .napkin-notes-upload-modal .napkin-thumbnail-strip {
   width: 120px;
   min-width: 120px;
-  max-height: 450px;
+  /* max-height: 450px; */
   display: flex;
   flex-direction: column;
   background: var(--background-primary-alt);
