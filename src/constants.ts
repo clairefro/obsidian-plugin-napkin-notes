@@ -1,13 +1,4 @@
-/**
- * Physical notes code block language
- */
 export const CODE_BLOCK_LANGUAGE = "napkin-notes";
-
-/**
- * Metadata field names
- */
-export const METADATA_KEYWORDS = "keywords";
-export const METADATA_DESCRIPTION = "description";
 
 /**
  * Server configuration
@@ -21,15 +12,13 @@ export const SERVER_TIMEOUT_MS = 300000; // 5 minutes
  */
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/jpg",
   "image/png",
+  "image/jpeg",
   "image/gif",
+  "image/svg+xml",
   "image/webp",
   "image/bmp",
-  "image/tiff",
-  "image/svg+xml",
-  "image/x-icon", // For .ico files
+  "image/avif",
 ];
 export const FILE_PREFIX = "napkin-note";
 

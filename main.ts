@@ -10,7 +10,6 @@ export default class NapkinNotesPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    // Add command to insert physical notes
     this.addCommand({
       id: "insert-napkin-notes",
       name: "Insert Napkin Notes",
@@ -27,11 +26,11 @@ export default class NapkinNotesPlugin extends Plugin {
     // Add settings tab
     this.addSettingTab(new NapkinNotesSettingTab(this.app, this));
 
-    console.log("Physical Note Scanner plugin loaded");
+    console.log("[Napkin Notes] plugin loaded");
   }
 
   onunload() {
-    console.log("Physical Note Scanner plugin unloaded");
+    console.log("[Napkin Notes] plugin unloaded");
   }
 
   async loadSettings() {
