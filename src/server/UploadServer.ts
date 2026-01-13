@@ -15,7 +15,7 @@ function serveUploadPage(res: ServerResponse): void {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Upload Images as Napkin Notes</title>
+	<title>Napkin Notes - Upload Images</title>
 	<style>
 		* {
 			margin: 0;
@@ -136,159 +136,176 @@ function serveUploadPage(res: ServerResponse): void {
 	</style>
 </head>
 <body>
-	<div class="container">
-		<h1>📸 Upload Images as Napkin Notes</h1>
-		<p>Select or capture photos to send to Obsidian</p>
+		<div class="container">
+			<h1>📸 Upload Images as Napkin Notes</h1>
+			<p>Select or capture photos to send to Obsidian</p>
 
-		<div class="upload-area" id="dropZone">
-			<div class="upload-icon">📷</div>
-			<p><strong>Tap to select photos</strong></p>
+			<div class="upload-area" id="dropZone">
+				<div class="upload-icon">📷</div>
+				<p><strong>Tap to select photos</strong></p>
+			</div>
+
+			<!-- Hidden file input for gallery selection -->
+			<input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+
+			<!-- Hidden file input for camera capture -->
+			<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+
+			<div style="display: flex; gap: 10px; margin-top: 20px;">
+				<!-- Camera capture button uses a hidden file input with capture attribute -->
+				<label for="directCameraInput" class="btn" style="flex:1; text-align:center; margin:0;">
+					Capture with Camera
+					<input type="file" id="directCameraInput" accept="image/*" capture="environment" style="display:none;">
+				</label>
+			</div>
+
+			<button class="btn" id="uploadBtn" disabled style="margin-top: 20px;">Upload Images</button>
+
+			<div class="count" id="count" style="display:none;"></div>
+			<div class="preview" id="preview"></div>
+			<div class="status" id="status" style="display:none;"></div>
 		</div>
 
-		<input type="file" id="fileInput" accept="image/*" multiple>
+		<script>
+			const dropZone = document.getElementById('dropZone');
+			const fileInput = document.getElementById('fileInput');
+			const cameraInput = document.getElementById('cameraInput');
+			const cameraBtn = document.getElementById('cameraBtn');
+			const uploadBtn = document.getElementById('uploadBtn');
+			const preview = document.getElementById('preview');
+			const status = document.getElementById('status');
+			const count = document.getElementById('count');
+			let selectedFiles = [];
 
-		<button class="btn" id="uploadBtn" disabled>Upload Images</button>
+			// Drop zone click/touch opens gallery
+			dropZone.addEventListener('click', (e) => {
+				e.preventDefault();
+				fileInput.click();
+			});
+			dropZone.addEventListener('touchend', (e) => {
+				e.preventDefault();
+				fileInput.click();
+			});
 
-		<div class="count" id="count" style="display:none;"></div>
-		<div class="preview" id="preview"></div>
-		<div class="status" id="status" style="display:none;"></div>
-	</div>
 
-	<script>
-		const dropZone = document.getElementById('dropZone');
-		const fileInput = document.getElementById('fileInput');
-		const uploadBtn = document.getElementById('uploadBtn');
-		const preview = document.getElementById('preview');
-		const status = document.getElementById('status');
-		const count = document.getElementById('count');
-		let selectedFiles = [];
-
-		// Click to select files - handle both click and touch
-		dropZone.addEventListener('click', (e) => {
-			e.preventDefault();
-			fileInput.click();
-		});
-
-		dropZone.addEventListener('touchend', (e) => {
-			e.preventDefault();
-			fileInput.click();
-		});
-
-		// File selection
-		fileInput.addEventListener('change', (e) => {
-			handleFiles(e.target.files);
-		});
-
-		// Drag and drop
-		dropZone.addEventListener('dragover', (e) => {
-			e.preventDefault();
-			dropZone.classList.add('dragover');
-		});
-
-		dropZone.addEventListener('dragleave', () => {
-			dropZone.classList.remove('dragover');
-		});
-
-		dropZone.addEventListener('drop', (e) => {
-			e.preventDefault();
-			dropZone.classList.remove('dragover');
-			handleFiles(e.dataTransfer.files);
-		});
-
-		function handleFiles(files) {
-			selectedFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-
-			if (selectedFiles.length === 0) {
-				showStatus('Please select image files', 'error');
-				return;
+			// Camera button is now a label for the hidden input, so no JS needed
+			// Optionally, you can still listen for changes on directCameraInput:
+			const directCameraInput = document.getElementById('directCameraInput');
+			if (directCameraInput) {
+				directCameraInput.addEventListener('change', (e) => {
+					handleFiles(e.target.files);
+				});
 			}
 
-			// Show preview - limit preview generation to save memory
-			preview.innerHTML = '';
-			const maxPreviews = Math.min(selectedFiles.length, 6); // Limit to 6 previews
+			// File selection from gallery
+			fileInput.addEventListener('change', (e) => {
+				handleFiles(e.target.files);
+			});
 
-			for (let i = 0; i < maxPreviews; i++) {
-				const file = selectedFiles[i];
-				try {
-					const reader = new FileReader();
-					reader.onload = (e) => {
-						try {
-							const img = document.createElement('img');
-							img.src = e.target.result;
-							preview.appendChild(img);
-						} catch (err) {
-							console.error('Failed to create preview:', err);
-						}
-					};
-					reader.onerror = () => {
-						console.error('Failed to read file for preview');
-					};
-					reader.readAsDataURL(file);
-				} catch (err) {
-					console.error('Failed to generate preview:', err);
+			// File selection from camera
+			cameraInput.addEventListener('change', (e) => {
+				handleFiles(e.target.files);
+			});
+
+			// Drag and drop
+			dropZone.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				dropZone.classList.add('dragover');
+			});
+			dropZone.addEventListener('dragleave', () => {
+				dropZone.classList.remove('dragover');
+			});
+			dropZone.addEventListener('drop', (e) => {
+				e.preventDefault();
+				dropZone.classList.remove('dragover');
+				handleFiles(e.dataTransfer.files);
+			});
+
+			function handleFiles(files) {
+				selectedFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+				if (selectedFiles.length === 0) {
+					showStatus('Please select image files', 'error');
+					return;
 				}
-			}
-
-			if (selectedFiles.length > maxPreviews) {
-				const moreText = document.createElement('div');
-				moreText.style.cssText = 'grid-column: 1 / -1; text-align: center; color: #666;';
-				moreText.textContent = \`+\${selectedFiles.length - maxPreviews} more\`;
-				preview.appendChild(moreText);
-			}
-
-			// Enable upload button
-			uploadBtn.disabled = false;
-			count.style.display = 'block';
-			count.textContent = \`\${selectedFiles.length} image(s) selected\`;
-			status.style.display = 'none';
-		}
-
-		// Upload button
-		uploadBtn.addEventListener('click', async () => {
-			uploadBtn.disabled = true;
-			uploadBtn.textContent = 'Uploading...';
-
-			try {
-				// Get token from URL
-				const urlParams = new URLSearchParams(window.location.search);
-				const token = urlParams.get('token');
-
-				for (let i = 0; i < selectedFiles.length; i++) {
-					const file = selectedFiles[i];
-					const formData = new FormData();
-					formData.append('image', file);
-
-					const response = await fetch(\`/upload?token=\${token}\`, {
-						method: 'POST',
-						body: formData
-					});
-
-					if (!response.ok) {
-						throw new Error(\`Upload failed with status \${response.status}\`);
-					}
-
-					count.textContent = \`Uploaded \${i + 1}/\${selectedFiles.length}\`;
-				}
-
-				showStatus('All images uploaded successfully!', 'success');
-				selectedFiles = [];
+				// Show preview - limit preview generation to save memory
 				preview.innerHTML = '';
-				fileInput.value = '';
-				uploadBtn.textContent = 'Upload Images';
-
-			} catch (error) {
-				showStatus('Upload failed: ' + error.message, 'error');
+				const maxPreviews = Math.min(selectedFiles.length, 6); // Limit to 6 previews
+				for (var i = 0; i < maxPreviews; i++) {
+					var file = selectedFiles[i];
+					try {
+						var reader = new FileReader();
+						reader.onload = function(e) {
+							try {
+								var img = document.createElement('img');
+								img.src = e.target.result;
+								preview.appendChild(img);
+							} catch (err) {
+								console.error('Failed to create preview:', err);
+							}
+						};
+						reader.onerror = function() {
+							console.error('Failed to read file for preview');
+						};
+						reader.readAsDataURL(file);
+					} catch (err) {
+						console.error('Failed to generate preview:', err);
+					}
+				}
+				if (selectedFiles.length > maxPreviews) {
+					var moreText = document.createElement('div');
+					moreText.style.cssText = 'grid-column: 1 / -1; text-align: center; color: #666;';
+					moreText.textContent = '+' + (selectedFiles.length - maxPreviews) + ' more';
+					preview.appendChild(moreText);
+				}
+				// Enable upload button
 				uploadBtn.disabled = false;
-				uploadBtn.textContent = 'Upload Images';
+				count.style.display = 'block';
+				count.textContent = selectedFiles.length + ' image(s) selected';
+				status.style.display = 'none';
 			}
-		});
 
-		function showStatus(message, type) {
-			status.textContent = message;
-			status.className = 'status ' + type;
-			status.style.display = 'block';
-		}
-	</script>
+			// Upload button
+			uploadBtn.addEventListener('click', async () => {
+				uploadBtn.disabled = true;
+				uploadBtn.textContent = 'Uploading...';
+				try {
+					// Get token from URL
+					const urlParams = new URLSearchParams(window.location.search);
+					const token = urlParams.get('token');
+					for (var i = 0; i < selectedFiles.length; i++) {
+						var file = selectedFiles[i];
+						var formData = new FormData();
+						formData.append('image', file);
+						var urlParams = new URLSearchParams(window.location.search);
+						var token = urlParams.get('token');
+						var response = await fetch('/upload?token=' + token, {
+							method: 'POST',
+							body: formData
+						});
+						if (!response.ok) {
+							throw new Error('Upload failed with status ' + response.status);
+						}
+						count.textContent = 'Uploaded ' + (i + 1) + '/' + selectedFiles.length;
+					}
+					showStatus('All images uploaded successfully!', 'success');
+					selectedFiles = [];
+					preview.innerHTML = '';
+					fileInput.value = '';
+					cameraInput.value = '';
+					uploadBtn.textContent = 'Upload Images';
+				} catch (error) {
+					showStatus('Upload failed: ' + error.message, 'error');
+					uploadBtn.disabled = false;
+					uploadBtn.textContent = 'Upload Images';
+				}
+			});
+
+			function showStatus(message, type) {
+				status.textContent = message;
+				status.className = 'status ' + type;
+				status.style.display = 'block';
+			}
+		</script>
 </body>
 </html>
 		`;

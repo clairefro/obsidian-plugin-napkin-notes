@@ -11,7 +11,7 @@ export interface ImageAnnotation {
  * Image data with its annotation
  */
 export interface ImageData {
-  file?: File; // Browser File object (for direct upload)
+  file?: File; // Browser File object (for filesystem upload)
   buffer?: ArrayBuffer; // Raw image data (for QR upload)
   filename: string; // Original filename
   annotation: ImageAnnotation; // Metadata

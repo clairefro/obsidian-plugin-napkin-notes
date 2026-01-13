@@ -8,7 +8,7 @@ import { UploadServer } from "../server/UploadServer";
 import { QRCodeDisplay } from "./QRCodeDisplay";
 import {
   MODAL_TITLE,
-  TAB_DIRECT_UPLOAD,
+  TAB_FILESYSTEM,
   TAB_CAMERA,
   ALLOWED_MIME_TYPES,
 } from "../constants";
@@ -222,9 +222,9 @@ export class UploadModal extends Modal {
 
     this.tabContainer.empty();
 
-    // Direct upload tab
+    // Filesystem tab
     const directTab = this.tabContainer.createEl("div", {
-      text: TAB_DIRECT_UPLOAD,
+      text: TAB_FILESYSTEM,
       cls: "napkin-notes-tab",
     });
     if (this.currentTab === "direct") {
@@ -308,14 +308,15 @@ export class UploadModal extends Modal {
   }
 
   private async switchTab(tab: "direct" | "camera"): Promise<void> {
-    // Stop upload server when leaving camera tab
-    if (this.currentTab === "camera" && tab !== "camera") {
-      await this.stopUploadServer();
-    }
-
+    // Update tab state and UI immediately
     this.currentTab = tab;
     this.renderTabs();
     this.renderContent();
+
+    // Stop upload server in the background if leaving camera tab
+    if (this.uploadServer && tab !== "camera") {
+      this.stopUploadServer(); // don't await
+    }
   }
 
   /**
@@ -323,11 +324,11 @@ export class UploadModal extends Modal {
    */
   private async stopUploadServer(): Promise<void> {
     if (this.uploadServer) {
-      console.log("[NapkinNotes] Stopping upload server (tab switch)");
+      console.log("[Napkin Notes] Stopping upload server (tab switch)");
       await this.uploadServer.stop();
       this.uploadServer = undefined;
       this.qrDisplay = undefined;
-      console.log("[NapkinNotes] Upload server stopped");
+      console.log("[Napkin Notes] Upload server stopped");
     }
   }
 
@@ -435,19 +436,19 @@ export class UploadModal extends Modal {
 
   private async handleServerUpload(event: UploadEvent): Promise<void> {
     console.log(
-      `[NapkinNotes] handleServerUpload called for ${event.filename}`
+      `[Napkin Notes] handleServerUpload called for ${event.filename}`
     );
     try {
       // Convert ArrayBuffer to Blob
       const blob = new Blob([event.buffer], { type: "image/jpeg" });
       const file = new File([blob], event.filename, { type: "image/jpeg" });
-      console.log(`[NapkinNotes] Created File object, size: ${file.size}`);
+      console.log(`[Napkin Notes] Created File object, size: ${file.size}`);
 
       // Process the uploaded file
       const buffer = await this.imageProcessor.fileToArrayBuffer(file);
       const dataUrl = this.imageProcessor.createDataUrl(buffer, file.type);
       console.log(
-        `[NapkinNotes] Processed image, dataUrl length: ${dataUrl.length}`
+        `[Napkin Notes] Processed image, dataUrl length: ${dataUrl.length}`
       );
 
       const imageData: ImageData = {
@@ -462,30 +463,30 @@ export class UploadModal extends Modal {
 
       this.images.push(imageData);
       console.log(
-        `[NapkinNotes] Added image, total images: ${this.images.length}`
+        `[Napkin Notes] Added image, total images: ${this.images.length}`
       );
 
       // Update carousel
       this.refreshCarousel();
-      console.log(`[NapkinNotes] Updated carousel`);
+      console.log(`[Napkin Notes] Updated carousel`);
 
       // Update review section
       this.updateReviewSection();
-      console.log(`[NapkinNotes] Updated review section`);
+      console.log(`[Napkin Notes] Updated review section`);
 
       // Update upload counter in QR display
       if (this.qrDisplay) {
         this.qrDisplay.updateCounter(this.images.length);
-        console.log(`[NapkinNotes] Updated QR counter`);
+        console.log(`[Napkin Notes] Updated QR counter`);
       }
 
       // Scroll to review section
       this.scrollToReviewSection();
 
       new Notice(`Received image: ${event.filename}`);
-      console.log(`[NapkinNotes] handleServerUpload completed successfully`);
+      console.log(`[Napkin Notes] handleServerUpload completed successfully`);
     } catch (error) {
-      console.error("[NapkinNotes] Failed to process uploaded image:", error);
+      console.error("[Napkin Notes] Failed to process uploaded image:", error);
       new Notice("Failed to process uploaded image");
     }
   }

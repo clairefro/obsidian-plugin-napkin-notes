@@ -4,7 +4,7 @@ Minimal Obsidian plugin for turning handwritten notes, sketches, and whiteboard 
 
 ## Features
 
-- Direct upload or QR code upload from your phone
+- Filesystem upload or QR code upload from your phone
 - Carousel viewing of images in reading mode
 - Drag-and-drop reordering and deletion
 - Optional descriptions for each image
