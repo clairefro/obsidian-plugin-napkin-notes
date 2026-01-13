@@ -3,7 +3,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import * as crypto from "crypto";
 const Busboy = require("busboy");
 import { UploadEvent } from "../types";
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "../constants";
+// import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "../constants";
 
 /**
  * Serve the mobile upload HTML page
@@ -199,10 +199,13 @@ function serveUploadPage(res: ServerResponse): void {
 				if (directLabel) directLabel.style.pointerEvents = isBusy ? 'none' : '';
 				if (text) {
 					status.textContent = text;
-					status.className = 'status';
+					status.className = 'status busy';
+					status.style.color = '#ffffff';
 					status.style.display = 'block';
 				} else if (!isBusy) {
 					status.style.display = 'none';
+					status.style.color = '';
+					status.className = 'status';
 				}
 			}
 
