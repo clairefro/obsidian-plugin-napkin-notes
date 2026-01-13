@@ -25,7 +25,7 @@ Images are stored in a code block:
 ````markdown
 ```napkin-notes
 [[attachments/your-image.jpg]]
-description: Optional description
+Optional description
 ```
 ````
 
