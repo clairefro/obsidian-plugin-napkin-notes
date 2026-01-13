@@ -505,7 +505,9 @@ export class CarouselViewer {
   }
 
   private updateThumbnailSelection(): void {
-    const thumbs = this.thumbsContainer?.querySelectorAll(".thumbnail-wrapper");
+    const thumbs = this.thumbsContainer?.querySelectorAll(
+      ".napkin-thumbnail-wrapper"
+    );
     thumbs?.forEach((thumb, index) => {
       if (index === this.currentIndex) {
         thumb.addClass("active");
