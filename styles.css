@@ -1,3 +1,17 @@
+/* Reading view Delete button (red) */
+
+.napkin-notes-carousel-reading .napkin-carousel-delete-btn {
+  background: var(--text-error);
+  color: var(--background-primary);
+  margin-left: 1rem;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+}
+
+.napkin-notes-carousel-reading
+  .napkin-carousel-delete-btn:hover:not(:disabled) {
+  background: var(--text-error);
+}
 .napkin-nav-edit-absolute {
   background: none !important;
   border: none !important;
@@ -792,7 +806,7 @@
   display: block;
 }
 
-.napkin-notes-carousel-reading .napkin-.napkin-carousel-main-area {
+.napkin-notes-carousel-reading .napkin-carousel-main-area {
   flex: 1;
   min-width: 0;
   max-width: 500px;
@@ -854,7 +868,7 @@
   min-width: 80px;
   text-align: center;
 }
-
+.napkin-notes-carousel-reading .napkin-carousel-button,
 .napkin-notes-carousel-reading .napkin-carousel-edit-btn,
 .napkin-notes-carousel-reading .napkin-carousel-save-btn,
 .napkin-notes-carousel-reading .napkin-carousel-cancel-btn {

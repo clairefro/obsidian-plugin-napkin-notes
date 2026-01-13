@@ -318,7 +318,7 @@ export class CarouselViewer {
 
       this.deleteBtn = editControls.createEl("button", {
         text: "Delete",
-        cls: "napkin-carousel-button napkin-carousel-delete-btn napkin-carousel-edit-btn",
+        cls: "napkin-carousel-button napkin-carousel-delete-btn",
         attr: { title: "Remove this image" },
       });
       this.deleteBtn.addEventListener("click", () => this.handleDelete());
