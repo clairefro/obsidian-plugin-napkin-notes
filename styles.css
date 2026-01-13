@@ -46,7 +46,7 @@
 /* Modal */
 .napkin-notes-upload-modal {
   width: 90vw !important;
-  max-width: 800px !important;
+  max-width: 700px !important;
   max-height: 85vh; /* Allow modal to shrink if content is smaller */
   overflow-y: auto;
   overflow-x: hidden;
@@ -84,18 +84,21 @@
 
 .napkin-notes-tabs {
   display: flex;
-  font-size: 0.75rem;
+  font-size: 1.05rem;
   margin-bottom: 1rem;
-  gap: 0.5rem;
+  gap: 1.25rem;
 }
 
 .napkin-notes-tab {
-  width: auto; /* Restore tab indicator width */
+  width: auto;
   border-color: var(--interactive-accent);
   cursor: pointer;
   border-bottom: 3px solid transparent;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem 0.5rem 1.5rem;
+  border-radius: 8px 8px 0 0;
+  font-size: 1.05rem;
 }
 
 .napkin-notes-tab:hover {
@@ -115,7 +118,7 @@
 }
 
 .napkin-notes-upload-modal .napkin-section-header {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .napkin-notes-upload-modal .napkin-section-header h3 {
@@ -175,9 +178,8 @@
   align-items: center;
   justify-content: center;
 }
-}
 
-.napkin-notes-upload-modal .napkin-upload-section {
+.napkin-notes-upload-modal .napkin-modal-section {
   margin-bottom: 1rem;
 }
 
@@ -213,7 +215,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .napkin-notes-upload-modal .napkin-qr-status {
@@ -266,7 +268,7 @@
 
 .napkin-notes-upload-modal .napkin-qr-info-url {
   font-family: var(--font-monospace);
-  font-size: 0.85em;
+  font-size: 0.6em;
   color: var(--text-muted);
   background: var(--background-secondary);
   padding: 0.5rem;
@@ -341,9 +343,12 @@
 .napkin-notes-upload-modal .napkin-carousel-delete-btn {
   background: var(--background-modifier-error);
   color: var(--text-on-accent);
-  margin-left: 1rem;
-  font-size: 0.9rem;
-  padding: 0.4rem 0.8rem;
+  margin: 0 auto;
+  display: block;
+  font-size: 1rem;
+  padding: 0.2rem 0.8rem;
+  border-radius: 6px;
+  text-align: center;
 }
 
 .napkin-notes-upload-modal .napkin-carousel-delete-btn:hover:not(:disabled) {
@@ -368,7 +373,6 @@
 .napkin-notes-upload-modal .napkin-thumbnail-strip {
   width: 120px;
   min-width: 120px;
-  /* max-height: 450px; */
   display: flex;
   flex-direction: column;
   background: var(--background-primary-alt);
@@ -1053,11 +1057,23 @@
     width: 100% !important;
     height: auto;
     flex-direction: column;
-    max-height: none;
-    position: relative;
-    overflow: visible;
-    transition: flex-direction 0.2s, width 0.2s, min-width 0.2s,
-      border-width 0.2s, padding 0.2s;
+    width: 100%;
+    min-height: 80px;
+    max-height: 200px;
+    resize: vertical;
+    font-size: 1rem;
+    font-family: var(--font-interface, inherit);
+    color: var(--text-normal);
+    background: var(--background-primary);
+    border: 1.5px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .napkin-carousel-description-input:focus {
+    border-color: var(--interactive-accent);
   }
 
   .napkin-notes-carousel-reading .napkin-thumbnail-strip.collapsed {
