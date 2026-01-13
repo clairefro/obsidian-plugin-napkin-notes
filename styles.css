@@ -1,7 +1,35 @@
+.napkin-nav-edit-absolute {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--text-muted) !important;
+  font-size: 0.85rem !important;
+  padding: 2px 8px !important;
+  position: absolute;
+  right: 36px;
+  top: 22px;
+  transform: translateY(-50%);
+  z-index: 2;
+  cursor: pointer;
+  min-width: unset;
+  width: auto;
+  height: auto;
+}
+/* Centered file path under image (reading view) */
+.napkin-carousel-filepath-centered {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.7em;
+  margin: 0.5rem 0 0.5rem 0;
+  background: none;
+  padding: 0;
+  border: none;
+  word-break: break-all;
+}
 /* Physical Note Scanner Plugin Styles */
 
 /* Modal */
-.napkin-notes-modal {
+.napkin-notes-upload-modal {
   width: 90vw !important;
   max-width: 1200px !important; /* Set a reasonable max-width */
   max-height: 85vh; /* Allow modal to shrink if content is smaller */
@@ -11,10 +39,10 @@
 }
 
 /* Only set width: 100% for block elements, not for all (fixes button sizing) */
-.napkin-notes-modal > *,
-.napkin-notes-modal .modal-section,
-.napkin-notes-modal .napkin-notes-content,
-.napkin-notes-modal .review-section {
+.napkin-notes-upload-modal > *,
+.napkin-notes-upload-modal .napkin-modal-section,
+.napkin-notes-upload-modal .napkin-notes-content,
+.napkin-notes-upload-modal .napkin-review-section {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
@@ -22,117 +50,90 @@
 }
 
 /* Reduce button size in upload modal */
-.napkin-notes-modal .carousel-edit-controls button.upload-modal-btn {
+.napkin-notes-upload-modal
+  .napkin-carousel-edit-controls
+  button.upload-modal-btn {
   font-size: 0.95rem;
   padding: 0.35rem 0.9rem;
   min-width: 0;
   width: auto;
 }
 
-.napkin-notes-modal h2 {
-  margin-bottom: 1rem;
+.napkin-notes-upload-modal h2 {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--background-primary);
+  border-radius: 8px;
+  font-size: 0.95em;
 }
 
-.napkin-notes-modal h3 {
-  margin: 1.5rem 0 0.5rem 0;
-  font-size: 1.1em;
-  color: var(--text-normal);
-}
-
-/* Override Obsidian's .modal-content defaults for .napkin-notes-modal */
-.modal-content.napkin-notes-modal {
-  width: 100% !important; /* Override Obsidian's default width */
-  max-width: 800px !important; /* Constrain modal width */
-  overflow-x: hidden !important; /* Prevent horizontal scrolling */
-  box-sizing: border-box; /* Ensure padding and borders are included in width */
-}
-
-/* Tabs */
 .napkin-notes-tabs {
   display: flex;
-  border-bottom: 2px solid var(--background-modifier-border);
+  font-size: 0.75rem;
   margin-bottom: 1rem;
   gap: 0.5rem;
 }
 
 .napkin-notes-tab {
   width: auto; /* Restore tab indicator width */
-  padding: 0.75rem 1.5rem; /* Adjust padding for better fit */
+  border-color: var(--interactive-accent);
   cursor: pointer;
   border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
   color: var(--text-muted);
   font-weight: 500;
 }
 
 .napkin-notes-tab:hover {
-  background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 
 .napkin-notes-tab.active {
   border-bottom-color: var(--interactive-accent);
-  color: var(--text-normal);
+  display: inline-flex;
 }
 
-/* Modal Sections */
-.napkin-notes-modal .modal-section {
+.napkin-notes-upload-modal .napkin-modal-section {
   background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
+  text-align: center;
   border-radius: 8px;
   padding: 1rem;
-  margin-bottom: 1rem;
 }
 
-.napkin-notes-modal .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.napkin-notes-modal .section-header h3 {
+.napkin-notes-upload-modal .napkin-section-header h3 {
   margin: 0;
-  font-size: 1em;
+  text-align: center;
   color: var(--text-normal);
   font-weight: 600;
 }
 
-.napkin-notes-modal .image-count {
-  background: var(--background-modifier-border);
+.napkin-notes-upload-modal .napkin-image-count {
+  opacity: 0.5;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  font-size: 0.85em;
+  border-color: var(--text-success);
   color: var(--text-muted);
 }
-
 /* Review Section */
-.napkin-notes-modal .review-section {
-  min-height: 200px;
+.napkin-notes-upload-modal .napkin-review-section {
+  width: 100%;
 }
 
-.napkin-notes-modal .review-empty-state {
-  text-align: center;
-  padding: 2rem 1rem;
-}
-
-.napkin-notes-modal .empty-state-text {
-  color: var(--text-muted);
+.napkin-notes-upload-modal .napkin-empty-state-text {
+  width: 100%;
   font-style: italic;
 }
-
 /* Content */
-.napkin-notes-modal .napkin-notes-content {
-  width: 100%; /* Ensure content fits within the modal */
+.napkin-notes-upload-modal .napkin-notes-content {
+  flex: 1;
   min-height: 150px;
   max-height: calc(85vh - 2rem); /* Adjust content height to fit within modal */
-  margin-bottom: 1.5rem;
+  display: flex;
   overflow: hidden; /* Prevent content overflow */
   overflow-x: hidden; /* Prevent horizontal scrolling */
-}
+  width: 100%;
 
-/* Upload Zone */
-.napkin-notes-modal .upload-zone {
+  /* Upload Zone */
+  max-width: 100%;
   border: 3px dashed var(--background-modifier-border);
   border-radius: 12px;
   padding: 3rem 2rem;
@@ -142,93 +143,86 @@
   background: var(--background-primary-alt);
 }
 
-.napkin-notes-modal .upload-zone:hover {
+.napkin-notes-upload-modal .napkin-upload-zone:hover {
   background: var(--background-modifier-hover);
   border-color: var(--interactive-accent);
 }
 
-.napkin-notes-modal .upload-zone.dragover {
+.napkin-notes-upload-modal .napkin-upload-zone.dragover {
   background: var(--background-modifier-cover);
   border-color: var(--interactive-accent);
   border-style: solid;
 }
 
-.napkin-notes-modal .upload-zone-text {
+.napkin-notes-upload-modal .napkin-upload-zone-text {
   font-size: 1.2em;
   font-weight: 600;
   color: var(--text-normal);
   margin-bottom: 0.5rem;
 }
 
-.napkin-notes-modal .upload-zone-subtext {
+.napkin-notes-upload-modal .napkin-upload-zone-subtext {
   color: var(--text-muted);
   font-size: 0.9em;
 }
 
 /* QR Upload */
-.napkin-notes-modal .qr-upload-container {
+.napkin-notes-upload-modal .napkin-qr-upload-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
 }
 
-.napkin-notes-modal .qr-status {
+.napkin-notes-upload-modal .napkin-qr-status {
   text-align: center;
   padding: 1rem;
   border-radius: 8px;
   background: var(--background-secondary);
 }
 
-.napkin-notes-modal .qr-status-active {
+.napkin-notes-upload-modal .napkin-qr-status-active {
   color: var(--text-success);
   font-weight: 600;
 }
 
-.napkin-notes-modal .qr-upload-count {
+.napkin-notes-upload-modal .napkin-qr-upload-count {
   color: var(--text-muted);
   margin-top: 0.5rem;
 }
 
-.napkin-notes-modal .qr-error {
+.napkin-notes-upload-modal .napkin-qr-error {
   color: var(--text-error);
   font-weight: 600;
-}
-
-.napkin-notes-modal .qr-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
   padding: 1rem;
 }
 
-.napkin-notes-modal .qr-code {
+.napkin-notes-upload-modal .napkin-qr-code {
   padding: 1.5rem;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.napkin-notes-modal .qr-info {
+.napkin-notes-upload-modal .napkin-qr-info {
   text-align: center;
   max-width: 400px;
 }
 
-.napkin-notes-modal .qr-info-title {
+.napkin-notes-upload-modal .napkin-qr-info-title {
   font-size: 1.1em;
   font-weight: 600;
   margin-bottom: 0.25rem;
   color: var(--text-normal);
 }
 
-.napkin-notes-modal .qr-info-subtitle {
+.napkin-notes-upload-modal .napkin-qr-info-subtitle {
   font-size: 0.85em;
   color: var(--text-muted);
   margin-bottom: 0.5rem;
 }
 
-.napkin-notes-modal .qr-info-url {
+.napkin-notes-upload-modal .napkin-qr-info-url {
   font-family: var(--font-monospace);
   font-size: 0.85em;
   color: var(--text-muted);
@@ -239,7 +233,7 @@
   margin-bottom: 0.5rem;
 }
 
-.napkin-notes-modal .qr-copy-btn {
+.napkin-notes-upload-modal .napkin-qr-copy-btn {
   padding: 0.5rem 1rem;
   background: var(--interactive-normal);
   border: none;
@@ -250,12 +244,12 @@
   transition: background 0.2s;
 }
 
-.napkin-notes-modal .qr-copy-btn:hover {
+.napkin-notes-upload-modal .napkin-qr-copy-btn:hover {
   background: var(--interactive-hover);
 }
 
 /* Carousel (Modal) */
-.napkin-notes-modal .carousel-wrapper {
+.napkin-notes-upload-modal .napkin-carousel-wrapper {
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
   padding: 0.4rem 0.5rem;
@@ -264,13 +258,13 @@
   overflow: hidden;
 }
 
-.napkin-notes-modal .carousel-empty {
+.napkin-notes-upload-modal .napkin-carousel-empty {
   text-align: center;
   color: var(--text-muted);
   padding: 2rem;
 }
 
-.napkin-notes-modal .carousel-navigation {
+.napkin-notes-upload-modal .napkin-carousel-navigation {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -278,7 +272,7 @@
   margin-bottom: 1rem;
 }
 
-.napkin-notes-modal .carousel-button {
+.napkin-notes-upload-modal .napkin-carousel-button {
   background: var(--interactive-normal);
   border: none;
   border-radius: 6px;
@@ -292,17 +286,17 @@
   width: auto;
 }
 
-.napkin-notes-modal .carousel-button:hover:not(:disabled) {
+.napkin-notes-upload-modal .napkin-carousel-button:hover:not(:disabled) {
   background: var(--interactive-hover);
   transform: translateY(-1px);
 }
 
-.napkin-notes-modal .carousel-button:disabled {
+.napkin-notes-upload-modal .napkin-carousel-button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
 
-.napkin-notes-modal .carousel-delete-btn {
+.napkin-notes-upload-modal .napkin-carousel-delete-btn {
   background: var(--background-modifier-error);
   color: var(--text-on-accent);
   margin-left: 1rem;
@@ -310,11 +304,11 @@
   padding: 0.4rem 0.8rem;
 }
 
-.napkin-notes-modal .carousel-delete-btn:hover:not(:disabled) {
+.napkin-notes-upload-modal .napkin-carousel-delete-btn:hover:not(:disabled) {
   background: var(--text-error);
 }
 
-.napkin-notes-modal .carousel-counter {
+.napkin-notes-upload-modal .napkin-carousel-counter {
   color: var(--text-muted);
   font-weight: bold;
   font-size: 1rem;
@@ -323,13 +317,13 @@
 }
 
 /* Carousel Layout with Thumbnail Strip (Modal) */
-.napkin-notes-modal .carousel-layout {
+.napkin-notes-upload-modal .napkin-carousel-layout {
   display: flex;
   gap: 1rem;
   width: 100%;
 }
 
-.napkin-notes-modal .thumbnail-strip {
+.napkin-notes-upload-modal .napkin-thumbnail-strip {
   width: 120px;
   min-width: 120px;
   max-height: 450px;
@@ -342,20 +336,20 @@
   transition: flex-direction 0.2s, width 0.2s, max-height 0.2s;
 }
 
-.napkin-notes-modal .thumbnail-header {
+.napkin-notes-upload-modal .napkin-thumbnail-header {
   padding: 0.5rem;
   background: var(--background-secondary);
   border-bottom: 1px solid var(--background-modifier-border);
   text-align: center;
 }
 
-.napkin-notes-modal .thumbnail-count {
+.napkin-notes-upload-modal .napkin-thumbnail-count {
   font-size: 0.75em;
   color: var(--text-muted);
   font-weight: 600;
 }
 
-.napkin-notes-modal .thumbnails-container {
+.napkin-notes-upload-modal .napkin-thumbnails-container {
   flex: 1;
   overflow-y: auto;
   padding: 0.5rem;
@@ -364,7 +358,7 @@
   gap: 0.5rem;
 }
 
-.napkin-notes-modal .thumbnail-wrapper {
+.napkin-notes-upload-modal .napkin-thumbnail-wrapper {
   position: relative;
   cursor: pointer;
   border: 2px solid transparent;
@@ -375,7 +369,7 @@
   width: auto !important;
 }
 
-.napkin-notes-modal .drop-indicator {
+.napkin-notes-upload-modal .napkin-drop-indicator {
   height: 0;
   border-top: 3px solid var(--interactive-accent);
   margin: 0.25rem 0;
@@ -383,26 +377,26 @@
   transition: border-color 0.15s;
 }
 
-.napkin-notes-modal .thumbnail-wrapper:hover {
+.napkin-notes-upload-modal .napkin-thumbnail-wrapper:hover {
   border-color: var(--text-muted);
 }
 
-.napkin-notes-modal .thumbnail-wrapper.active {
+.napkin-notes-upload-modal .napkin-thumbnail-wrapper.active {
   border-color: var(--interactive-accent);
   background: var(--background-modifier-hover);
 }
 
-.napkin-notes-modal .thumbnail-wrapper.dragging {
+.napkin-notes-upload-modal .napkin-thumbnail-wrapper.napkin-dragging {
   opacity: 0.5;
   transform: scale(0.95);
 }
 
-.napkin-notes-modal .thumbnail-wrapper.drag-over {
+.napkin-notes-upload-modal .napkin-thumbnail-wrapper.napkin-drag-over {
   border-color: var(--text-success);
   border-style: dashed;
 }
 
-.napkin-notes-modal .thumbnail-number {
+.napkin-notes-upload-modal .napkin-thumbnail-number {
   position: absolute;
   top: 2px;
   left: 2px;
@@ -416,7 +410,7 @@
   width: auto !important;
 }
 
-.napkin-notes-modal .thumbnail-image {
+.napkin-notes-upload-modal .napkin-thumbnail-image {
   width: 100%;
   height: 80px;
   object-fit: cover;
@@ -424,14 +418,14 @@
   display: block;
 }
 
-.napkin-notes-modal .carousel-main-area {
+.napkin-notes-upload-modal .napkin-carousel-main-area {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
-.napkin-notes-modal .carousel-image-container {
+.napkin-notes-upload-modal .napkin-carousel-image-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -444,7 +438,7 @@
   position: relative;
 }
 
-.napkin-notes-modal .carousel-image-wrapper {
+.napkin-notes-upload-modal .napkin-carousel-image-wrapper {
   width: 100%;
   height: 100%;
   display: flex;
@@ -453,7 +447,7 @@
   overflow: hidden;
 }
 
-.napkin-notes-modal .carousel-image {
+.napkin-notes-upload-modal .napkin-carousel-image {
   max-width: 100%;
   max-height: 400px;
   object-fit: contain;
@@ -465,8 +459,8 @@
 }
 
 /* Zoom Slider Overlay (shared between modal and reading view) */
-.napkin-notes-modal .zoom-slider-overlay,
-.napkin-notes-carousel-reading .zoom-slider-overlay {
+.napkin-notes-upload-modal .napkin-napkin-zoom-slider-overlay,
+.napkin-notes-carousel-reading .napkin-napkin-zoom-slider-overlay {
   position: absolute;
   bottom: 12px;
   left: 50%;
@@ -483,25 +477,29 @@
   z-index: 10;
 }
 
-.napkin-notes-modal .carousel-image-container:hover .zoom-slider-overlay,
-.napkin-notes-modal .carousel-image-container:focus-within .zoom-slider-overlay,
+.napkin-notes-upload-modal
+  .napkin-carousel-image-container:hover
+  .napkin-napkin-zoom-slider-overlay,
+.napkin-notes-upload-modal
+  .napkin-carousel-image-container:focus-within
+  .napkin-napkin-zoom-slider-overlay,
 .napkin-notes-carousel-reading
-  .carousel-image-container:hover
-  .zoom-slider-overlay,
+  .napkin-carousel-image-container:hover
+  .napkin-napkin-zoom-slider-overlay,
 .napkin-notes-carousel-reading
-  .carousel-image-container:focus-within
-  .zoom-slider-overlay {
+  .napkin-carousel-image-container:focus-within
+  .napkin-napkin-zoom-slider-overlay {
   opacity: 1;
 }
 
-.napkin-notes-modal .zoom-icon,
-.napkin-notes-carousel-reading .zoom-icon {
+.napkin-notes-upload-modal .napkin-zoom-icon,
+.napkin-notes-carousel-reading .napkin-zoom-icon {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.8);
 }
 
-.napkin-notes-modal .zoom-slider,
-.napkin-notes-carousel-reading .zoom-slider {
+.napkin-notes-upload-modal .napkin-zoom-slider,
+.napkin-notes-carousel-reading .napkin-zoom-slider {
   width: 100px;
   height: 4px;
   -webkit-appearance: none;
@@ -511,8 +509,8 @@
   cursor: pointer;
 }
 
-.napkin-notes-modal .zoom-slider::-webkit-slider-thumb,
-.napkin-notes-carousel-reading .zoom-slider::-webkit-slider-thumb {
+.napkin-notes-upload-modal .napkin-zoom-slider::-webkit-slider-thumb,
+.napkin-notes-carousel-reading .napkin-zoom-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 14px;
@@ -524,13 +522,13 @@
   transition: transform 0.1s ease;
 }
 
-.napkin-notes-modal .zoom-slider::-webkit-slider-thumb:hover,
-.napkin-notes-carousel-reading .zoom-slider::-webkit-slider-thumb:hover {
+.napkin-notes-upload-modal .napkin-zoom-slider::-webkit-slider-thumb:hover,
+.napkin-notes-carousel-reading .napkin-zoom-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
 }
 
-.napkin-notes-modal .zoom-slider::-moz-range-thumb,
-.napkin-notes-carousel-reading .zoom-slider::-moz-range-thumb {
+.napkin-notes-upload-modal .napkin-zoom-slider::-moz-range-thumb,
+.napkin-notes-carousel-reading .napkin-zoom-slider::-moz-range-thumb {
   width: 14px;
   height: 14px;
   background: white;
@@ -540,8 +538,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.napkin-notes-modal .zoom-value,
-.napkin-notes-carousel-reading .zoom-value {
+.napkin-notes-upload-modal .napkin-zoom-value,
+.napkin-notes-carousel-reading .napkin-zoom-value {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.9);
   min-width: 36px;
@@ -549,8 +547,8 @@
   font-family: var(--font-monospace);
 }
 
-.napkin-notes-modal .zoom-reset-btn,
-.napkin-notes-carousel-reading .zoom-reset-btn {
+.napkin-notes-upload-modal .napkin-zoom-reset-btn,
+.napkin-notes-carousel-reading .napkin-zoom-reset-btn {
   padding: 2px 8px;
   font-size: 10px;
   background: rgba(255, 255, 255, 0.2);
@@ -561,13 +559,13 @@
   transition: background 0.15s ease;
 }
 
-.napkin-notes-modal .zoom-reset-btn:hover,
-.napkin-notes-carousel-reading .zoom-reset-btn:hover {
+.napkin-notes-upload-modal .napkin-zoom-reset-btn:hover,
+.napkin-notes-carousel-reading .napkin-zoom-reset-btn:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
 /* Annotation Editor */
-.napkin-notes-modal .napkin-notes-annotation-section {
+.napkin-notes-upload-modal .napkin-notes-annotation-section {
   margin-top: 1rem;
   padding: 1rem;
   border: 1px solid var(--background-modifier-border);
@@ -577,136 +575,15 @@
   overflow: hidden;
 }
 
-.napkin-notes-modal .annotation-section {
-  margin-bottom: 1rem;
-}
-
-.napkin-notes-modal .annotation-section:last-child {
-  margin-bottom: 0;
-}
-
-.napkin-notes-modal .annotation-label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-normal);
-}
-
-.napkin-notes-modal .keyword-input-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border: 2px solid var(--background-modifier-border);
-  border-radius: 6px;
-  background: var(--background-primary);
-  min-height: 50px;
-  align-items: center;
-}
-
-.napkin-notes-modal .keyword-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.75rem;
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-  border-radius: 16px;
-  font-size: 0.9em;
-  font-weight: 500;
-}
-
-.napkin-notes-modal .keyword-remove {
-  cursor: pointer;
-  font-size: 1.2em;
-  font-weight: bold;
-  line-height: 1;
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-
-.napkin-notes-modal .keyword-remove:hover {
-  opacity: 1;
-}
-
-.napkin-notes-modal .keyword-input {
-  flex: 1;
-  min-width: 150px;
-  border: none;
-  background: transparent;
-  color: var(--text-normal);
-  outline: none;
-  font-size: 0.95em;
-}
-
-.napkin-notes-modal .keyword-input::placeholder {
-  color: var(--text-faint);
-}
-
-.napkin-notes-modal .keyword-suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  align-items: center;
-}
-
-.napkin-notes-modal .suggestions-label {
-  color: var(--text-muted);
-  font-size: 0.9em;
-}
-
-.napkin-notes-modal .keyword-suggestion-btn {
-  padding: 0.25rem 0.75rem;
-  background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 12px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: 0.85em;
-  transition: all 0.2s;
-}
-
-.napkin-notes-modal .keyword-suggestion-btn:hover {
-  background: var(--interactive-hover);
-  color: var(--text-normal);
-  border-color: var(--interactive-accent);
-}
-
-.napkin-notes-modal .description-input {
-  width: 100%;
-  max-width: 100%;
-  min-height: 80px;
-  padding: 0.75rem;
-  border: 2px solid var(--background-modifier-border);
-  border-radius: 6px;
-  background: var(--background-primary);
-  color: var(--text-normal);
-  font-family: var(--font-interface);
-  font-size: 0.95em;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-
-.napkin-notes-modal .description-input:focus {
-  border-color: var(--interactive-accent);
-}
-
-.napkin-notes-modal .description-input::placeholder {
-  color: var(--text-faint);
-}
-
 /* Modal Buttons */
-.napkin-notes-modal .modal-button-container {
+.napkin-notes-upload-modal .napkin-modal-button-container {
   width: auto; /* Restore button container width */
   display: flex;
   justify-content: flex-end; /* Align buttons to the right */
   gap: 1rem; /* Add spacing between buttons */
 }
 
-.napkin-notes-modal .modal-button-container button {
+.napkin-notes-upload-modal .napkin-modal-button-container button {
   width: auto; /* Restore button width */
   padding: 0.75rem 1.5rem; /* Adjust padding for better fit */
   border: none;
@@ -716,21 +593,29 @@
   transition: all 0.2s;
 }
 
-.napkin-notes-modal .modal-button-container button:not(.mod-cta) {
+.napkin-notes-upload-modal
+  .napkin-modal-button-container
+  button:not(.napkin-mod-cta) {
   background: var(--interactive-normal);
   color: var(--text-normal);
 }
 
-.napkin-notes-modal .modal-button-container button:not(.mod-cta):hover {
+.napkin-notes-upload-modal
+  .napkin-modal-button-container
+  button:not(.napkin-mod-cta):hover {
   background: var(--interactive-hover);
 }
 
-.napkin-notes-modal .modal-button-container button.mod-cta {
+.napkin-notes-upload-modal
+  .napkin-modal-button-container
+  button.napkin-mod-cta {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
 }
 
-.napkin-notes-modal .modal-button-container button.mod-cta:hover {
+.napkin-notes-upload-modal
+  .napkin-modal-button-container
+  button.napkin-mod-cta:hover {
   background: var(--interactive-accent-hover);
 }
 
@@ -745,7 +630,7 @@
 }
 
 /* Edit mode indicator for reading view only */
-.napkin-notes-carousel-reading.carousel-mode-edit {
+.napkin-notes-carousel-reading.napkin-carousel-mode-edit {
   background: color-mix(
     in srgb,
     var(--interactive-accent) 10%,
@@ -758,7 +643,7 @@
   );
 }
 
-.napkin-notes-carousel-reading .carousel-layout {
+.napkin-notes-carousel-reading .napkin-carousel-layout {
   display: flex;
   gap: 1rem;
   min-height: 500px;
@@ -766,7 +651,7 @@
   max-height: 800px;
 }
 
-.napkin-notes-carousel-reading .thumbnail-strip {
+.napkin-notes-carousel-reading .napkin-thumbnail-strip {
   display: flex;
   flex-direction: row;
   background: var(--background-primary);
@@ -779,58 +664,16 @@
   width: 120px;
   flex-shrink: 0;
   position: relative;
-  @media (max-width: 600px) {
-    .napkin-notes-carousel-reading .thumbnail-strip,
-    .napkin-notes-modal .thumbnail-strip {
-      flex-direction: row !important;
-      width: 100% !important;
-      min-width: 0 !important;
-      max-width: 100vw !important;
-      max-height: 80px !important;
-      border-radius: 8px 8px 0 0;
-      margin-bottom: 0.5rem;
-      overflow-x: auto;
-      overflow-y: hidden;
-    }
-    .napkin-notes-carousel-reading .thumbnail-content,
-    .napkin-notes-modal .thumbnail-content {
-      flex-direction: row !important;
-      max-height: 80px;
-      width: 100%;
-      overflow-x: auto;
-      overflow-y: hidden;
-    }
-    .napkin-notes-carousel-reading .thumbnails-container,
-    .napkin-notes-modal .thumbnails-container {
-      flex-direction: row !important;
-      gap: 0.5rem;
-      width: 100%;
-      max-height: 80px;
-      overflow-x: auto;
-      overflow-y: hidden;
-    }
-    .napkin-notes-carousel-reading .thumbnail-wrapper,
-    .napkin-notes-modal .thumbnail-wrapper {
-      min-width: 60px;
-      max-width: 80px;
-      height: 50px;
-    }
-    .napkin-notes-carousel-reading .thumbnail-image,
-    .napkin-notes-modal .thumbnail-image {
-      width: 60px;
-      height: 50px;
-    }
-  }
 }
 
-.napkin-notes-carousel-reading .thumbnail-strip.collapsed {
+.napkin-notes-carousel-reading .napkin-thumbnail-strip.napkin-collapsed {
   width: 0;
   min-width: 0;
   border-width: 0;
   background: transparent;
 }
 
-.napkin-notes-carousel-reading .thumbnail-toggle-btn {
+.napkin-notes-carousel-reading .napkin-thumbnail-toggle-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -850,23 +693,23 @@
 }
 
 .napkin-notes-carousel-reading
-  .thumbnail-strip.collapsed
-  .thumbnail-toggle-btn {
+  .napkin-thumbnail-strip.napkin-collapsed
+  .napkin-thumbnail-toggle-btn {
   right: -16px;
   border-radius: 6px;
 }
 
-.napkin-notes-carousel-reading .thumbnail-toggle-btn:hover {
+.napkin-notes-carousel-reading .napkin-thumbnail-toggle-btn:hover {
   background: var(--background-modifier-hover);
 }
 
-.napkin-notes-carousel-reading .toggle-icon {
+.napkin-notes-carousel-reading .napkin-toggle-icon {
   font-size: 1.25rem;
   color: var(--text-muted);
   line-height: 1;
 }
 
-.napkin-notes-carousel-reading .thumbnail-content {
+.napkin-notes-carousel-reading .napkin-thumbnail-content {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -874,24 +717,26 @@
   min-width: 0;
 }
 
-.napkin-notes-carousel-reading .thumbnail-strip.collapsed .thumbnail-content {
+.napkin-notes-carousel-reading
+  .napkin-thumbnail-strip.napkin-collapsed
+  .napkin-thumbnail-content {
   display: none;
 }
 
-.napkin-notes-carousel-reading .thumbnail-header {
+.napkin-notes-carousel-reading .napkin-thumbnail-header {
   padding: 0.5rem;
   border-bottom: 1px solid var(--background-modifier-border);
   text-align: center;
   flex-shrink: 0;
 }
 
-.napkin-notes-carousel-reading .thumbnail-count {
+.napkin-notes-carousel-reading .napkin-thumbnail-count {
   font-size: 0.75rem;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
-.napkin-notes-carousel-reading .thumbnails-container {
+.napkin-notes-carousel-reading .napkin-thumbnails-container {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -901,7 +746,7 @@
   gap: 0.5rem;
 }
 
-.napkin-notes-carousel-reading .thumbnail-wrapper {
+.napkin-notes-carousel-reading .napkin-thumbnail-wrapper {
   position: relative;
   border-radius: 6px;
   overflow: hidden;
@@ -912,7 +757,7 @@
   flex-shrink: 0;
 }
 
-.napkin-notes-carousel-reading .drop-indicator {
+.napkin-notes-carousel-reading .napkin-drop-indicator {
   height: 0;
   border-top: 3px solid var(--interactive-accent);
   margin: 0.25rem 0;
@@ -920,18 +765,15 @@
   transition: border-color 0.15s;
 }
 
-.napkin-notes-carousel-reading .thumbnail-wrapper:hover {
+.napkin-notes-carousel-reading .napkin-thumbnail-wrapper:hover {
   border-color: var(--text-muted);
 }
 
-.napkin-notes-carousel-reading .thumbnail-wrapper.active {
+.napkin-notes-carousel-reading .napkin-thumbnail-wrapper.active {
   border-color: var(--interactive-accent);
 }
-.block-language-physical-note-viewer {
-  margin-bottom: 0;
-}
 
-.napkin-notes-carousel-reading .thumbnail-number {
+.napkin-notes-carousel-reading .napkin-thumbnail-number {
   position: absolute;
   top: 2px;
   left: 2px;
@@ -943,14 +785,14 @@
   z-index: 1;
 }
 
-.napkin-notes-carousel-reading .thumbnail-image {
+.napkin-notes-carousel-reading .napkin-thumbnail-image {
   width: 100%;
   height: 60px;
   object-fit: cover;
   display: block;
 }
 
-.napkin-notes-carousel-reading .carousel-main-area {
+.napkin-notes-carousel-reading .napkin-.napkin-carousel-main-area {
   flex: 1;
   min-width: 0;
   max-width: 500px;
@@ -960,7 +802,7 @@
   height: 100%;
 }
 
-.napkin-notes-carousel-reading .carousel-navigation {
+.napkin-notes-carousel-reading .napkin-carousel-navigation {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -970,7 +812,7 @@
 }
 
 /* Reading view carousel buttons */
-.napkin-notes-carousel-reading .carousel-button {
+.napkin-notes-carousel-reading .napkin-carousel-button {
   background: var(--interactive-normal);
   border: none;
   border-radius: 6px;
@@ -984,27 +826,28 @@
   width: auto;
 }
 
-.napkin-notes-carousel-reading .carousel-button:hover:not(:disabled) {
+.napkin-notes-carousel-reading .napkin-carousel-button:hover:not(:disabled) {
   background: var(--interactive-hover);
   transform: translateY(-1px);
 }
 
-.napkin-notes-carousel-reading .carousel-button:disabled {
+.napkin-notes-carousel-reading .napkin-carousel-button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
 
-.napkin-notes-carousel-reading .carousel-delete-btn {
+.napkin-notes-carousel-reading .mapkin-carousel-delete-btn {
   background: var(--background-modifier-error);
   color: var(--text-on-accent);
   margin-left: 1rem;
 }
 
-.napkin-notes-carousel-reading .carousel-delete-btn:hover:not(:disabled) {
+.napkin-notes-carousel-reading
+  .napkin-carousel-delete-btn:hover:not(:disabled) {
   background: var(--text-error);
 }
 
-.napkin-notes-carousel-reading .carousel-counter {
+.napkin-notes-carousel-reading .napkin-carousel-counter {
   color: var(--text-muted);
   font-weight: bold;
   font-size: 1rem;
@@ -1012,29 +855,29 @@
   text-align: center;
 }
 
-.napkin-notes-carousel-reading .carousel-edit-btn,
-.napkin-notes-carousel-reading .carousel-save-btn,
-.napkin-notes-carousel-reading .carousel-cancel-btn {
+.napkin-notes-carousel-reading .napkin-carousel-edit-btn,
+.napkin-notes-carousel-reading .napkin-carousel-save-btn,
+.napkin-notes-carousel-reading .napkin-carousel-cancel-btn {
   font-size: 0.9rem;
   padding: 0.4rem 0.8rem;
 }
 
-.napkin-notes-carousel-reading .carousel-save-btn {
+.napkin-notes-carousel-reading .napkin-carousel-save-btn {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
 }
 
-.napkin-notes-carousel-reading .carousel-save-btn:hover:not(:disabled) {
+.napkin-notes-carousel-reading .napkin-carousel-save-btn:hover:not(:disabled) {
   background: var(--interactive-accent-hover);
 }
 
-.napkin-notes-carousel-reading .carousel-image-container {
+.napkin-notes-carousel-reading .napkin-carousel-image-container {
   position: relative;
   flex: 1;
   min-height: 0;
 }
 
-.napkin-notes-carousel-reading .carousel-image-wrapper {
+.napkin-notes-carousel-reading .napkin-carousel-image-wrapper {
   width: 100%;
   height: 100%;
   display: flex;
@@ -1043,7 +886,7 @@
   overflow: hidden;
 }
 
-.napkin-notes-carousel-reading .carousel-image {
+.napkin-notes-carousel-reading .napkin-carousel-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -1053,7 +896,7 @@
   -webkit-user-drag: none;
 }
 
-.napkin-notes-carousel-reading .carousel-metadata {
+.napkin-notes-carousel-reading .napkin-carousel-metadata {
   margin-top: 1rem;
   padding: 1rem;
   background: var(--background-primary);
@@ -1061,7 +904,7 @@
   font-size: 0.95em;
 }
 
-.napkin-notes-carousel-reading .carousel-description {
+.napkin-notes-carousel-reading .napkin-carousel-description {
   color: var(--text-muted);
   margin-bottom: 0.5rem;
   line-height: 1.4;
@@ -1070,7 +913,7 @@
   position: relative;
 }
 
-.napkin-notes-carousel-reading .carousel-description.collapsed {
+.napkin-notes-carousel-reading .napkin-carousel-description.collapsed {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;
@@ -1078,11 +921,11 @@
   overflow: hidden;
 }
 
-.napkin-notes-carousel-reading .carousel-description.expanded {
+.napkin-notes-carousel-reading .napkin-carousel-description.expanded {
   display: block;
 }
 
-.napkin-notes-carousel-reading .carousel-description-toggle {
+.napkin-notes-carousel-reading .napkin-carousel-description-toggle {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -1098,12 +941,12 @@
   opacity: 0.7;
 }
 
-.napkin-notes-carousel-reading .carousel-description-toggle:hover {
+.napkin-notes-carousel-reading .napkin-carousel-description-toggle:hover {
   color: var(--text-muted);
   opacity: 1;
 }
 
-.napkin-notes-carousel-reading .carousel-filepath {
+.napkin-notes-carousel-reading .napkin-carousel-filepath {
   font-family: var(--font-monospace);
   color: var(--text-faint);
   font-size: 0.7em;
@@ -1112,7 +955,7 @@
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.napkin-notes-carousel-reading .carousel-error {
+.napkin-notes-carousel-reading .napkin-carousel-error {
   text-align: center;
   color: var(--text-error);
   padding: 2rem;
@@ -1125,34 +968,25 @@
   font-style: italic;
 }
 
-/* Shared View */
-.napkin-notes-modal .shared-view {
-  display: none; /* Hide shared view by default */
-}
-
-.napkin-notes-modal .shared-view.visible {
-  display: block; /* Show shared view when images are uploaded */
-}
-
-.carousel-edit-controls {
+.napkin-carousel-edit-controls {
   display: flex;
   justify-content: center;
   margin: 0.5rem;
   gap: 0.25rem;
 }
-.carousel-description-input {
+.napkin-carousel-description-input {
   width: 100%;
   margin-top: 1rem;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .napkin-notes-modal {
+  .napkin-notes-upload-modal {
     width: 95vw;
     height: 90vh;
   }
 
-  .carousel-image-container {
+  .napkin-carousel-image-container {
     max-height: 500px;
   }
 
@@ -1165,13 +999,13 @@
   }
 
   /* Reading view carousel responsive */
-  .napkin-notes-carousel-reading .carousel-layout {
+  .napkin-notes-carousel-reading .napkin-carousel-layout {
     flex-direction: column;
     height: auto;
     min-height: 350px;
   }
 
-  .napkin-notes-carousel-reading .thumbnail-strip {
+  .napkin-notes-carousel-reading .napkin-thumbnail-strip {
     width: 100% !important;
     height: auto;
     flex-direction: column;
@@ -1180,14 +1014,14 @@
     overflow: visible;
   }
 
-  .napkin-notes-carousel-reading .thumbnail-strip.collapsed {
+  .napkin-notes-carousel-reading .napkin-thumbnail-strip.collapsed {
     width: 100% !important;
     height: 0;
     min-height: 0;
     border-width: 0;
   }
 
-  .napkin-notes-carousel-reading .thumbnail-toggle-btn {
+  .napkin-notes-carousel-reading .napkin-thumbnail-toggle-btn {
     position: absolute;
     top: auto;
     bottom: -15px;
@@ -1202,19 +1036,19 @@
   }
 
   .napkin-notes-carousel-reading
-    .thumbnail-strip.collapsed
-    .thumbnail-toggle-btn {
+    .napkin-thumbnail-strip.collapsed
+    .napkin-thumbnail-toggle-btn {
     bottom: -10px;
     border-radius: 6px;
     right: auto;
   }
 
-  .napkin-notes-carousel-reading .thumbnail-content {
+  .napkin-notes-carousel-reading .napkin-thumbnail-content {
     flex-direction: row;
     max-height: 80px;
   }
 
-  .napkin-notes-carousel-reading .thumbnail-header {
+  .napkin-notes-carousel-reading .napkin-thumbnail-header {
     border-bottom: none;
     border-right: 1px solid var(--background-modifier-border);
     padding: 0.5rem;
@@ -1222,26 +1056,28 @@
     align-items: center;
   }
 
-  .napkin-notes-carousel-reading .thumbnails-container {
+  .napkin-notes-carousel-reading .napkin-thumbnails-container {
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
   }
 
-  .napkin-notes-carousel-reading .thumbnail-wrapper {
+  .napkin-notes-carousel-reading .napkin-thumbnail-wrapper {
     min-width: 60px;
   }
 
-  .napkin-notes-carousel-reading .thumbnail-image {
+  .napkin-notes-carousel-reading .napkin-thumbnail-image {
     width: 60px;
     height: 50px;
   }
 
-  .napkin-notes-carousel-reading .toggle-icon {
+  .napkin-notes-carousel-reading .napkin-toggle-icon {
     transform: rotate(90deg);
   }
 
-  .napkin-notes-carousel-reading .thumbnail-strip.collapsed .toggle-icon {
+  .napkin-notes-carousel-reading
+    .napkin-thumbnail-strip.collapsed
+    .napkin-toggle-icon {
     transform: rotate(-90deg);
   }
 }

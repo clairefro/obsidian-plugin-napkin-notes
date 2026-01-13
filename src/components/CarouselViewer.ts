@@ -88,21 +88,24 @@ export class CarouselViewer {
     this.container.empty();
 
     // Add mode class to container
-    this.container.removeClass("carousel-mode-view", "carousel-mode-edit");
-    this.container.addClass(`carousel-mode-${this.mode}`);
+    this.container.removeClass(
+      "napkin-carousel-mode-view",
+      "napkin-carousel-mode-edit"
+    );
+    this.container.addClass(`napkin-carousel-mode-${this.mode}`);
 
     if (this.images.length === 0) {
       this.container.createEl("p", {
         text:
           this.mode === "edit" ? "No images uploaded yet" : "No images found",
-        cls: "carousel-empty",
+        cls: "napkin-carousel-empty",
       });
       return;
     }
 
     // Main carousel layout
     this.carouselLayout = this.container.createEl("div", {
-      cls: "carousel-layout",
+      cls: "napkin-carousel-layout",
     });
 
     // Thumbnail strip
@@ -126,17 +129,19 @@ export class CarouselViewer {
     // In edit mode, always open the tray (no 'collapsed' class)
     const forceOpen = isCollapsible && this.mode === "edit";
     this.thumbnailStrip = this.carouselLayout.createEl("div", {
-      cls: `thumbnail-strip${isCollapsible && !forceOpen ? " collapsed" : ""}`,
+      cls: `napkin-thumbnail-strip${
+        isCollapsible && !forceOpen ? " napkin-collapsed" : ""
+      }`,
     });
 
     if (isCollapsible && this.mode !== "edit") {
       // Toggle button for collapsible mode (view mode only)
       const toggleBtn = this.thumbnailStrip.createEl("button", {
-        cls: "thumbnail-toggle-btn",
+        cls: "napkin-thumbnail-toggle-btn",
         attr: { title: "Toggle thumbnails" },
       });
       const toggleIcon = toggleBtn.createEl("span", {
-        cls: "toggle-icon",
+        cls: "napkin-toggle-icon",
         text: "›",
       });
 
@@ -152,21 +157,21 @@ export class CarouselViewer {
 
     // Thumbnail content wrapper
     this.thumbnailContent = this.thumbnailStrip.createEl("div", {
-      cls: "thumbnail-content",
+      cls: "napkin-thumbnail-content",
     });
 
     // Header
     const thumbHeader = this.thumbnailContent.createEl("div", {
-      cls: "thumbnail-header",
+      cls: "napkin-thumbnail-header",
     });
     thumbHeader.createEl("span", {
       text: `${this.images.length} image${this.images.length !== 1 ? "s" : ""}`,
-      cls: "thumbnail-count",
+      cls: "napkin-thumbnail-count",
     });
 
     // Thumbnails container
     this.thumbsContainer = this.thumbnailContent.createEl("div", {
-      cls: "thumbnails-container",
+      cls: "napkin-thumbnails-container",
     });
 
     this.renderThumbnails();
@@ -179,7 +184,9 @@ export class CarouselViewer {
 
     this.images.forEach((image, index) => {
       const thumbWrapper = this.thumbsContainer!.createEl("div", {
-        cls: `thumbnail-wrapper ${index === this.currentIndex ? "active" : ""}`,
+        cls: `napkin-thumbnail-wrapper ${
+          index === this.currentIndex ? "active" : ""
+        }`,
         attr:
           this.mode === "edit"
             ? {
@@ -191,13 +198,13 @@ export class CarouselViewer {
 
       // Page number
       thumbWrapper.createEl("div", {
-        cls: "thumbnail-number",
+        cls: "napkin-thumbnail-number",
         text: (index + 1).toString(),
       });
 
       // Thumbnail image
       const thumbImg = thumbWrapper.createEl("img", {
-        cls: "thumbnail-image",
+        cls: "napkin-thumbnail-image",
         attr: { alt: `Page ${index + 1}` },
       });
 
@@ -244,6 +251,7 @@ export class CarouselViewer {
         // Insert a drop indicator before or after the hovered thumbnail
         const indicator = document.createElement("div");
         indicator.className = "drop-indicator";
+        indicator.className = "napkin-drop-indicator";
         if (index > this.draggedIndex) {
           // Dropping after
           wrapper.after(indicator);
@@ -299,29 +307,29 @@ export class CarouselViewer {
     if (!this.carouselLayout) return;
 
     this.mainArea = this.carouselLayout.createEl("div", {
-      cls: "carousel-main-area",
+      cls: "napkin-carousel-main-area",
     });
 
     // --- EDIT MODE CONTROLS (Delete, Save, Cancel) ---
     if (this.mode === "edit") {
       const editControls = this.mainArea.createEl("div", {
-        cls: "carousel-edit-controls",
+        cls: "napkin-carousel-edit-controls",
       });
 
       this.deleteBtn = editControls.createEl("button", {
         text: "Delete",
-        cls: "carousel-button carousel-delete-btn carousel-edit-btn",
+        cls: "napkin-carousel-button napkin-carousel-delete-btn napkin-carousel-edit-btn",
         attr: { title: "Remove this image" },
       });
       this.deleteBtn.addEventListener("click", () => this.handleDelete());
 
       // Only show Done editing button in markdown note (reading view)
       const isUploadModal =
-        this.container.closest(".napkin-notes-modal") !== null;
+        this.container.closest(".napkin-notes-upload-modal") !== null;
       if (!isUploadModal) {
         this.cancelBtn = editControls.createEl("button", {
           text: "Done editing",
-          cls: "carousel-button carousel-edit-btn",
+          cls: "napkin-carousel-button napkin-carousel-edit-btn",
           attr: { title: "Save and exit editing" },
         });
         this.cancelBtn.addEventListener("click", () => {
@@ -332,19 +340,21 @@ export class CarouselViewer {
     }
 
     // --- PAGINATION CONTROLS ---
-    const nav = this.mainArea.createEl("div", { cls: "carousel-navigation" });
+    const nav = this.mainArea.createEl("div", {
+      cls: "napkin-carousel-navigation",
+    });
 
     this.prevBtn = nav.createEl("button", {
       text: "←",
-      cls: "carousel-button",
+      cls: "napkin-carousel-button",
     });
     this.prevBtn.addEventListener("click", () => this.previous());
 
-    this.counterEl = nav.createEl("span", { cls: "carousel-counter" });
+    this.counterEl = nav.createEl("span", { cls: "napkin-carousel-counter" });
 
     this.nextBtn = nav.createEl("button", {
       text: "→",
-      cls: "carousel-button",
+      cls: "napkin-carousel-button",
     });
     this.nextBtn.addEventListener("click", () => this.next());
 
@@ -352,7 +362,7 @@ export class CarouselViewer {
     if (this.options.showEditButton && this.mode === "view") {
       this.editBtn = nav.createEl("button", {
         text: "Edit",
-        cls: "carousel-button carousel-edit-btn",
+        cls: "napkin-carousel-edit-btn napkin-nav-edit-absolute",
         attr: { title: "Edit this carousel" },
       });
       this.editBtn.addEventListener("click", () => this.enterEditMode());
@@ -360,21 +370,31 @@ export class CarouselViewer {
 
     // Image container
     this.imageContainer = this.mainArea.createEl("div", {
-      cls: "carousel-image-container",
+      cls: "napkin-carousel-image-container",
     });
 
     const imageWrapper = this.imageContainer.createEl("div", {
-      cls: "carousel-image-wrapper",
+      cls: "napkin-carousel-image-wrapper",
     });
 
-    this.imageEl = imageWrapper.createEl("img", { cls: "carousel-image" });
+    this.imageEl = imageWrapper.createEl("img", {
+      cls: "napkin-carousel-image",
+    });
+
+    // File path as tooltip (reading view only)
+    const currentImage = this.images[this.currentIndex];
+    if (currentImage.filepath && this.mode !== "edit") {
+      this.imageEl.setAttr("title", currentImage.filepath);
+    } else if (this.imageEl) {
+      this.imageEl.removeAttribute("title");
+    }
 
     // Zoom controls
     this.renderZoomControls();
 
     // Metadata section
     this.metadataDiv = this.mainArea.createEl("div", {
-      cls: "carousel-metadata",
+      cls: "napkin-carousel-metadata",
     });
   }
 
@@ -401,13 +421,13 @@ export class CarouselViewer {
     if (!this.imageContainer) return;
 
     const zoomOverlay = this.imageContainer.createEl("div", {
-      cls: "zoom-slider-overlay",
+      cls: "napkin-napkin-zoom-slider-overlay",
     });
 
-    zoomOverlay.createEl("span", { cls: "zoom-icon", text: "🔍" });
+    zoomOverlay.createEl("span", { cls: "napkin-zoom-icon", text: "🔍" });
 
     this.zoomSlider = zoomOverlay.createEl("input", {
-      cls: "zoom-slider",
+      cls: "napkin-zoom-slider",
       attr: {
         type: "range",
         min: "0.5",
@@ -418,7 +438,7 @@ export class CarouselViewer {
     }) as HTMLInputElement;
 
     const zoomValue = zoomOverlay.createEl("span", {
-      cls: "zoom-value",
+      cls: "napkin-zoom-value",
       text: "100%",
     });
 
@@ -429,7 +449,7 @@ export class CarouselViewer {
     });
 
     const resetBtn = zoomOverlay.createEl("button", {
-      cls: "zoom-reset-btn",
+      cls: "napkin-zoom-reset-btn",
       text: "Reset",
       attr: { title: "Reset zoom" },
     });
@@ -521,7 +541,7 @@ export class CarouselViewer {
       // Editable description
 
       this.descriptionInput = this.metadataDiv.createEl("textarea", {
-        cls: "carousel-description-input",
+        cls: "napkin-carousel-description-input",
         attr: {
           placeholder:
             "[Optional] Add a description or keywords for this image to help with search...",
@@ -540,22 +560,24 @@ export class CarouselViewer {
         }
       });
     } else {
-      // Read-only description with expand/collapse
-      if (image.description) {
+      // Read-only description with expand/collapse (only if present and non-empty)
+      const desc =
+        typeof image.description === "string" ? image.description.trim() : "";
+      if (desc.length > 0) {
         const descContainer = this.metadataDiv.createEl("div");
         const descDiv = descContainer.createEl("div", {
-          cls: `carousel-description ${
-            this.descriptionExpanded ? "expanded" : "collapsed"
+          cls: `napkin-carousel-description ${
+            this.descriptionExpanded ? "napkin-expanded" : "napkin-collapsed"
           }`,
         });
-        descDiv.setText(image.description);
+        descDiv.setText(desc);
 
-        const lineCount = image.description.split("\n").length;
-        const needsExpand = lineCount > 3 || image.description.length > 150;
+        const lineCount = desc.split("\n").length;
+        const needsExpand = lineCount > 3 || desc.length > 150;
 
         if (needsExpand) {
           const toggleBtn = descContainer.createEl("button", {
-            cls: "carousel-description-toggle",
+            cls: "napkin-carousel-description-toggle",
           });
           toggleBtn.setText(
             this.descriptionExpanded ? "Show less ▲" : "Show more ▼"
@@ -571,14 +593,6 @@ export class CarouselViewer {
             );
           });
         }
-      }
-
-      // File path (reading view only)
-      if (image.filepath) {
-        const filepathDiv = this.metadataDiv.createEl("div", {
-          cls: "carousel-filepath",
-        });
-        filepathDiv.setText(image.filepath);
       }
     }
   }
@@ -742,7 +756,7 @@ export class CarouselViewer {
     if (this.zoomSlider) {
       this.zoomSlider.value = this.zoomLevel.toString();
       const zoomValue =
-        this.zoomSlider.parentElement?.querySelector(".zoom-value");
+        this.zoomSlider.parentElement?.querySelector(".napkin-zoom-value");
       if (zoomValue) {
         zoomValue.textContent = `${Math.round(this.zoomLevel * 100)}%`;
       }
@@ -775,7 +789,7 @@ export class CarouselViewer {
     if (this.zoomSlider) {
       this.zoomSlider.value = "1";
       const zoomValue =
-        this.zoomSlider.parentElement?.querySelector(".zoom-value");
+        this.zoomSlider.parentElement?.querySelector(".napkin-zoom-value");
       if (zoomValue) {
         zoomValue.textContent = "100%";
       }

@@ -46,18 +46,18 @@ export class UploadModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("napkin-notes-modal");
+    contentEl.addClass("napkin-notes-upload-modal");
 
     // Title
     contentEl.createEl("h2", { text: MODAL_TITLE });
 
     // ========== UPLOAD SECTION ==========
     const uploadSection = contentEl.createEl("div", {
-      cls: "modal-section upload-section",
+      cls: "napkin-modal-section upload-section",
     });
 
     const uploadHeader = uploadSection.createEl("div", {
-      cls: "section-header",
+      cls: "napkin-section-header",
     });
     uploadHeader.createEl("h3", { text: "Upload" });
 
@@ -75,15 +75,15 @@ export class UploadModal extends Modal {
 
     // ========== REVIEW SECTION ==========
     this.reviewSection = contentEl.createEl("div", {
-      cls: "modal-section review-section",
+      cls: "napkin-modal-section napkin-review-section",
     });
 
     const reviewHeader = this.reviewSection.createEl("div", {
-      cls: "section-header",
+      cls: "napkin-section-header",
     });
     reviewHeader.createEl("h3", { text: "Review" });
     this.imageCountEl = reviewHeader.createEl("span", {
-      cls: "image-count",
+      cls: "napkin-image-count",
       text: "No images",
     });
 
@@ -93,7 +93,7 @@ export class UploadModal extends Modal {
     });
     emptyState.createEl("p", {
       text: "Upload images to review them here",
-      cls: "empty-state-text",
+      cls: "napkin-empty-state-text",
     });
 
     // Carousel section
@@ -111,7 +111,7 @@ export class UploadModal extends Modal {
 
     // Buttons
     const buttonContainer = contentEl.createEl("div", {
-      cls: "modal-button-container",
+      cls: "napkin-modal-button-container",
     });
 
     const cancelBtn = buttonContainer.createEl("button", { text: "Cancel" });
@@ -119,7 +119,7 @@ export class UploadModal extends Modal {
 
     this.insertBtn = buttonContainer.createEl("button", {
       text: "Insert into Notes",
-      cls: "mod-cta",
+      cls: "napkin-mod-cta",
       attr: {
         "aria-label": "Upload image(s) first",
       },
@@ -347,17 +347,17 @@ export class UploadModal extends Modal {
     if (!this.contentContainer) return;
 
     const uploadZone = this.contentContainer.createEl("div", {
-      cls: "upload-zone",
+      cls: "napkin-upload-zone",
     });
 
     uploadZone.createEl("p", {
       text: "📁 Drop images or click to upload",
-      cls: "upload-zone-text",
+      cls: "napkin-upload-zone-text",
     });
 
     uploadZone.createEl("p", {
       text: "Supports multiple images",
-      cls: "upload-zone-subtext",
+      cls: "napkin-upload-zone-subtext",
     });
 
     // File input
@@ -405,7 +405,7 @@ export class UploadModal extends Modal {
     if (!this.contentContainer) return;
 
     const qrContainer = this.contentContainer.createEl("div", {
-      cls: "qr-upload-container",
+      cls: "napkin-qr-upload-container",
     });
 
     // Initialize QR display

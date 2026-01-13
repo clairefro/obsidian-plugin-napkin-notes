@@ -21,17 +21,19 @@ export class QRCodeDisplay {
     this.container.empty();
 
     // Status message
-    const statusDiv = this.container.createEl("div", { cls: "qr-status" });
+    const statusDiv = this.container.createEl("div", {
+      cls: "napkin-qr-status",
+    });
     statusDiv.createEl("div", {
       text: "✓ Ready to connect",
-      cls: "qr-status-active",
+      cls: "napkin-qr-status-active",
     });
 
     // QR code container
     const qrContainer = this.container.createEl("div", { cls: "qr-container" });
 
     // Generate and display QR code
-    this.qrCanvas = qrContainer.createEl("canvas", { cls: "qr-code" });
+    this.qrCanvas = qrContainer.createEl("canvas", { cls: "napkin-qr-code" });
     await QRCode.toCanvas(this.qrCanvas, serverInfo.url, {
       width: 300,
       margin: 2,
@@ -42,23 +44,23 @@ export class QRCodeDisplay {
     });
 
     // Server info
-    const infoDiv = qrContainer.createEl("div", { cls: "qr-info" });
+    const infoDiv = qrContainer.createEl("div", { cls: "napkin-qr-info" });
     infoDiv.createEl("div", {
       text: "Scan with your phone camera",
-      cls: "qr-info-title",
+      cls: "napkin-qr-info-title",
     });
     infoDiv.createEl("div", {
       text: "Phone must be on the same wifi network",
-      cls: "qr-info-subtitle",
+      cls: "napkin-qr-info-subtitle",
     });
 
-    const urlDiv = infoDiv.createEl("div", { cls: "qr-info-url" });
+    const urlDiv = infoDiv.createEl("div", { cls: "napkin-qr-info-url" });
     urlDiv.setText(serverInfo.url);
 
     // Copy button
     const copyBtn = infoDiv.createEl("button", {
       text: "Copy URL",
-      cls: "qr-copy-btn",
+      cls: "napkin-qr-copy-btn",
     });
 
     copyBtn.addEventListener("click", async () => {
@@ -72,7 +74,7 @@ export class QRCodeDisplay {
     // Upload counter
     const counterDiv = this.container.createEl("div", {
       text: "0 images received",
-      cls: "qr-upload-count",
+      cls: "napkin-qr-upload-count",
     });
     this.container.dataset.counter = "0";
   }
@@ -81,8 +83,9 @@ export class QRCodeDisplay {
    * Update upload counter
    */
   updateCounter(count: number): void {
-    const counterDiv =
-      this.container.querySelector<HTMLElement>(".qr-upload-count");
+    const counterDiv = this.container.querySelector<HTMLElement>(
+      ".napkin-qr-upload-count"
+    );
     if (counterDiv) {
       counterDiv.textContent = `${count} image${
         count !== 1 ? "s" : ""
@@ -96,10 +99,12 @@ export class QRCodeDisplay {
   showError(message: string): void {
     this.container.empty();
 
-    const errorDiv = this.container.createEl("div", { cls: "qr-status" });
+    const errorDiv = this.container.createEl("div", {
+      cls: "napkin-qr-status",
+    });
     errorDiv.createEl("div", {
       text: `✗ ${message}`,
-      cls: "qr-error",
+      cls: "napkin-qr-error",
     });
   }
 
