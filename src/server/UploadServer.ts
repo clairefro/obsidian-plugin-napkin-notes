@@ -142,7 +142,7 @@ function serveUploadPage(res: ServerResponse): void {
 
 		<div class="upload-area" id="dropZone">
 			<div class="upload-icon">📷</div>
-			<p><strong>Tap to select photos</strong><br>or drag and drop here</p>
+			<p><strong>Tap to select photos</strong></p>
 		</div>
 
 		<input type="file" id="fileInput" accept="image/*" multiple>
