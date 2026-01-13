@@ -580,16 +580,16 @@ export class CarouselViewer {
             cls: "napkin-carousel-description-toggle",
           });
           toggleBtn.setText(
-            this.descriptionExpanded ? "Show less ▲" : "Show more ▼"
+            this.descriptionExpanded ? "Show less" : "Show more..."
           );
 
           toggleBtn.addEventListener("click", () => {
             this.descriptionExpanded = !this.descriptionExpanded;
-            descDiv.className = `carousel-description ${
+            descDiv.className = `napkin-carousel-description ${
               this.descriptionExpanded ? "expanded" : "collapsed"
             }`;
             toggleBtn.setText(
-              this.descriptionExpanded ? "Show less ▲" : "Show more ▼"
+              this.descriptionExpanded ? "Show less" : "Show more..."
             );
           });
         }
