@@ -151,12 +151,24 @@ function serveUploadPage(res: ServerResponse): void {
 			<!-- Hidden file input for camera capture -->
 			<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
 
-			<div style="display: flex; gap: 10px; margin-top: 20px;">
-				<!-- Camera capture button uses a hidden file input with capture attribute -->
-				<label for="directCameraInput" class="btn" style="flex:1; text-align:center; margin:0;">
+			<!-- Camera capture and camera preview options -->
+			<div style="display:flex; gap:10px; margin-top:20px;">
+				<label id="directCameraLabel" for="directCameraInput" class="btn" style="flex:1; text-align:center; margin:0;">
 					Capture with Camera
 					<input type="file" id="directCameraInput" accept="image/*" capture="environment" style="display:none;">
 				</label>
+				<button class="btn" id="openCameraPreviewBtn" style="flex:1; display:none;">Open Camera Preview (Low-Res)</button>
+			</div>
+			<div id="cameraSupportNotice" style="margin-top:8px; font-size:0.95em; color:#ffb300; display:none; text-align:center;">Your browser does not support camera preview — please use the Gallery option.</div>
+
+			<!-- Camera preview modal -->
+			<div id="cameraPreviewModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; flex-direction:column;">
+				<video id="cameraPreviewVideo" autoplay playsinline style="max-width:90vw; max-height:60vh; border-radius:12px; background:#000;"></video>
+				<div style="margin-top:20px; display:flex; gap:10px;">
+					<button class="btn" id="takePreviewPhotoBtn">Take Photo</button>
+					<button class="btn" id="closePreviewBtn" style="background:#444;">Cancel</button>
+				</div>
+				<canvas id="previewCanvas" style="display:none;"></canvas>
 			</div>
 
 			<button class="btn" id="uploadBtn" disabled style="margin-top: 20px;">Upload Images</button>
@@ -188,66 +200,131 @@ function serveUploadPage(res: ServerResponse): void {
 			});
 
 
-			// Upload immediately after camera capture, no preview or processing
-			const directCameraInput = document.getElementById('directCameraInput');
-			if (directCameraInput) {
-				directCameraInput.addEventListener('change', async (e) => {
+			// Compress image using createImageBitmap + OffscreenCanvas before upload
+			async function compressImage(file) {
+				const bitmap = await createImageBitmap(file);
+				const MAX_DIM = 1600;
+				const scale = Math.min(1, MAX_DIM / bitmap.width, MAX_DIM / bitmap.height);
+				const canvas = new OffscreenCanvas(bitmap.width * scale, bitmap.height * scale);
+				const ctx = canvas.getContext('2d');
+				ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+				const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 });
+				bitmap.close();
+				return blob;
+			}
+
+// Camera preview capture (getUserMedia) + compressed gallery upload
+			const openCameraPreviewBtn = document.getElementById('openCameraPreviewBtn');
+			const cameraPreviewModal = document.getElementById('cameraPreviewModal');
+			const cameraPreviewVideo = document.getElementById('cameraPreviewVideo');
+			const takePreviewPhotoBtn = document.getElementById('takePreviewPhotoBtn');
+			const closePreviewBtn = document.getElementById('closePreviewBtn');
+			const previewCanvas = document.getElementById('previewCanvas');
+			const directCameraLabelEl = document.getElementById('directCameraLabel');
+			let previewStream = null;
+
+			if (openCameraPreviewBtn) {
+				// Feature detect
+				if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+					// Prefer preview flow: hide file-input camera label to prevent high-res camera app flow
+					if (directCameraLabelEl) directCameraLabelEl.style.display = 'none';
+					openCameraPreviewBtn.style.display = 'inline-block';
+					openCameraPreviewBtn.addEventListener('click', async () => {
+						try {
+							previewStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 320 }, height: { ideal: 240 } }, audio: false });
+							cameraPreviewVideo.srcObject = previewStream;
+							cameraPreviewModal.style.display = 'flex';
+						} catch (err) {
+							showStatus('Camera preview unavailable: ' + err.message, 'error');
+						}
+					});
+
+					closePreviewBtn.addEventListener('click', () => {
+						cameraPreviewModal.style.display = 'none';
+						if (previewStream) { previewStream.getTracks().forEach(t => t.stop()); previewStream = null; }
+					});
+
+					takePreviewPhotoBtn.addEventListener('click', () => {
+						const w = 320;
+						const h = 240;
+						previewCanvas.width = w; previewCanvas.height = h;
+						const ctx = previewCanvas.getContext('2d');
+						ctx.drawImage(cameraPreviewVideo, 0, 0, w, h);
+						previewCanvas.toBlob(async (blob) => {
+							if (!blob) { showStatus('Capture failed', 'error'); return; }
+							try {
+								uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading...';
+								const urlParams = new URLSearchParams(window.location.search);
+								const token = urlParams.get('token');
+								const formData = new FormData(); formData.append('image', blob, 'photo.jpg');
+								const response = await fetch('/upload?token=' + token, { method: 'POST', body: formData });
+								if (!response.ok) throw new Error('Upload failed with status ' + response.status);
+								showStatus('Image uploaded successfully!', 'success');
+							} catch (error) {
+								showStatus('Upload failed: ' + error.message, 'error');
+							} finally {
+								uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Images';
+								cameraPreviewModal.style.display = 'none';
+								if (previewStream) { previewStream.getTracks().forEach(t => t.stop()); previewStream = null; }
+							}
+						}, 'image/jpeg', 0.7);
+					});
+				} else {
+					// Preview not supported: show file-input camera and notice
+					if (directCameraLabelEl) directCameraLabelEl.style.display = 'inline-block';
+					openCameraPreviewBtn.style.display = 'none';
+					const notice = document.getElementById('cameraSupportNotice'); if (notice) notice.style.display = 'block';
+				}
+			}
+
+			// Upload after camera capture (file input), compressing first
+			const directCameraInputEl = document.getElementById('directCameraInput');
+			if (directCameraInputEl) {
+				directCameraInputEl.addEventListener('change', async (e) => {
 					const files = e.target.files;
 					if (files && files.length > 0) {
 						const file = files[0];
 						try {
 							uploadBtn.disabled = true;
+							uploadBtn.textContent = 'Compressing...';
+							const compressed = await compressImage(file);
 							uploadBtn.textContent = 'Uploading...';
 							const urlParams = new URLSearchParams(window.location.search);
 							const token = urlParams.get('token');
 							const formData = new FormData();
-							formData.append('image', file);
-							const response = await fetch('/upload?token=' + token, {
-								method: 'POST',
-								body: formData
-							});
-							if (!response.ok) {
-								throw new Error('Upload failed with status ' + response.status);
-							}
+							formData.append('image', compressed, file.name);
+							const response = await fetch('/upload?token=' + token, { method: 'POST', body: formData });
+							if (!response.ok) { throw new Error('Upload failed with status ' + response.status); }
 							showStatus('Image uploaded successfully!', 'success');
 						} catch (error) {
 							showStatus('Upload failed: ' + error.message, 'error');
 						} finally {
-							uploadBtn.disabled = false;
-							uploadBtn.textContent = 'Upload Images';
-							directCameraInput.value = '';
+							uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Images'; directCameraInputEl.value = '';
 						}
 					}
 				});
 			}
 
-			// Upload immediately after gallery selection, no preview or processing
+			// Upload after gallery selection, compressing each image
 			fileInput.addEventListener('change', async (e) => {
 				const files = e.target.files;
 				if (files && files.length > 0) {
 					try {
-						uploadBtn.disabled = true;
-						uploadBtn.textContent = 'Uploading...';
+						uploadBtn.disabled = true; uploadBtn.textContent = 'Compressing...';
 						const urlParams = new URLSearchParams(window.location.search);
 						const token = urlParams.get('token');
 						for (let i = 0; i < files.length; i++) {
-							const formData = new FormData();
-							formData.append('image', files[i]);
-							const response = await fetch('/upload?token=' + token, {
-								method: 'POST',
-								body: formData
-							});
-							if (!response.ok) {
-								throw new Error('Upload failed with status ' + response.status);
-							}
+							const compressed = await compressImage(files[i]);
+							const formData = new FormData(); formData.append('image', compressed, files[i].name);
+							uploadBtn.textContent = 'Uploading... (' + (i+1) + '/' + files.length + ')';
+							const response = await fetch('/upload?token=' + token, { method: 'POST', body: formData });
+							if (!response.ok) { throw new Error('Upload failed with status ' + response.status); }
 						}
 						showStatus('All images uploaded successfully!', 'success');
 					} catch (error) {
 						showStatus('Upload failed: ' + error.message, 'error');
 					} finally {
-						uploadBtn.disabled = false;
-						uploadBtn.textContent = 'Upload Images';
-						fileInput.value = '';
+						uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Images'; fileInput.value = '';
 					}
 				}
 			});
