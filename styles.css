@@ -46,7 +46,7 @@
 /* Modal */
 .napkin-notes-upload-modal {
   width: 90vw !important;
-  max-width: 1200px !important; /* Set a reasonable max-width */
+  max-width: 800px !important;
   max-height: 85vh; /* Allow modal to shrink if content is smaller */
   overflow-y: auto;
   overflow-x: hidden;
@@ -75,7 +75,7 @@
 }
 
 .napkin-notes-upload-modal h2 {
-  margin-top: 1rem;
+  margin: 0 !important;
   padding: 1rem;
   background: var(--background-primary);
   border-radius: 8px;
@@ -143,12 +143,21 @@
   min-height: 150px;
   max-height: calc(85vh - 2rem); /* Adjust content height to fit within modal */
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
   overflow: hidden; /* Prevent content overflow */
   overflow-x: hidden; /* Prevent horizontal scrolling */
   width: 100%;
-
-  /* Upload Zone */
   max-width: 100%;
+}
+/* Make upload zone fill the .napkin-notes-content area */
+.napkin-notes-upload-modal .napkin-upload-zone {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   border: 3px dashed var(--background-modifier-border);
   border-radius: 12px;
   padding: 3rem 2rem;
@@ -156,8 +165,21 @@
   cursor: pointer;
   transition: all 0.3s ease;
   background: var(--background-primary-alt);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 }
 
+.napkin-notes-upload-modal .napkin-upload-section {
+  margin-bottom: 1rem;
+}
+
+.napkin-notes-upload-modal .napkin-upload-zone {
+  width: 100%;
+  height: 100%;
+}
 .napkin-notes-upload-modal .napkin-upload-zone:hover {
   background: var(--background-modifier-hover);
   border-color: var(--interactive-accent);

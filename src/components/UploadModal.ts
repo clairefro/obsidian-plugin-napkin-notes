@@ -53,7 +53,7 @@ export class UploadModal extends Modal {
 
     // ========== UPLOAD SECTION ==========
     const uploadSection = contentEl.createEl("div", {
-      cls: "napkin-modal-section upload-section",
+      cls: "napkin-modal-section napkin-upload-section",
     });
 
     const uploadHeader = uploadSection.createEl("div", {
