@@ -985,7 +985,6 @@
 }
 
 /* Responsive adjustments */
-/* ...existing code... */
 @media (max-width: 768px) {
   .napkin-notes-upload-modal {
     width: 95vw;
