@@ -45,7 +45,7 @@
 
 /* Modal */
 .napkin-notes-upload-modal {
-  width: 90vw !important;
+  /* width: 90vw !important; */
   max-width: 700px !important;
   max-height: 85vh; /* Allow modal to shrink if content is smaller */
   overflow-y: auto;
