@@ -414,9 +414,14 @@ export class UploadModal extends Modal {
 
     try {
       // Initialize upload server
-      this.uploadServer = new UploadServer((event: UploadEvent) => {
-        this.handleServerUpload(event);
-      });
+      this.uploadServer = new UploadServer(
+        (event: UploadEvent) => {
+          this.handleServerUpload(event);
+        },
+        (info) => {
+          this.handleDeviceConnect(info);
+        }
+      );
 
       // Start server
       const serverInfo = await this.uploadServer.start(
@@ -439,7 +444,7 @@ export class UploadModal extends Modal {
       `[Napkin Notes] handleServerUpload called for ${event.filename}`
     );
     try {
-      // Convert ArrayBuffer to Blob
+      // Convert ArrayBuffer to Blob and File
       const blob = new Blob([event.buffer], { type: "image/jpeg" });
       const file = new File([blob], event.filename, { type: "image/jpeg" });
       console.log(`[Napkin Notes] Created File object, size: ${file.size}`);
@@ -489,6 +494,17 @@ export class UploadModal extends Modal {
       console.error("[Napkin Notes] Failed to process uploaded image:", error);
       new Notice("Failed to process uploaded image");
     }
+  }
+
+  private handleDeviceConnect(info: {
+    ip: string;
+    userAgent?: string;
+    url?: string;
+    timestamp?: number;
+  }): void {
+    console.log("[Napkin Notes] Device connected:", info);
+    // Show a brief notification to the user and log details for debugging
+    new Notice("[Napkin Notes] Device connected: " + (info.ip || "unknown"));
   }
 
   private async handleFiles(files: File[]): Promise<void> {

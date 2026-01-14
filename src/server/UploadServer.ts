@@ -159,7 +159,6 @@ function serveUploadPage(res: ServerResponse): void {
 				</label>
 				<button class="btn" id="openCameraPreviewBtn" style="flex:1; display:none;">Open Camera Preview (Low-Res)</button>
 			</div>
-			<div id="cameraSupportNotice" style="margin-top:8px; font-size:0.95em; color:#ffb300; display:none; text-align:center;">Your browser does not support camera preview — please use the Gallery option.</div>
 
 			<!-- Camera preview modal -->
 			<div id="cameraPreviewModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; flex-direction:column;">
@@ -222,15 +221,50 @@ function serveUploadPage(res: ServerResponse): void {
 
 			// Compress image using createImageBitmap + OffscreenCanvas before upload
 			async function compressImage(file) {
-				const bitmap = await createImageBitmap(file);
-				const MAX_DIM = 1600;
-				const scale = Math.min(1, MAX_DIM / bitmap.width, MAX_DIM / bitmap.height);
-				const canvas = new OffscreenCanvas(bitmap.width * scale, bitmap.height * scale);
-				const ctx = canvas.getContext('2d');
-				ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-				const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 });
-				bitmap.close();
-				return blob;
+				// Robust compression with fallbacks: prefer createImageBitmap + OffscreenCanvas, otherwise use DOM canvas
+				try {
+					if (typeof createImageBitmap === 'function' && typeof OffscreenCanvas === 'function') {
+						const bitmap = await createImageBitmap(file);
+						const MAX_DIM = 1600;
+						const scale = Math.min(1, MAX_DIM / bitmap.width, MAX_DIM / bitmap.height);
+						const canvas = new OffscreenCanvas(Math.max(1, Math.floor(bitmap.width * scale)), Math.max(1, Math.floor(bitmap.height * scale)));
+						const ctx = canvas.getContext('2d');
+						ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+						const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 });
+						bitmap.close();
+						return blob;
+					}
+				} catch (err) {
+					console.warn('createImageBitmap/OffscreenCanvas compression failed, falling back:', err);
+				}
+
+				// Fallback to DOM canvas
+				return await new Promise((resolve, reject) => {
+					const img = new Image();
+					img.onload = () => {
+						try {
+							const MAX_DIM = 1600;
+							let width = img.width;
+							let height = img.height;
+							const scale = Math.min(1, MAX_DIM / width, MAX_DIM / height);
+							width = Math.max(1, Math.floor(width * scale));
+							height = Math.max(1, Math.floor(height * scale));
+							const canvas = document.createElement('canvas');
+							canvas.width = width;
+							canvas.height = height;
+							const ctx = canvas.getContext('2d');
+							ctx.drawImage(img, 0, 0, width, height);
+							canvas.toBlob((blob) => {
+								if (blob) resolve(blob);
+								else reject(new Error('Canvas toBlob failed'));
+							}, 'image/jpeg', 0.8);
+						} catch (err) {
+							reject(err);
+						}
+					};
+					img.onerror = (e) => reject(new Error('Image load error'));
+					img.src = URL.createObjectURL(file);
+				});
 			}
 
 // Camera preview capture (getUserMedia) + compressed gallery upload
@@ -293,7 +327,6 @@ function serveUploadPage(res: ServerResponse): void {
 					// Preview not supported: show file-input camera and notice
 					if (directCameraLabelEl) directCameraLabelEl.style.display = 'inline-block';
 					openCameraPreviewBtn.style.display = 'none';
-					const notice = document.getElementById('cameraSupportNotice'); if (notice) notice.style.display = 'block';
 				}
 			}
 
@@ -306,7 +339,14 @@ function serveUploadPage(res: ServerResponse): void {
 						const file = files[0];
 						try {
 							setBusy(true, 'Compressing...');
-							const compressed = await compressImage(file);
+					let compressed;
+					try {
+						compressed = await compressImage(file);
+						console.log('[Upload Page] compressed size:', compressed.size);
+					} catch (errCompress) {
+						console.warn('[Upload Page] compressImage failed for camera file, uploading original:', errCompress);
+						compressed = file; // fallback to original
+					}
 							setBusy(true, 'Uploading...');
 							const urlParams = new URLSearchParams(window.location.search);
 							const token = urlParams.get('token');
@@ -327,22 +367,31 @@ function serveUploadPage(res: ServerResponse): void {
 			// Upload after gallery selection, compressing each image
 			fileInput.addEventListener('change', async (e) => {
 				const files = e.target.files;
-				if (files && files.length > 0) {
-					try {
-						setBusy(true, 'Compressing...');
-						const urlParams = new URLSearchParams(window.location.search);
-						const token = urlParams.get('token');
-						for (let i = 0; i < files.length; i++) {
-							const compressed = await compressImage(files[i]);
-							const formData = new FormData(); formData.append('image', compressed, files[i].name);
-							setBusy(true, 'Uploading... (' + (i+1) + '/' + files.length + ')');
-							const response = await fetch('/upload?token=' + token, { method: 'POST', body: formData });
-							if (!response.ok) { throw new Error('Upload failed with status ' + response.status); }
+			console.log('[Upload Page] gallery change event, files:', files && files.length ? files.length : 0);
+			if (files && files.length > 0) {
+				try {
+					setBusy(true, 'Compressing...');
+					const urlParams = new URLSearchParams(window.location.search);
+					const token = urlParams.get('token');
+					for (let i = 0; i < files.length; i++) {
+						console.log('[Upload Page] processing file', i, files[i].name, files[i].size);
+						let compressed;
+						try {
+							compressed = await compressImage(files[i]);
+							console.log('[Upload Page] compressed size:', compressed.size);
+						} catch (errCompress) {
+							console.warn('[Upload Page] compressImage failed, will try uploading original file:', errCompress);
+							compressed = files[i];
 						}
-						showStatus('All images uploaded successfully!', 'success');
-					} catch (error) {
-						showStatus('Upload failed: ' + error.message, 'error');
-					} finally {
+						const formData = new FormData(); formData.append('image', compressed, files[i].name);
+						setBusy(true, 'Uploading... (' + (i+1) + '/' + files.length + ')');
+						const response = await fetch('/upload?token=' + token, { method: 'POST', body: formData });
+						console.log('[Upload Page] upload response status:', response.status);
+						if (!response.ok) { throw new Error('Upload failed with status ' + response.status); }
+					}
+					showStatus('All images uploaded successfully!', 'success');
+				} catch (error) {
+					console.error('[Upload Page] gallery upload error:', error);
 						setBusy(false, ''); fileInput.value = '';
 					}
 				}
@@ -465,9 +514,24 @@ export class UploadServer {
   private port: number = 0;
   private token: string = "";
   private onUpload: (event: UploadEvent) => void;
+  private onConnect?: (info: {
+    ip: string;
+    userAgent?: string;
+    url?: string;
+    timestamp?: number;
+  }) => void;
 
-  constructor(onUpload: (event: UploadEvent) => void) {
+  constructor(
+    onUpload: (event: UploadEvent) => void,
+    onConnect?: (info: {
+      ip: string;
+      userAgent?: string;
+      url?: string;
+      timestamp?: number;
+    }) => void
+  ) {
     this.onUpload = onUpload;
+    this.onConnect = onConnect;
   }
 
   /**
@@ -548,6 +612,29 @@ export class UploadServer {
     }
 
     if (req.method === "GET" && url.pathname === "/") {
+      // Notify plugin that a device connected to the upload page
+      try {
+        const remoteIP =
+          req.socket && req.socket.remoteAddress
+            ? req.socket.remoteAddress
+            : (req.connection && req.connection.remoteAddress) || "";
+        const userAgent = String(req.headers["user-agent"] || "");
+        this.onConnect &&
+          this.onConnect({
+            ip: remoteIP,
+            userAgent,
+            url: url.toString(),
+            timestamp: Date.now(),
+          });
+        console.log(
+          `[Napkin Notes Upload Server] Client connected: ${remoteIP} - ${userAgent}`
+        );
+      } catch (err) {
+        console.error(
+          "[Napkin Notes Upload Server] Error notifying onConnect:",
+          err
+        );
+      }
       serveUploadPage(res);
     } else if (req.method === "POST" && url.pathname === "/upload") {
       handleUpload(req, res, this.onUpload);
