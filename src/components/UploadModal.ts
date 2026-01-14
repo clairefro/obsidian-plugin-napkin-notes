@@ -452,9 +452,6 @@ export class UploadModal extends Modal {
       // Process the uploaded file
       const buffer = await this.imageProcessor.fileToArrayBuffer(file);
       const dataUrl = this.imageProcessor.createDataUrl(buffer, file.type);
-      console.log(
-        `[Napkin Notes] Processed image, dataUrl length: ${dataUrl.length}`
-      );
 
       const imageData: ImageData = {
         file: file,
@@ -473,16 +470,13 @@ export class UploadModal extends Modal {
 
       // Update carousel
       this.refreshCarousel();
-      console.log(`[Napkin Notes] Updated carousel`);
 
       // Update review section
       this.updateReviewSection();
-      console.log(`[Napkin Notes] Updated review section`);
 
       // Update upload counter in QR display
       if (this.qrDisplay) {
         this.qrDisplay.updateCounter(this.images.length);
-        console.log(`[Napkin Notes] Updated QR counter`);
       }
 
       // Scroll to review section

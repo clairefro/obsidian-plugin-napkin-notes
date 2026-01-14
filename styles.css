@@ -504,6 +504,22 @@
   -webkit-user-drag: none;
 }
 
+/* Reading view: stretch image to fill container and display normally */
+.napkin-notes-carousel-reading .napkin-carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* No blend mode or opacity — image displays normally */
+}
+
+/* Apply visual styling when napkin background is loaded */
+.napkin-notes-upload-modal
+  .napkin-carousel-image-container.napkin-background-loaded,
+.napkin-notes-carousel-reading.napkin-carousel-mode-view.napkin-background-loaded {
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
 /* Zoom Slider Overlay (shared between modal and reading view) */
 .napkin-notes-upload-modal .napkin-napkin-zoom-slider-overlay,
 .napkin-notes-carousel-reading .napkin-napkin-zoom-slider-overlay {

@@ -34,6 +34,10 @@ export interface CarouselViewerOptions {
   showSaveButton?: boolean; // Show save button in edit mode (for reading view)
   collapsibleThumbnails?: boolean; // Start thumbnails collapsed (for reading view)
   portraitMode?: boolean; // Use portrait aspect ratio
+
+  // Napkin-mode background
+  napkinModeEnabled?: boolean;
+  napkinAssets?: { light: string; dark: string };
 }
 
 export class CarouselViewer {
@@ -56,6 +60,9 @@ export class CarouselViewer {
 
   // Drag state
   private draggedIndex: number = -1;
+
+  // Theme observer (to respond to theme changes like light/dark toggles)
+  private themeObserver?: MutationObserver;
 
   // UI Elements
   private carouselLayout?: HTMLElement;
@@ -117,6 +124,26 @@ export class CarouselViewer {
     // Setup interactions
     this.setupZoomGestures();
     this.setupKeyboardNav();
+
+    // Watch theme changes (toggle between light/dark) so napkin background can be re-applied
+    try {
+      if (typeof MutationObserver !== "undefined" && !this.themeObserver) {
+        this.themeObserver = new MutationObserver((mutations) => {
+          for (const m of mutations) {
+            if (m.type === "attributes" && m.attributeName === "class") {
+              // Re-evaluate napkin background on class changes to <body>
+              this.applyNapkinBackground();
+            }
+          }
+        });
+        this.themeObserver.observe(document.body, {
+          attributes: true,
+          attributeFilter: ["class"],
+        });
+      }
+    } catch (err) {
+      // If MutationObserver isn't available, skip silently
+    }
 
     // Initial display
     this.updateDisplay();
@@ -472,9 +499,255 @@ export class CarouselViewer {
     // Update metadata
     this.updateMetadata(currentImage);
 
+    // Apply napkin background if enabled (re-evaluate theme on each update)
+    this.applyNapkinBackground();
+
     // Notify change
     if (this.options.onImageChange) {
       this.options.onImageChange(this.currentIndex);
+    }
+  }
+
+  private applyNapkinBackground(): void {
+    try {
+      // Determine where to apply the background. For reading view (view mode),
+      // apply to the top-level container (`.napkin-notes-carousel-reading.napkin-carousel-mode-view`).
+      // Otherwise (e.g., upload modal), apply to the image container so the modal keeps its styles.
+      const isReadingView =
+        this.container.classList.contains("napkin-notes-carousel-reading") &&
+        this.mode === "view";
+      const targetEl: HTMLElement | undefined = isReadingView
+        ? (this.container as HTMLElement)
+        : (this.imageContainer as HTMLElement | undefined);
+
+      if (!this.options.napkinModeEnabled || !targetEl) {
+        // Clear any previously applied background from both possible targets
+        if (this.imageContainer)
+          (this.imageContainer as HTMLElement).style.backgroundImage = "";
+        if (this.container)
+          (this.container as HTMLElement).style.backgroundImage = "";
+        this.imageContainer?.classList.remove("napkin-background-loaded");
+        this.container?.classList.remove("napkin-background-loaded");
+        return;
+      }
+
+      // Determine theme: prefer explicit Obsidian body classes (theme-light / theme-dark)
+      // If neither class is present, fall back to prefers-color-scheme.
+      let isDark: boolean;
+      try {
+        const body = document.body;
+        if (body.classList.contains("theme-light")) {
+          isDark = false;
+        } else if (body.classList.contains("theme-dark")) {
+          isDark = true;
+        } else {
+          isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        }
+      } catch (err) {
+        isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        console.warn(
+          "Napkin theme detection failed, falling back to matchMedia:",
+          err
+        );
+      }
+
+      const url = isDark
+        ? this.options.napkinAssets?.dark
+        : this.options.napkinAssets?.light;
+
+      if (!url) {
+        targetEl.style.backgroundImage = "";
+        targetEl.classList.remove("napkin-background-loaded");
+        return;
+      }
+
+      // Preload to verify asset is reachable before applying.
+      // If the URL is a file:// URL, prefer asking Obsidian's adapter for a resource
+      // path at runtime (this handles sandboxing / packaging differences).
+      const preload = new Image();
+
+      // Resolve a final URL to use for loading (may be adapted by Obsidian)
+      let resolvedUrl = url;
+      try {
+        if (
+          url.startsWith("file://") &&
+          this.app &&
+          this.app.vault &&
+          this.app.vault.adapter &&
+          typeof this.app.vault.adapter.getResourcePath === "function"
+        ) {
+          try {
+            const { fileURLToPath } = require("url");
+            const fsPath = fileURLToPath(url);
+            const adapterUrl = this.app.vault.adapter.getResourcePath(fsPath);
+            if (adapterUrl) {
+              resolvedUrl = adapterUrl;
+            } else {
+              console.warn(
+                "Napkin background: adapter.getResourcePath returned empty for",
+                fsPath
+              );
+            }
+          } catch (adapterErr) {
+            console.warn(
+              "Napkin background: adapter.getResourcePath attempt failed:",
+              adapterErr
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("Napkin background: resource path resolution error:", err);
+      }
+
+      preload.onload = () => {
+        try {
+          const encoded = encodeURI(resolvedUrl);
+          targetEl.style.backgroundImage = `url("${encoded}")`;
+          targetEl.style.backgroundSize = "cover";
+          targetEl.style.backgroundPosition = "center center";
+          targetEl.style.backgroundRepeat = "no-repeat";
+
+          // Add class on the correct element
+          if (isReadingView) {
+            this.container.classList.add("napkin-background-loaded");
+          } else if (this.imageContainer) {
+            this.imageContainer.classList.add("napkin-background-loaded");
+          }
+        } catch (err) {
+          console.warn("Failed to set napkin background after load:", err);
+        }
+      };
+
+      preload.onerror = (e) => {
+        console.warn("Napkin background failed to load:", resolvedUrl, e);
+
+        // Attempt to derive a filesystem path from the URL (handles file:// and app://)
+        let fsPath: string | undefined;
+        try {
+          if (resolvedUrl.startsWith("file://")) {
+            const { fileURLToPath } = require("url");
+            fsPath = fileURLToPath(resolvedUrl);
+          } else {
+            try {
+              const parsed = new URL(resolvedUrl);
+              if (parsed && parsed.pathname) {
+                fsPath = decodeURIComponent(parsed.pathname);
+              }
+            } catch (parseErr) {
+              console.warn("Could not parse napkin URL to fs path:", parseErr);
+            }
+          }
+        } catch (resolveErr) {
+          console.warn(
+            "Error deriving filesystem path for napkin asset:",
+            resolveErr
+          );
+        }
+
+        // If we have a filesystem path, try adapter.getResourcePath at runtime (may yield a usable URL)
+        try {
+          if (
+            fsPath &&
+            this.app &&
+            this.app.vault &&
+            this.app.vault.adapter &&
+            typeof this.app.vault.adapter.getResourcePath === "function"
+          ) {
+            try {
+              const adapterUrl = this.app.vault.adapter.getResourcePath(fsPath);
+              if (adapterUrl && adapterUrl !== resolvedUrl) {
+                const reload = new Image();
+                reload.onload = () => {
+                  try {
+                    targetEl.style.backgroundImage = `url("${encodeURI(
+                      adapterUrl
+                    )}")`;
+                    targetEl.style.backgroundSize = "cover";
+                    targetEl.style.backgroundPosition = "center center";
+                    targetEl.style.backgroundRepeat = "no-repeat";
+                    if (isReadingView) {
+                      this.container.classList.add("napkin-background-loaded");
+                    } else if (this.imageContainer) {
+                      this.imageContainer.classList.add(
+                        "napkin-background-loaded"
+                      );
+                    }
+                  } catch (err) {
+                    console.warn(
+                      "Failed to set napkin background from adapter URL:",
+                      err
+                    );
+                  }
+                };
+                reload.onerror = () => {
+                  console.warn(
+                    "Adapter-provided napkin URL failed to load:",
+                    adapterUrl
+                  );
+                };
+                reload.src = encodeURI(adapterUrl);
+                return;
+              }
+            } catch (adapterErr) {
+              console.warn("Adapter resource path attempt failed:", adapterErr);
+            }
+          }
+        } catch (err) {
+          console.warn("Error trying adapter fallback for napkin asset:", err);
+        }
+
+        // Try reading from disk and embedding as data URI as a last resort
+        try {
+          if (fsPath && typeof (window as any).require === "function") {
+            const fs = require("fs");
+            const path = require("path");
+            if (fs.existsSync(fsPath)) {
+              const data = fs.readFileSync(fsPath);
+              const ext = (path.extname(fsPath) || ".png")
+                .replace(".", "")
+                .toLowerCase();
+              const mime =
+                ext === "png"
+                  ? "image/png"
+                  : ext === "jpg" || ext === "jpeg"
+                  ? "image/jpeg"
+                  : "image/png";
+              const b64 = data.toString("base64");
+              const dataUri = `data:${mime};base64,${b64}`;
+              targetEl.style.backgroundImage = `url("${dataUri}")`;
+              targetEl.style.backgroundSize = "cover";
+              targetEl.style.backgroundPosition = "center center";
+              targetEl.style.backgroundRepeat = "no-repeat";
+
+              if (isReadingView) {
+                this.container.classList.add("napkin-background-loaded");
+              } else if (this.imageContainer) {
+                this.imageContainer.classList.add("napkin-background-loaded");
+              }
+
+              console.info("Napkin background loaded from filesystem fallback");
+              return;
+            }
+          }
+        } catch (fsErr) {
+          console.warn(
+            "Filesystem fallback for napkin background failed:",
+            fsErr
+          );
+        }
+
+        // Clear any applied background on failure
+        targetEl.style.backgroundImage = "";
+        if (isReadingView) {
+          this.container.classList.remove("napkin-background-loaded");
+        } else if (this.imageContainer) {
+          this.imageContainer.classList.remove("napkin-background-loaded");
+        }
+      };
+
+      preload.src = encodeURI(resolvedUrl);
+    } catch (err) {
+      console.warn("Failed to apply napkin background:", err);
     }
   }
 

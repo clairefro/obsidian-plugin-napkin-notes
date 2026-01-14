@@ -70,5 +70,22 @@ export class NapkinNotesSettingTab extends PluginSettingTab {
             this.app.workspace.trigger("css-change");
           })
       );
+
+    // Napkin Mode background
+    new Setting(containerEl)
+      .setName("Enable Napkin Mode")
+      .setDesc(
+        "When enabled, the carousel background uses a napkin paper texture based on your theme (light/dark)."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(!!this.plugin.settings.enableNapkinMode)
+          .onChange(async (value) => {
+            this.plugin.settings.enableNapkinMode = value;
+            await this.plugin.saveSettings();
+            // Trigger re-render of reading views to apply background
+            this.app.workspace.trigger("css-change");
+          })
+      );
   }
 }

@@ -178,6 +178,52 @@ function renderCarousel(
       collapsibleThumbnails: true,
       showEditButton: mode === "view",
       showSaveButton: mode === "edit",
+      napkinModeEnabled: !!plugin.settings.enableNapkinMode,
+      napkinAssets: ((): { light: string; dark: string } => {
+        try {
+          const lightFs = `${plugin.manifest.dir}/src/assets/napkin-light.png`;
+          const darkFs = `${plugin.manifest.dir}/src/assets/napkin-dark.png`;
+
+          let lightUrl = "";
+          let darkUrl = "";
+
+          try {
+            if (
+              plugin.app &&
+              plugin.app.vault &&
+              plugin.app.vault.adapter &&
+              typeof plugin.app.vault.adapter.getResourcePath === "function"
+            ) {
+              lightUrl =
+                plugin.app.vault.adapter.getResourcePath(lightFs) || "";
+              darkUrl = plugin.app.vault.adapter.getResourcePath(darkFs) || "";
+            }
+          } catch (adapterErr) {
+            console.warn("adapter.getResourcePath failed:", adapterErr);
+          }
+
+          if (!lightUrl) {
+            console.warn(
+              "Napkin light asset: adapter.getResourcePath did not return a URL for",
+              lightFs
+            );
+          }
+          if (!darkUrl) {
+            console.warn(
+              "Napkin dark asset: adapter.getResourcePath did not return a URL for",
+              darkFs
+            );
+          }
+
+          return {
+            light: lightUrl,
+            dark: darkUrl,
+          };
+        } catch (err) {
+          console.warn("Failed to resolve napkin asset paths:", err);
+          return { light: "", dark: "" };
+        }
+      })(),
       onModeChange: (newMode) => {
         currentMode = newMode;
         createViewer(newMode);

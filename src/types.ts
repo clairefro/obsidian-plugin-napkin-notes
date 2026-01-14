@@ -33,6 +33,7 @@ export interface NapkinNotesSettings {
   uploadFolder: string; // Custom folder path or empty for default
   serverPortRange: [number, number]; // Port range for upload server
   enableCarousel: boolean; // Show carousel in reading view
+  enableNapkinMode?: boolean; // Use napkin paper background in carousel
 }
 
 /**
@@ -42,6 +43,7 @@ export const DEFAULT_SETTINGS: NapkinNotesSettings = {
   uploadFolder: "",
   serverPortRange: [8080, 8090],
   enableCarousel: true,
+  enableNapkinMode: false,
 };
 
 /**
