@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting, TFolder } from "obsidian";
 import NapkinNotesPlugin from "../../main";
 
 export class NapkinNotesSettingTab extends PluginSettingTab {
@@ -15,67 +15,57 @@ export class NapkinNotesSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "Napkin Notes Settings" });
 
-    // Upload folder setting
+    // Upload folder setting with auto-suggest for valid folder paths
     new Setting(containerEl)
       .setName("Upload folder")
       .setDesc(
-        "Folder for physical note images. Leave empty to use the vault's default attachment folder."
+        "Folder for image attachments. Leave empty to use the vault's default attachment folder (recommended)."
       )
-      .addText((text) =>
+      .addText((text) => {
+        const folders = this.app.vault
+          .getAllLoadedFiles()
+          .filter((file) => file instanceof TFolder)
+          .map((folder) => folder.path);
+
         text
           .setPlaceholder("folder/path")
-          .setValue(this.plugin.settings.uploadFolder)
+          .setValue(this.plugin.settings.uploadFolder || "")
           .onChange(async (value) => {
-            this.plugin.settings.uploadFolder = value;
+            this.plugin.settings.uploadFolder = value.trim();
             await this.plugin.saveSettings();
-          })
-      );
+          });
 
-    // Server port range
-    new Setting(containerEl)
-      .setName("Server port range")
-      .setDesc("Port range for the QR upload server (e.g., 8080-8090)")
-      .addText((text) =>
-        text
-          .setPlaceholder("8080-8090")
-          .setValue(
-            `${this.plugin.settings.serverPortRange[0]}-${this.plugin.settings.serverPortRange[1]}`
-          )
-          .onChange(async (value) => {
-            const parts = value.split("-");
-            if (parts.length === 2) {
-              const start = parseInt(parts[0].trim());
-              const end = parseInt(parts[1].trim());
-              if (!isNaN(start) && !isNaN(end) && start < end) {
-                this.plugin.settings.serverPortRange = [start, end];
-                await this.plugin.saveSettings();
-              }
-            }
-          })
-      );
+        text.inputEl.addEventListener("input", (e) => {
+          const inputValue = (e.target as HTMLInputElement).value;
+          const suggestions = folders.filter((folder) =>
+            folder.toLowerCase().includes(inputValue.toLowerCase())
+          );
 
-    // Enable carousel in reading view
-    new Setting(containerEl)
-      .setName("Enable carousel in reading view")
-      .setDesc(
-        "Display physical notes as an interactive carousel instead of static images in reading view"
-      )
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.enableCarousel)
-          .onChange(async (value) => {
-            this.plugin.settings.enableCarousel = value;
-            await this.plugin.saveSettings();
-            // Trigger re-render of reading views
-            this.app.workspace.trigger("css-change");
-          })
-      );
+          // Clear existing datalist
+          let dataList = text.inputEl.nextElementSibling;
+          if (dataList && dataList.tagName === "DATALIST") {
+            dataList.remove();
+          }
+
+          // Create new datalist
+          dataList = document.createElement("datalist");
+          dataList.id = "folder-suggestions";
+          suggestions.forEach((folder) => {
+            const option = document.createElement("option");
+            option.value = folder;
+            dataList.appendChild(option);
+          });
+
+          text.inputEl.setAttribute("list", "folder-suggestions");
+          text.inputEl.parentElement?.appendChild(dataList);
+        });
+      });
 
     // Napkin Mode background
     new Setting(containerEl)
-      .setName("Enable Napkin Mode")
+      .setName("Napkin Mode")
       .setDesc(
-        "When enabled, the carousel background uses a napkin paper texture based on your theme (light/dark)."
+        "When enabled, the viewer has a paper napkin texture based on your theme (light/dark). Must re-open note to see change"
       )
       .addToggle((toggle) =>
         toggle
