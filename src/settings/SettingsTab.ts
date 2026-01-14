@@ -53,11 +53,15 @@ export class NapkinNotesSettingTab extends PluginSettingTab {
           suggestions.forEach((folder) => {
             const option = document.createElement("option");
             option.value = folder;
-            dataList.appendChild(option);
+            if (dataList) {
+              dataList.appendChild(option);
+            }
           });
 
           text.inputEl.setAttribute("list", "folder-suggestions");
-          text.inputEl.parentElement?.appendChild(dataList);
+          if (text.inputEl.parentElement) {
+            text.inputEl.parentElement.appendChild(dataList);
+          }
         });
       });
 
