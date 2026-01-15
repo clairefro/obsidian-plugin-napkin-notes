@@ -4,7 +4,7 @@ import { ImageData, UploadEvent, ImageWithFile } from "../types";
 import { CarouselViewer, CarouselImage } from "./CarouselViewer";
 import { ImageProcessor } from "../services/ImageProcessor";
 import { MarkdownGenerator } from "../services/MarkdownGenerator";
-import { UploadServer } from "../server/UploadServer";
+import type { UploadServer } from "../server/UploadServer"; // lazy-loaded at runtime to avoid importing Node-only modules on mobile
 import { QRCodeDisplay } from "./QRCodeDisplay";
 import {
   MODAL_TITLE,
@@ -436,8 +436,11 @@ export class UploadModal extends Modal {
     this.qrDisplay = new QRCodeDisplay(qrContainer);
 
     try {
-      // Initialize upload server
-      this.uploadServer = new UploadServer(
+      // Initialize upload server (lazy-load to avoid Node imports on mobile)
+      const serverModule = await import("../server/UploadServer.js");
+      const UploadServerClass =
+        serverModule.UploadServer as typeof import("../server/UploadServer.js").UploadServer;
+      this.uploadServer = new UploadServerClass(
         (event: UploadEvent) => {
           this.handleServerUpload(event);
         },
@@ -583,6 +586,7 @@ export class UploadModal extends Modal {
   }
 
   private onCarouselChange(index: number): void {
+    // NOT IMPLEMENTED CURRENTLY
     // Update annotation editor to show current image's annotations
     // Annotation editor is now handled by CarouselViewer
   }

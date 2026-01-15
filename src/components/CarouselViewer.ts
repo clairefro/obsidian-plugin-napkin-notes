@@ -1,50 +1,7 @@
-import { App, TFile, MarkdownView, Platform, Modal } from "obsidian";
+import { App, TFile } from "obsidian";
+import { ConfirmModal } from "./ConfirmModal";
 import napkinDark from "../assets/napkin-dark.png";
 import napkinLight from "../assets/napkin-light.png";
-
-/**
- * Small confirmation modal used instead of window.confirm for Obsidian styling
- */
-class ConfirmModal extends Modal {
-  private message: string;
-  private onConfirm: () => void;
-
-  constructor(app: App, message: string, onConfirm: () => void) {
-    super(app);
-    this.message = message;
-    this.onConfirm = onConfirm;
-  }
-
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.createEl("h3", { text: "Confirm" });
-    contentEl.createEl("p", { text: this.message });
-
-    const btnRow = contentEl.createEl("div", { cls: "napkin-confirm-buttons" });
-
-    const confirmBtn = btnRow.createEl("button", {
-      text: "Delete",
-      cls: "mod-cta",
-    });
-    const cancelBtn = btnRow.createEl("button", { text: "Cancel" });
-
-    confirmBtn.addEventListener("click", () => {
-      try {
-        this.onConfirm();
-      } catch (e) {
-        console.error(e);
-      }
-      this.close();
-    });
-
-    cancelBtn.addEventListener("click", () => this.close());
-  }
-
-  onClose() {
-    const { contentEl } = this;
-    contentEl.empty();
-  }
-}
 
 /**
  * Unified image data structure for the carousel viewer
