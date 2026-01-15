@@ -1,9 +1,9 @@
-import type { IncomingMessage, ServerResponse, Server } from "http";
+import * as http from "http";
+import { IncomingMessage, ServerResponse } from "http";
+import * as crypto from "crypto";
+import Busboy from "busboy";
 import { UploadEvent } from "../types";
 import { Platform } from "obsidian";
-
-// Note: Node-only modules (http, crypto, busboy) are required at runtime inside functions
-// so that this file can be imported safely in Obsidian mobile environments (Capacitor) where Node builtins are unavailable.
 
 // import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "../constants";
 
@@ -157,7 +157,7 @@ function serveUploadPage(res: ServerResponse): void {
 			<p>Select or capture photos to send to Obsidian</p>
 
 			<!-- Connection banner: shown if polling detects server is unreachable -->
-			<div id="connectionBanner" class="connection-banner" style="display:none;">Connection lost</div>
+			<div id="connectionBanner" class="connection-banner" style="display:none;">Connection lost - close tab and scan again</div>
 
 			<div class="upload-area" id="dropZone">
 				<div class="upload-icon">📁</div>
@@ -499,18 +499,6 @@ async function handleUpload(
   onUpload: (event: UploadEvent) => void
 ): Promise<void> {
   try {
-    // Require busboy at runtime so mobile (Capacitor) does not fail on import
-    let Busboy: any;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      Busboy = require("busboy");
-    } catch (err) {
-      console.error("[Napkin Notes Upload Server] Busboy load failed:", err);
-      res.writeHead(500, { "Content-Type": "text/plain" });
-      res.end("Server error");
-      return;
-    }
-
     const busboy = Busboy({ headers: req.headers });
     let fileCount = 0;
 
@@ -586,21 +574,14 @@ async function handleUpload(
  * Generate a secure random token
  */
 function generateToken(): string {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const crypto = require("crypto");
-    return crypto.randomBytes(16).toString("hex");
-  } catch (err) {
-    // Fallback (non-crypto) if unavailable
-    return Math.random().toString(36).slice(2, 18);
-  }
+  return crypto.randomBytes(16).toString("hex");
 }
 
 /**
  * Upload server for receiving images from mobile devices
  */
 export class UploadServer {
-  private server: Server | null = null;
+  private server: http.Server | null = null;
   private port: number = 0;
   private token: string = "";
   private onUpload: (event: UploadEvent) => void;
@@ -661,28 +642,17 @@ export class UploadServer {
    */
   private tryStartServer(port: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Require Node http at runtime so module import won't fail on mobile
-      let http: any;
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        http = require("http");
-      } catch (err) {
-        reject(err);
-        return;
-      }
-
-      const srv = http.createServer((req: any, res: any) => {
+      this.server = http.createServer((req, res) => {
         this.handleRequest(req, res);
       });
-      this.server = srv;
 
-      srv.on("error", (err: any) => {
-        if (err && err.code === "EADDRINUSE") {
+      this.server.on("error", (err: any) => {
+        if (err.code === "EADDRINUSE") {
           reject(err);
         }
       });
 
-      srv.listen(port, () => {
+      this.server.listen(port, () => {
         resolve();
       });
     });
@@ -754,21 +724,16 @@ export class UploadServer {
    * Get local IP address
    */
   private getLocalIP(): string {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const os = require("os");
-      const interfaces = os.networkInterfaces();
+    const os = require("os");
+    const interfaces = os.networkInterfaces();
 
-      for (const name of Object.keys(interfaces)) {
-        for (const iface of interfaces[name]) {
-          // Skip internal and non-IPv4 addresses
-          if (iface.family === "IPv4" && !iface.internal) {
-            return iface.address;
-          }
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        // Skip internal and non-IPv4 addresses
+        if (iface.family === "IPv4" && !iface.internal) {
+          return iface.address;
         }
       }
-    } catch (err) {
-      // not a Node environment
     }
 
     return "localhost";

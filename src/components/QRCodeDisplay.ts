@@ -35,7 +35,7 @@ export class QRCodeDisplay {
     // Generate and display QR code
     this.qrCanvas = qrContainer.createEl("canvas", { cls: "napkin-qr-code" });
     await QRCode.toCanvas(this.qrCanvas, serverInfo.url, {
-      width: 300,
+      width: 200,
       margin: 2,
       color: {
         dark: "#000000",
