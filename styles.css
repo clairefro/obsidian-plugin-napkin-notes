@@ -436,6 +436,14 @@
   transition: flex-direction 0.2s, width 0.2s, max-height 0.2s;
 }
 
+.napkin-notes-upload-modal .napkin-thumbnail-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
 .napkin-notes-upload-modal .napkin-thumbnail-header {
   padding: 0.5rem;
   background: var(--background-secondary);
@@ -1182,6 +1190,10 @@
     max-height: 80px;
   }
 
+  .napkin-notes-carousel-reading .napkin-thumbnail-strip {
+    width: 100% !important;
+  }
+
   .napkin-notes-carousel-reading .napkin-thumbnail-header {
     border-bottom: none;
     border-right: 1px solid var(--background-modifier-border);
@@ -1203,5 +1215,49 @@
   .napkin-notes-carousel-reading .napkin-thumbnail-image {
     width: 60px;
     height: 50px;
+  }
+
+  /* Upload modal mobile styles */
+  .napkin-notes-upload-modal .napkin-carousel-layout {
+    flex-direction: column;
+  }
+
+  .napkin-notes-upload-modal .napkin-thumbnail-strip {
+    width: 100% !important;
+    min-width: 100%;
+    max-height: 120px;
+    flex-direction: column;
+  }
+
+  .napkin-notes-upload-modal .napkin-thumbnail-header {
+    border-bottom: none;
+    border-right: 1px solid var(--background-modifier-border);
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .napkin-notes-upload-modal .napkin-thumbnail-content {
+    flex-direction: row !important;
+    max-height: 100px;
+    display: flex;
+  }
+
+  .napkin-notes-upload-modal .napkin-thumbnails-container {
+    flex-direction: row !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem;
+  }
+
+  .napkin-notes-upload-modal .napkin-thumbnail-wrapper {
+    min-width: 70px;
+    flex-shrink: 0;
+  }
+
+  .napkin-notes-upload-modal .napkin-thumbnail-image {
+    width: 70px;
+    height: 60px;
   }
 }
