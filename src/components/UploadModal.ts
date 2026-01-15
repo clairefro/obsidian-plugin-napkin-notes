@@ -214,8 +214,6 @@ export class UploadModal extends Modal {
 
     // Update review section
     this.updateReviewSection();
-
-    new Notice("Image removed");
   }
 
   /**
