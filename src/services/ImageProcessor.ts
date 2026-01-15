@@ -1,4 +1,4 @@
-import { App, TFile, Vault, FileManager, normalizePath } from "obsidian";
+import { App, TFile, normalizePath } from "obsidian";
 import { NapkinNotesSettings } from "../types";
 import { FILE_PREFIX } from "../constants";
 

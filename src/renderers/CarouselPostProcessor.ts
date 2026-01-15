@@ -1,4 +1,3 @@
-import { TFile, Notice } from "obsidian";
 import NapkinNotesPlugin from "../../main";
 import { CODE_BLOCK_LANGUAGE } from "../constants";
 import { CarouselViewer, CarouselImage } from "../components/CarouselViewer";
@@ -155,162 +154,21 @@ function renderCarousel(
   container.empty();
   container.addClass("napkin-notes-carousel-reading");
 
-  // Store original images for cancel functionality
-  const originalImages = parsedImages.map((img) => ({ ...img }));
-
-  // Convert ParsedImage to CarouselImage
   const carouselImages: CarouselImage[] = parsedImages.map((img) => ({
     filepath: img.filepath,
     description: img.description,
   }));
 
-  let currentMode: "view" | "edit" = "view";
-  let viewer: CarouselViewer;
-
-  const createViewer = (mode: "view" | "edit") => {
-    container.empty();
-
-    viewer = new CarouselViewer({
-      app: plugin.app,
-      container,
-      images: mode === "view" ? carouselImages : [...carouselImages],
-      mode,
-      collapsibleThumbnails: true,
-      showEditButton: mode === "view",
-      showSaveButton: mode === "edit",
-      napkinModeEnabled: !!plugin.settings.enableNapkinMode,
-      napkinAssets: ((): { light: string; dark: string } => {
-        try {
-          const lightFs = `${plugin.manifest.dir}/src/assets/napkin-light.png`;
-          const darkFs = `${plugin.manifest.dir}/src/assets/napkin-dark.png`;
-
-          let lightUrl = "";
-          let darkUrl = "";
-
-          try {
-            if (
-              plugin.app &&
-              plugin.app.vault &&
-              plugin.app.vault.adapter &&
-              typeof plugin.app.vault.adapter.getResourcePath === "function"
-            ) {
-              lightUrl =
-                plugin.app.vault.adapter.getResourcePath(lightFs) || "";
-              darkUrl = plugin.app.vault.adapter.getResourcePath(darkFs) || "";
-            }
-          } catch (adapterErr) {
-            console.warn("adapter.getResourcePath failed:", adapterErr);
-          }
-
-          if (!lightUrl) {
-            console.warn(
-              "Napkin light asset: adapter.getResourcePath did not return a URL for",
-              lightFs
-            );
-          }
-          if (!darkUrl) {
-            console.warn(
-              "Napkin dark asset: adapter.getResourcePath did not return a URL for",
-              darkFs
-            );
-          }
-
-          return {
-            light: lightUrl,
-            dark: darkUrl,
-          };
-        } catch (err) {
-          console.warn("Failed to resolve napkin asset paths:", err);
-          return { light: "", dark: "" };
-        }
-      })(),
-      onModeChange: (newMode) => {
-        currentMode = newMode;
-        createViewer(newMode);
-      },
-      onDelete: (index) => {
-        carouselImages.splice(index, 1);
-        viewer.updateImages(carouselImages);
-
-        if (carouselImages.length === 0) {
-          new Notice(
-            "All images removed. Save to update or cancel to restore."
-          );
-        }
-      },
-      onReorder: (newImages) => {
-        carouselImages.length = 0;
-        carouselImages.push(...newImages);
-      },
-      onDescriptionChange: (index, description) => {
-        carouselImages[index].description = description;
-      },
-      onSave: async (images) => {
-        try {
-          // Generate new code block content
-          const newContent = generateCodeBlockContent(images);
-
-          // Find and update the code block in the file
-          const file = plugin.app.vault.getAbstractFileByPath(sourcePath);
-          if (file && file instanceof TFile) {
-            const fileContent = await plugin.app.vault.read(file);
-
-            // Find the code block with the original source
-            const codeBlockRegex = new RegExp(
-              "```" + CODE_BLOCK_LANGUAGE + "\\n[\\s\\S]*?```",
-              "g"
-            );
-
-            let match;
-            let found = false;
-            let newFileContent = fileContent;
-
-            while ((match = codeBlockRegex.exec(fileContent)) !== null) {
-              const blockContent = match[0];
-              const blockSource = blockContent
-                .replace("```" + CODE_BLOCK_LANGUAGE + "\n", "")
-                .replace(/\n?```$/, "");
-
-              // Check if this is the right code block by comparing normalized content
-              if (
-                normalizeSource(blockSource) === normalizeSource(originalSource)
-              ) {
-                const newBlock =
-                  "```" + CODE_BLOCK_LANGUAGE + "\n" + newContent + "\n```";
-                newFileContent =
-                  fileContent.slice(0, match.index) +
-                  newBlock +
-                  fileContent.slice(match.index + match[0].length);
-                found = true;
-                break;
-              }
-            }
-
-            if (found) {
-              await plugin.app.vault.modify(file, newFileContent);
-
-              // Update the stored images
-              carouselImages.length = 0;
-              carouselImages.push(...images);
-
-              // Switch back to view mode
-              currentMode = "view";
-              createViewer("view");
-            } else {
-              new Notice("Could not find the code block to update.");
-            }
-          }
-        } catch (error) {
-          console.error("Failed to save carousel:", error);
-          new Notice("Failed to save carousel changes.");
-        }
-      },
-    });
-
-    viewer.render();
-  };
-
-  createViewer("view");
+  const viewer = new CarouselViewer({
+    app: plugin.app,
+    container,
+    images: carouselImages,
+    mode: "view",
+    collapsibleThumbnails: true,
+    showEditButton: true,
+    showSaveButton: false,
+  });
+  viewer.render();
 }
 
 /**

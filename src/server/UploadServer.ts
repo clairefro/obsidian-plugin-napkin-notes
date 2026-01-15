@@ -1,8 +1,10 @@
 import * as http from "http";
 import { IncomingMessage, ServerResponse } from "http";
 import * as crypto from "crypto";
-const Busboy = require("busboy");
+import Busboy from "busboy";
 import { UploadEvent } from "../types";
+import { Platform } from "obsidian";
+
 // import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "../constants";
 
 /**
@@ -421,7 +423,6 @@ async function handleUpload(
   onUpload: (event: UploadEvent) => void
 ): Promise<void> {
   try {
-    console.log("[Napkin Notes Upload Server] Starting handleUpload");
     const busboy = Busboy({ headers: req.headers });
     let fileCount = 0;
 
@@ -456,13 +457,7 @@ async function handleUpload(
               ),
               filename: filename || "image.jpg",
             };
-            console.log(
-              `[Napkin Notes Upload Server] Calling onUpload callback for ${filename}`
-            );
             onUpload(uploadEvent);
-            console.log(
-              `[Napkin Notes Upload Server] onUpload callback completed for ${filename}`
-            );
           } catch (err) {
             console.error(
               `[Napkin Notes Upload Server] Error in onUpload callback:`,
@@ -540,9 +535,10 @@ export class UploadServer {
   async start(
     portRange: [number, number]
   ): Promise<{ port: number; token: string; url: string }> {
-    console.log(
-      `[Napkin Notes Upload Server] Starting server, port range: ${portRange[0]}-${portRange[1]}`
-    );
+    if (Platform.isMobile) {
+      throw new Error("Upload server is disabled on mobile devices.");
+    }
+
     this.token = generateToken();
 
     for (let port = portRange[0]; port <= portRange[1]; port++) {

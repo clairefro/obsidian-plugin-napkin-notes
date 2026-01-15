@@ -583,7 +583,7 @@ export class UploadModal extends Modal {
       // Insert at cursor
       this.editor.replaceSelection(markdown);
 
-      new Notice(`Inserted ${this.images.length} physical note(s)`);
+      new Notice(`Inserted ${this.images.length} napkin note(s)`);
 
       this.close();
     } catch (error) {
