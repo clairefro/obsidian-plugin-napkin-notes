@@ -238,6 +238,9 @@
   width: 100%;
   height: 100%;
 }
+.napkin-notes-upload-modal .napkin-upload-zone p {
+  margin-bottom: 0.75rem;
+}
 .napkin-notes-upload-modal .napkin-upload-zone:hover {
   background: var(--background-modifier-hover);
   border-color: var(--interactive-accent);
@@ -257,7 +260,7 @@
 }
 
 .napkin-notes-upload-modal .napkin-upload-zone-subtext {
-  color: var(--text-muted);
+  color: var(--text-muted) !important;
   font-size: 0.9em;
 }
 
