@@ -31,6 +31,10 @@ export interface CarouselViewerOptions {
   onSave?: (images: CarouselImage[]) => void;
   onModeChange?: (mode: "view" | "edit") => void;
 
+  // Hook called when user wants to add images while editing inline. Should return
+  // an array of CarouselImage objects to be inserted after current index.
+  onAdd?: (index: number) => Promise<CarouselImage[]>;
+
   // Options
   showEditButton?: boolean; // Show edit button in view mode (for reading view)
   showSaveButton?: boolean; // Show save button in edit mode (for reading view)
@@ -349,6 +353,14 @@ export class CarouselViewer {
       const isUploadModal =
         this.container.closest(".napkin-notes-upload-modal") !== null;
       if (!isUploadModal) {
+        // Add 'Add' button (inline edit mode only)
+        const addBtn = editControls.createEl("button", {
+          text: "Add",
+          cls: "napkin-carousel-button napkin-carousel-add-btn",
+          attr: { title: "Add images after current image" },
+        });
+        addBtn.addEventListener("click", () => this.handleAdd());
+
         this.cancelBtn = editControls.createEl("button", {
           text: "Done editing",
           cls: "napkin-carousel-button napkin-carousel-edit-btn",
@@ -423,6 +435,31 @@ export class CarouselViewer {
   private handleDelete(): void {
     if (this.options.onDelete) {
       this.options.onDelete(this.currentIndex);
+    } else {
+      // Fallback: remove locally if no handler provided
+      this.removeImage(this.currentIndex);
+    }
+  }
+
+  private async handleAdd(): Promise<void> {
+    if (!this.options.onAdd) {
+      console.warn("Add handler not provided");
+      return;
+    }
+
+    try {
+      const newImages = await this.options.onAdd(this.currentIndex);
+      if (!newImages || newImages.length === 0) return;
+
+      // Insert new images after the current index
+      const insertPos = this.currentIndex + 1;
+      this.images.splice(insertPos, 0, ...newImages);
+
+      // Move selection to the first inserted image
+      this.currentIndex = insertPos;
+      this.render();
+    } catch (err) {
+      console.error("Failed to add images:", err);
     }
   }
 

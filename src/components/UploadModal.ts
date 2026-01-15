@@ -1,6 +1,6 @@
 import { App, Modal, Notice, Editor } from "obsidian";
 import NapkinNotesPlugin from "../../main";
-import { ImageData, UploadEvent } from "../types";
+import { ImageData, UploadEvent, ImageWithFile } from "../types";
 import { CarouselViewer, CarouselImage } from "./CarouselViewer";
 import { ImageProcessor } from "../services/ImageProcessor";
 import { MarkdownGenerator } from "../services/MarkdownGenerator";
@@ -15,9 +15,12 @@ import {
 
 export class UploadModal extends Modal {
   private plugin: NapkinNotesPlugin;
-  private editor: Editor;
+  private editor?: Editor;
   private images: ImageData[] = [];
   private currentTab: "direct" | "camera" = "direct";
+
+  // Optional callback when the modal is used in 'return results' mode
+  private onComplete?: (saved: ImageWithFile[]) => void;
 
   // Components
   private carouselViewer?: CarouselViewer;
@@ -34,10 +37,18 @@ export class UploadModal extends Modal {
   private imageCountEl?: HTMLElement;
   private insertBtn?: HTMLButtonElement;
 
-  constructor(app: App, plugin: NapkinNotesPlugin, editor: Editor) {
+  constructor(
+    app: App,
+    plugin: NapkinNotesPlugin,
+    editor?: Editor,
+    onComplete?: (
+      saved: { vaultFile: import("obsidian").TFile; annotation?: any }[]
+    ) => void
+  ) {
     super(app);
     this.plugin = plugin;
     this.editor = editor;
+    this.onComplete = onComplete;
 
     this.imageProcessor = new ImageProcessor(app, plugin.settings);
     this.markdownGenerator = new MarkdownGenerator();
@@ -125,7 +136,21 @@ export class UploadModal extends Modal {
       },
     });
     this.insertBtn.disabled = true;
-    this.insertBtn.addEventListener("click", () => this.insertNotes());
+    this.insertBtn.addEventListener("click", async () => {
+      if (this.onComplete) {
+        // Save to vault and return saved files to the caller instead of inserting into editor
+        try {
+          const saved = await this.saveImagesToVault();
+          this.onComplete(saved);
+          this.close();
+        } catch (err) {
+          console.error("Failed to save images for onComplete:", err);
+          new Notice("Failed to save images");
+        }
+      } else {
+        this.insertNotes();
+      }
+    });
   }
 
   /**
@@ -486,6 +511,26 @@ export class UploadModal extends Modal {
     }
   }
 
+  /**
+   * Save current images to the vault and return saved files + annotations
+   */
+  private async saveImagesToVault(): Promise<ImageWithFile[]> {
+    const imageWithFiles: ImageWithFile[] = [];
+
+    for (const imageData of this.images) {
+      const buffer =
+        imageData.buffer ||
+        (await this.imageProcessor.fileToArrayBuffer(imageData.file!));
+      const vaultFile = await this.imageProcessor.saveImage(
+        buffer,
+        imageData.filename
+      );
+      imageWithFiles.push({ vaultFile, annotation: imageData.annotation });
+    }
+
+    return imageWithFiles;
+  }
+
   private handleDeviceConnect(info: {
     ip: string;
     userAgent?: string;
@@ -556,27 +601,16 @@ export class UploadModal extends Modal {
       new Notice("Saving images...");
 
       // Save all images to vault
-      const imageWithFiles = [];
-
-      for (const imageData of this.images) {
-        const buffer =
-          imageData.buffer ||
-          (await this.imageProcessor.fileToArrayBuffer(imageData.file!));
-        const vaultFile = await this.imageProcessor.saveImage(
-          buffer,
-          imageData.filename
-        );
-
-        imageWithFiles.push({
-          vaultFile: vaultFile,
-          annotation: imageData.annotation,
-        });
-      }
+      const imageWithFiles = await this.saveImagesToVault();
 
       // Generate markdown
       const markdown = this.markdownGenerator.generate(imageWithFiles);
 
       // Insert at cursor
+      if (!this.editor) {
+        new Notice("No editor available to insert notes");
+        return;
+      }
       this.editor.replaceSelection(markdown);
 
       new Notice(`Inserted ${this.images.length} napkin note(s)`);

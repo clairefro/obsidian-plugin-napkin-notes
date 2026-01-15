@@ -10,6 +10,14 @@
   font-size: 0.9rem;
   padding: 0.4rem 0.8rem;
 }
+
+.napkin-notes-carousel-reading .napkin-carousel-add-btn {
+  background: var(--interactive-normal) !important;
+  color: var(--text-normal) !important;
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+}
 .napkin-notes-carousel-reading .napkin-nav-edit-absolute {
   background: none !important;
   border: none !important;

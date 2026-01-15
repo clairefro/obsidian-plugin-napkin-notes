@@ -1,7 +1,8 @@
 import NapkinNotesPlugin from "../../main";
 import { CODE_BLOCK_LANGUAGE } from "../constants";
 import { CarouselViewer, CarouselImage } from "../components/CarouselViewer";
-import { TFile } from "obsidian";
+import { UploadModal } from "../components/UploadModal";
+import { MarkdownView, TFile } from "obsidian";
 
 interface ParsedImage {
   filepath: string;
@@ -168,6 +169,44 @@ function renderCarousel(
     collapsibleThumbnails: true,
     showEditButton: true,
     showSaveButton: true,
+    onAdd: async (index: number) => {
+      // Open the upload modal in 'return results' mode. Resolve with CarouselImage[].
+      return new Promise<CarouselImage[]>((resolve, reject) => {
+        try {
+          const activeView =
+            plugin.app.workspace.getActiveViewOfType(MarkdownView);
+          const editor = activeView ? activeView.editor : undefined;
+
+          let completed = false;
+          const modal = new UploadModal(
+            plugin.app,
+            plugin,
+            editor,
+            async (saved) => {
+              // saved: array of {vaultFile, annotation}
+              completed = true;
+              const newImgs: CarouselImage[] = saved.map((s) => ({
+                filepath: s.vaultFile.path,
+                description: s.annotation?.description || "",
+              }));
+              resolve(newImgs);
+            }
+          );
+
+          const origOnClose = modal.onClose.bind(modal);
+          modal.onClose = async () => {
+            if (!completed) {
+              resolve([]);
+            }
+            await origOnClose();
+          };
+
+          modal.open();
+        } catch (err) {
+          reject(err);
+        }
+      });
+    },
     onSave: async (images: CarouselImage[]) => {
       try {
         const newContent = generateCodeBlockContent(images);
