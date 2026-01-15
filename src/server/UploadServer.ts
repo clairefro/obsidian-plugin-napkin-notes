@@ -129,6 +129,20 @@ function serveUploadPage(res: ServerResponse): void {
 			color: #ff6b6b;
 			border: 1px solid #ff6b6b;
 		}
+		.connection-banner {
+			display: none;
+			background: #4d1a1a;
+			color: #ff6b6b;
+			padding: 10px;
+			border-radius: 6px;
+			margin-bottom: 12px;
+			text-align: center;
+			font-weight: 700;
+		}
+		.close-btn {
+			background: #bb2b2b;
+			color: #ffffff;
+		}
 		.count {
 			margin-top: 15px;
 			text-align: center;
@@ -141,6 +155,9 @@ function serveUploadPage(res: ServerResponse): void {
 		<div class="container">
 			<h1>📸 Upload Images as Napkin Notes</h1>
 			<p>Select or capture photos to send to Obsidian</p>
+
+			<!-- Connection banner: shown if polling detects server is unreachable -->
+			<div id="connectionBanner" class="connection-banner" style="display:none;">Connection lost</div>
 
 			<div class="upload-area" id="dropZone">
 				<div class="upload-icon">📁</div>
@@ -176,6 +193,9 @@ function serveUploadPage(res: ServerResponse): void {
 			<div class="count" id="count" style="display:none;"></div>
 			<div class="preview" id="preview"></div>
 			<div class="status" id="status" style="display:none;"></div>
+
+			<!-- Close-tab button for ephemeral clients (placed at bottom) -->
+			<button class="btn close-btn" id="closeTabBtn" style="margin-top:16px;">Close this tab</button>
 		</div>
 
 		<script>
@@ -405,6 +425,62 @@ function serveUploadPage(res: ServerResponse): void {
 				status.className = 'status ' + type;
 				status.style.display = 'block';
 			}
+
+			function attemptClose(fallbackMessage) {
+				try { window.close(); return; } catch (e) {}
+				try { window.open('', '_self').close(); return; } catch (e) {}
+				if (fallbackMessage) {
+					showStatus(fallbackMessage, 'error');
+				}
+			}
+
+			(function initConnectionPolling() {
+				const urlParams = new URLSearchParams(window.location.search);
+				const token = urlParams.get('token');
+				const banner = document.getElementById('connectionBanner');
+				const closeBtn = document.getElementById('closeTabBtn');
+				let lost = false;
+				if (closeBtn) {
+					closeBtn.addEventListener('click', () => attemptClose('Please close this tab manually.'));
+				}
+				if (!token) return;
+
+				async function check() {
+					const controller = new AbortController();
+					const timeout = setTimeout(() => controller.abort(), 1500);
+					try {
+						const res = await fetch('/ping?token=' + token, { method: 'GET', cache: 'no-cache', signal: controller.signal });
+						clearTimeout(timeout);
+						// 204 No Content is expected
+						if (res.ok) {
+							if (lost) {
+								lost = false;
+								if (banner) banner.style.display = 'none';
+								setBusy(false, '');
+							}
+						} else {
+							if (!lost) {
+								lost = true;
+								if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
+								setBusy(false, '');
+							}
+						}
+					} catch (e) {
+						clearTimeout(timeout);
+						if (!lost) {
+							lost = true;
+							if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
+							setBusy(false, '');
+						}
+					}
+				}
+
+				// Run immediately and then every 2 seconds
+				check();
+				const id = setInterval(check, 2000);
+				window.addEventListener('beforeunload', () => clearInterval(id));
+			})();
+
 		</script>
 </body>
 </html>
@@ -632,6 +708,10 @@ export class UploadServer {
         );
       }
       serveUploadPage(res);
+    } else if (req.method === "GET" && url.pathname === "/ping") {
+      // Lightweight ping for client polling. If token verified above, respond with 204.
+      res.writeHead(204);
+      res.end();
     } else if (req.method === "POST" && url.pathname === "/upload") {
       handleUpload(req, res, this.onUpload);
     } else {
