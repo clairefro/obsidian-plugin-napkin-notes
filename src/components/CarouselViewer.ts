@@ -791,14 +791,28 @@ export class CarouselViewer {
   private setupZoomGestures(): void {
     if (!this.imageContainer) return;
 
-    // Wheel zoom (mouse wheel / trackpad pinch)
+    // Wheel zoom (pinch) and two-finger pan on trackpad
     this.imageContainer.addEventListener(
       "wheel",
       (e) => {
+        // Trackpad pinch-to-zoom usually comes through with ctrl/meta key
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           const delta = e.deltaY > 0 ? -0.1 : 0.1;
           this.setZoom(this.zoomLevel + delta);
+          return;
+        }
+
+        // Two-finger scroll on trackpad produces wheel events with deltaX/deltaY.
+        // When zoomed in, interpret that as panning the image.
+        if (this.zoomLevel > 1 && (e.deltaX !== 0 || e.deltaY !== 0)) {
+          e.preventDefault();
+          // deltaMode: 0=pixels, 1=lines, 2=pages. Convert lines to pixels roughly.
+          const factor = e.deltaMode === 1 ? 16 : 1;
+          // Invert deltas so content follows finger movement
+          this.panX += -e.deltaX * factor;
+          this.panY += -e.deltaY * factor;
+          this.applyZoom();
         }
       },
       { passive: false }

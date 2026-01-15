@@ -104,7 +104,6 @@
   border-radius: 10px;
 }
 
-
 /* Only set width: 100% for block elements, not for all (fixes button sizing) */
 .napkin-notes-upload-modal > *,
 .napkin-notes-upload-modal .napkin-modal-section,
@@ -551,7 +550,7 @@
   object-fit: contain;
   border-radius: 0;
   transform-origin: center center;
-  transition: transform 0.1s ease-out;
+  transition: none; /* remove inertia/smoothing so panning and zoom are immediate */
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -1009,7 +1008,7 @@
   max-height: 100%;
   object-fit: contain;
   transform-origin: center center;
-  transition: transform 0.1s ease-out;
+  transition: none; /* remove inertia/smoothing so panning and zoom are immediate */
   user-select: none;
   -webkit-user-drag: none;
 }
