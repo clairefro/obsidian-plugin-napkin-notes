@@ -10,7 +10,7 @@ import {
   MODAL_TITLE,
   TAB_FILESYSTEM,
   TAB_CAMERA,
-  ALLOWED_MIME_TYPES,
+  // ALLOWED_MIME_TYPES,
 } from "../constants";
 
 export class UploadModal extends Modal {
@@ -291,6 +291,7 @@ export class UploadModal extends Modal {
       collapsibleThumbnails: false, // Keep thumbnails always visible in modal
       showEditButton: false, // No edit button needed - always in edit mode
       showSaveButton: false, // No save button - use modal's Insert button
+      enableNapkinMode: this.plugin.settings.enableNapkinMode,
       onImageChange: (index) => {
         this.onCarouselChange(index);
       },

@@ -1316,3 +1316,122 @@
     height: 60px;
   }
 }
+
+/* Napkin mode CSS textures - realistic paper napkin */
+.napkin-mode-light {
+  background: 
+    /* Light coffee stains - more visible */ radial-gradient(
+      ellipse 120px 90px at 15% 20%,
+      rgba(180, 140, 100, 0.35) 0%,
+      rgba(200, 170, 130, 0.15) 40%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 90px 75px at 85% 75%,
+      rgba(185, 145, 105, 0.28) 0%,
+      rgba(205, 175, 135, 0.12) 40%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 60px 60px at 60% 40%,
+      rgba(190, 150, 110, 0.22) 0%,
+      rgba(200, 170, 130, 0.08) 40%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50px 40px at 30% 70%,
+      rgba(175, 135, 95, 0.18) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 40px 50px at 75% 30%,
+      rgba(180, 140, 100, 0.15) 0%,
+      transparent 60%
+    ),
+    /* Paper texture with fibers - more visible */
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        rgba(0, 0, 0, 0.025) 1px,
+        rgba(0, 0, 0, 0.025) 2px
+      ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(0, 0, 0, 0.025) 1px,
+      rgba(0, 0, 0, 0.025) 2px
+    ),
+    /* Base napkin color with slight variation */
+      linear-gradient(
+        135deg,
+        #faf8f5 0%,
+        #f5f3f0 25%,
+        #f8f6f3 50%,
+        #f4f2ef 75%,
+        #f7f5f2 100%
+      );
+
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.03),
+    inset 0 0 50px rgba(245, 235, 220, 0.4);
+}
+
+.napkin-mode-dark {
+  background: 
+    /* Darker stains - water/coffee marks - more visible */ radial-gradient(
+      ellipse 120px 90px at 15% 20%,
+      rgba(60, 45, 35, 0.45) 0%,
+      rgba(80, 70, 60, 0.2) 40%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 90px 75px at 85% 75%,
+      rgba(65, 50, 40, 0.38) 0%,
+      rgba(75, 65, 55, 0.18) 40%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 60px 60px at 60% 40%,
+      rgba(70, 55, 45, 0.32) 0%,
+      rgba(70, 60, 50, 0.12) 40%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50px 40px at 30% 70%,
+      rgba(55, 40, 30, 0.25) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 40px 50px at 75% 30%,
+      rgba(60, 45, 35, 0.22) 0%,
+      transparent 60%
+    ),
+    /* Paper texture with fibers - more visible */
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        rgba(255, 255, 255, 0.035) 1px,
+        rgba(255, 255, 255, 0.035) 2px
+      ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(255, 255, 255, 0.035) 1px,
+      rgba(255, 255, 255, 0.035) 2px
+    ),
+    /* Base napkin color - aged/used napkin */
+      linear-gradient(
+        135deg,
+        #3a3530 0%,
+        #423d38 25%,
+        #3d3833 50%,
+        #413c37 75%,
+        #3e3935 100%
+      );
+
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.4),
+    inset 0 0 50px rgba(100, 90, 80, 0.15);
+}

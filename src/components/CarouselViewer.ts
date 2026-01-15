@@ -1,7 +1,5 @@
 import { App, TFile } from "obsidian";
 import { ConfirmModal } from "./ConfirmModal";
-import napkinDark from "../assets/napkin-dark.png";
-import napkinLight from "../assets/napkin-light.png";
 
 /**
  * Unified image data structure for the carousel viewer
@@ -44,8 +42,6 @@ export interface CarouselViewerOptions {
 
   // Napkin-mode background
   enableNapkinMode?: boolean; // Enable napkin mode
-  theme?: "light" | "dark"; // Theme for napkin mode
-  napkinAssets?: { light: string; dark: string }; // Napkin assets
 }
 
 export class CarouselViewer {
@@ -91,17 +87,12 @@ export class CarouselViewer {
   private metadataDiv?: HTMLElement;
   private descriptionInput?: HTMLTextAreaElement;
 
-  private napkinAssets = {
-    light: napkinLight,
-    dark: napkinDark,
-  };
-
   constructor(options: CarouselViewerOptions) {
     this.app = options.app;
     this.container = options.container;
     this.images = [...options.images]; // Clone to avoid mutations
     this.mode = options.mode;
-    this.options = { ...options, napkinAssets: this.napkinAssets };
+    this.options = options;
   }
 
   public render(): void {
@@ -565,22 +556,16 @@ export class CarouselViewer {
   }
 
   private applyNapkinBackground(): void {
-    if (
-      this.options.enableNapkinMode &&
-      this.options.napkinAssets &&
-      this.options.napkinAssets.light &&
-      this.options.napkinAssets.dark
-    ) {
-      const napkinBackground =
-        this.options.theme === "dark"
-          ? this.options.napkinAssets.dark
-          : this.options.napkinAssets.light;
-      this.container.style.backgroundImage = `url("${napkinBackground}")`;
-      this.container.style.backgroundSize = "cover";
-      this.container.style.backgroundPosition = "center center";
-      this.container.style.backgroundRepeat = "no-repeat";
+    if (this.options.enableNapkinMode) {
+      // Auto-detect theme from document.body class
+      const isDarkTheme = document.body.classList.contains("theme-dark");
+      // Remove old classes
+      this.container.removeClass("napkin-mode-light", "napkin-mode-dark");
+      // Add appropriate napkin class
+      this.container.addClass(isDarkTheme ? "napkin-mode-dark" : "napkin-mode-light");
     } else {
-      this.container.style.backgroundImage = "";
+      // Remove napkin classes
+      this.container.removeClass("napkin-mode-light", "napkin-mode-dark");
     }
   }
 
@@ -588,18 +573,6 @@ export class CarouselViewer {
     if (image.dataUrl) {
       // Direct data URL (upload modal)
       imgEl.src = image.dataUrl;
-    } else if (
-      image.filepath === "napkin-dark.png" &&
-      this.options.napkinAssets?.dark
-    ) {
-      // Use Base64 string for napkin-dark.png
-      imgEl.src = this.options.napkinAssets.dark;
-    } else if (
-      image.filepath === "napkin-light.png" &&
-      this.options.napkinAssets?.light
-    ) {
-      // Use Base64 string for napkin-light.png
-      imgEl.src = this.options.napkinAssets.light;
     } else if (image.vaultFile) {
       // Vault file (reading view)
       imgEl.src = this.app.vault.getResourcePath(image.vaultFile);

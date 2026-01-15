@@ -169,6 +169,7 @@ function renderCarousel(
     collapsibleThumbnails: true,
     showEditButton: true,
     showSaveButton: true,
+    enableNapkinMode: plugin.settings.enableNapkinMode,
     onAdd: async (index: number) => {
       // Open the upload modal in 'return results' mode. Resolve with CarouselImage[].
       return new Promise<CarouselImage[]>((resolve, reject) => {
