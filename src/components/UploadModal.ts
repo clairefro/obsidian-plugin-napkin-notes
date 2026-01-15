@@ -440,9 +440,6 @@ export class UploadModal extends Modal {
   }
 
   private async handleServerUpload(event: UploadEvent): Promise<void> {
-    console.log(
-      `[Napkin Notes] handleServerUpload called for ${event.filename}`
-    );
     try {
       // Convert ArrayBuffer to Blob and File
       const blob = new Blob([event.buffer], { type: "image/jpeg" });
@@ -483,7 +480,6 @@ export class UploadModal extends Modal {
       this.scrollToReviewSection();
 
       new Notice(`Received image: ${event.filename}`);
-      console.log(`[Napkin Notes] handleServerUpload completed successfully`);
     } catch (error) {
       console.error("[Napkin Notes] Failed to process uploaded image:", error);
       new Notice("Failed to process uploaded image");

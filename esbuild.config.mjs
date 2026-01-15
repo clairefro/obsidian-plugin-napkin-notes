@@ -57,8 +57,11 @@ const context = await esbuild.context({
 });
 
 if (prod) {
+  console.log("Building production bundle...");
   await context.rebuild();
+  console.log("Build complete.");
   process.exit(0);
 } else {
+  console.log("Starting esbuild in watch mode (dev)...");
   await context.watch();
 }

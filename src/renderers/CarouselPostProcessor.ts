@@ -1,6 +1,7 @@
 import NapkinNotesPlugin from "../../main";
 import { CODE_BLOCK_LANGUAGE } from "../constants";
 import { CarouselViewer, CarouselImage } from "../components/CarouselViewer";
+import { TFile } from "obsidian";
 
 interface ParsedImage {
   filepath: string;
@@ -166,7 +167,44 @@ function renderCarousel(
     mode: "view",
     collapsibleThumbnails: true,
     showEditButton: true,
-    showSaveButton: false,
+    showSaveButton: true,
+    onSave: async (images: CarouselImage[]) => {
+      try {
+        const newContent = generateCodeBlockContent(images);
+        if (normalizeSource(newContent) === normalizeSource(originalSource)) {
+          return; // No changes
+        }
+
+        const file = plugin.app.vault.getAbstractFileByPath(
+          sourcePath
+        ) as TFile;
+        if (!file) return;
+
+        const text = await plugin.app.vault.read(file);
+
+        const fenceRegex = new RegExp(
+          "```" + CODE_BLOCK_LANGUAGE + "\\s*([\\s\\S]*?)```",
+          "g"
+        );
+
+        let replaced = false;
+        const normalizedOriginal = normalizeSource(originalSource);
+
+        const updatedText = text.replace(fenceRegex, (fullMatch, inner) => {
+          if (!replaced && normalizeSource(inner) === normalizedOriginal) {
+            replaced = true;
+            return `\`\`\`${CODE_BLOCK_LANGUAGE}\n${newContent}\n\`\`\``;
+          }
+          return fullMatch;
+        });
+
+        if (!replaced) return; // Couldn't locate the original block
+
+        await plugin.app.vault.modify(file, updatedText);
+      } catch (err) {
+        console.error("Failed to save Napkin Notes block:", err);
+      }
+    },
   });
   viewer.render();
 }
