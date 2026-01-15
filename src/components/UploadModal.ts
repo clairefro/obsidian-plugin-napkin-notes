@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Editor } from "obsidian";
+import { App, Modal, Notice, Editor, Platform } from "obsidian";
 import NapkinNotesPlugin from "../../main";
 import { ImageData, UploadEvent, ImageWithFile } from "../types";
 import { CarouselViewer, CarouselImage } from "./CarouselViewer";
@@ -58,6 +58,11 @@ export class UploadModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.addClass("napkin-notes-upload-modal");
+
+    // On mobile, force direct upload tab (camera tab requires Node.js)
+    if (Platform.isMobileApp && this.currentTab === "camera") {
+      this.currentTab = "direct";
+    }
 
     // Title
     contentEl.createEl("h2", { text: MODAL_TITLE });
@@ -255,15 +260,17 @@ export class UploadModal extends Modal {
     }
     directTab.addEventListener("click", () => this.switchTab("direct"));
 
-    // Camera upload tab
-    const cameraTab = this.tabContainer.createEl("div", {
-      text: TAB_CAMERA,
-      cls: "napkin-notes-tab",
-    });
-    if (this.currentTab === "camera") {
-      cameraTab.addClass("active");
+    // Camera upload tab (desktop only - requires Node.js HTTP server)
+    if (!Platform.isMobileApp) {
+      const cameraTab = this.tabContainer.createEl("div", {
+        text: TAB_CAMERA,
+        cls: "napkin-notes-tab",
+      });
+      if (this.currentTab === "camera") {
+        cameraTab.addClass("active");
+      }
+      cameraTab.addEventListener("click", () => this.switchTab("camera"));
     }
-    cameraTab.addEventListener("click", () => this.switchTab("camera"));
   }
 
   /**
@@ -460,8 +467,13 @@ export class UploadModal extends Modal {
       new Notice("Ready! Scan QR code with your phone.");
     } catch (error) {
       console.error("Failed to start server:", error);
-      this.qrDisplay.showError("Failed to start server");
-      new Notice("Failed to start upload server");
+
+      const errorMessage = Platform.isMobileApp
+        ? "Camera upload via QR code is only available on desktop. Please use direct upload instead."
+        : "Failed to start upload server. Please try again or use direct upload.";
+
+      this.qrDisplay.showError(errorMessage);
+      new Notice(errorMessage);
     }
   }
 

@@ -1,6 +1,22 @@
-import * as http from 'http';
+import type * as http from 'http';
+import { Platform } from 'obsidian';
+import { getHttpModule, getOsModule } from '../utils/platformModules';
 
 export class PortManager {
+	private http: typeof import("http") | null = null;
+
+	/**
+	 * Initialize Node.js modules
+	 */
+	private async initialize(): Promise<void> {
+		if (Platform.isMobileApp) {
+			return;
+		}
+
+		if (!this.http) {
+			this.http = await getHttpModule();
+		}
+	}
 	/**
 	 * Find an available port within the given range
 	 * @param start Start of port range
@@ -8,6 +24,12 @@ export class PortManager {
 	 * @returns Available port number or null if none found
 	 */
 	async findAvailablePort(start: number, end: number): Promise<number | null> {
+		await this.initialize();
+
+		if (!this.http || Platform.isMobileApp) {
+			return null;
+		}
+
 		for (let port = start; port <= end; port++) {
 			if (await this.isPortAvailable(port)) {
 				return port;
@@ -23,7 +45,11 @@ export class PortManager {
 	 */
 	private isPortAvailable(port: number): Promise<boolean> {
 		return new Promise((resolve) => {
-			const server = http.createServer();
+			if (!this.http) {
+				resolve(false);
+				return;
+			}
+			const server = this.http.createServer();
 
 			server.once('error', (err: any) => {
 				if (err.code === 'EADDRINUSE') {
@@ -46,12 +72,24 @@ export class PortManager {
 	 * Get local network IP address
 	 * @returns Local IP address or 'localhost'
 	 */
-	getLocalIP(): string {
-		const os = require('os');
+	async getLocalIP(): Promise<string> {
+		if (Platform.isMobileApp) {
+			return 'localhost';
+		}
+
+		const os = await getOsModule();
+
+		if (!os) {
+			return 'localhost';
+		}
+
 		const interfaces = os.networkInterfaces();
 
 		for (const name of Object.keys(interfaces)) {
-			for (const iface of interfaces[name]) {
+			const ifaces = interfaces[name];
+			if (!ifaces) continue;
+
+			for (const iface of ifaces) {
 				// Skip internal (loopback) and non-IPv4 addresses
 				if (iface.family === 'IPv4' && !iface.internal) {
 					return iface.address;

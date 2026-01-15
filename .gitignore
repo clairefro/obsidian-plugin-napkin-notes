@@ -11,6 +11,7 @@ main.js.map
 .DS_Store
 .idea/
 .vscode/
+.claude/
 
 # Obsidian
 data.json

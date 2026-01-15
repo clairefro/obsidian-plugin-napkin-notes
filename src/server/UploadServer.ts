@@ -1,11 +1,32 @@
-import * as http from "http";
-import { IncomingMessage, ServerResponse } from "http";
-import * as crypto from "crypto";
+import type { IncomingMessage, ServerResponse } from "http";
 import Busboy from "busboy";
 import { UploadEvent } from "../types";
 import { Platform } from "obsidian";
+import { getHttpModule, getCryptoModule, getOsModule } from "../utils/platformModules";
+
+// Lazy-loaded modules (desktop only - Node.js built-ins)
+let http: typeof import("http") | null = null;
+let crypto: typeof import("crypto") | null = null;
+// Busboy is bundled, so we import it normally (not lazy-loaded)
 
 // import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "../constants";
+
+/**
+ * Initialize Node.js modules (desktop only)
+ */
+async function initializeNodeModules(): Promise<void> {
+  if (Platform.isMobileApp) {
+    return;
+  }
+
+  if (!http) {
+    http = await getHttpModule();
+  }
+  if (!crypto) {
+    crypto = await getCryptoModule();
+  }
+  // Busboy is bundled and imported at the top, no need to lazy-load
+}
 
 /**
  * Serve the mobile upload HTML page
@@ -569,6 +590,9 @@ async function handleUpload(
  * Generate a secure random token
  */
 function generateToken(): string {
+  if (!crypto) {
+    throw new Error("Crypto module not available");
+  }
   return crypto.randomBytes(16).toString("hex");
 }
 
@@ -576,7 +600,7 @@ function generateToken(): string {
  * Upload server for receiving images from mobile devices
  */
 export class UploadServer {
-  private server: http.Server | null = null;
+  private server: import("http").Server | null = null;
   private port: number = 0;
   private token: string = "";
   private onUpload: (event: UploadEvent) => void;
@@ -606,8 +630,18 @@ export class UploadServer {
   async start(
     portRange: [number, number]
   ): Promise<{ port: number; token: string; url: string }> {
-    if (Platform.isMobile) {
+    if (Platform.isMobileApp) {
       throw new Error("Upload server is disabled on mobile devices.");
+    }
+
+    // Initialize Node.js modules
+    await initializeNodeModules();
+
+    if (!http || !crypto) {
+      const missingModules = [];
+      if (!http) missingModules.push('http');
+      if (!crypto) missingModules.push('crypto');
+      throw new Error(`Required Node.js modules not available: ${missingModules.join(', ')}`);
     }
 
     this.token = generateToken();
@@ -616,7 +650,8 @@ export class UploadServer {
       try {
         await this.tryStartServer(port);
         this.port = port;
-        const url = `http://${this.getLocalIP()}:${port}?token=${this.token}`;
+        const localIP = await this.getLocalIP();
+        const url = `http://${localIP}:${port}?token=${this.token}`;
         console.log(
           `[Napkin Notes Upload Server] Server started successfully on ${url}`
         );
@@ -637,6 +672,10 @@ export class UploadServer {
    */
   private tryStartServer(port: number): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (!http) {
+        reject(new Error("HTTP module not available"));
+        return;
+      }
       this.server = http.createServer((req, res) => {
         this.handleRequest(req, res);
       });
@@ -718,12 +757,20 @@ export class UploadServer {
   /**
    * Get local IP address
    */
-  private getLocalIP(): string {
-    const os = require("os");
+  private async getLocalIP(): Promise<string> {
+    const os = await getOsModule();
+
+    if (!os) {
+      return "localhost";
+    }
+
     const interfaces = os.networkInterfaces();
 
     for (const name of Object.keys(interfaces)) {
-      for (const iface of interfaces[name]) {
+      const ifaces = interfaces[name];
+      if (!ifaces) continue;
+
+      for (const iface of ifaces) {
         // Skip internal and non-IPv4 addresses
         if (iface.family === "IPv4" && !iface.internal) {
           return iface.address;

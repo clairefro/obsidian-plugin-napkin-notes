@@ -32,10 +32,18 @@ const context = await esbuild.context({
     "@lezer/common",
     "@lezer/highlight",
     "@lezer/lr",
+    // Node.js built-in modules (available on desktop via Electron, not on mobile)
     "fs",
     "path",
     "http",
+    "https",
+    "crypto",
+    "os",
+    "stream",
+    "buffer",
+    "events",
     ...builtins,
+    // Note: busboy is NOT external - it needs to be bundled since it's an npm package
   ],
   platform: "browser", // Updated to browser platform
   format: "cjs",
