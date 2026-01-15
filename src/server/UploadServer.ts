@@ -159,13 +159,12 @@ function serveUploadPage(res: ServerResponse): void {
 			<!-- Connection banner: shown if polling detects server is unreachable -->
 			<div id="connectionBanner" class="connection-banner" style="display:none;">Connection lost - close tab and scan again</div>
 
-			<div class="upload-area" id="dropZone">
+			<label class="upload-area" id="dropZone" role="button" style="position:relative; overflow:hidden;">
 				<div class="upload-icon">📁</div>
 				<p><strong>Tap to select photos</strong></p>
-			</div>
-
-			<!-- Hidden file input for gallery selection -->
-			<input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+				<!-- File input positioned over the label for reliable native picker activation -->
+				<input type="file" id="fileInput" accept="image/*" multiple style="display:block; position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; border:0; margin:0; padding:0; z-index:2;">
+			</label>
 
 			<!-- Hidden file input for camera capture -->
 			<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
@@ -208,9 +207,9 @@ function serveUploadPage(res: ServerResponse): void {
 			const count = document.getElementById('count');
 			let selectedFiles = [];
 
-			// Helper to disable inputs and show transient status since uploads happen immediately
+			// Helper to disable non-gallery inputs and show transient status since uploads happen immediately
 			function setBusy(isBusy, text) {
-				if (fileInput) fileInput.disabled = isBusy;
+				// Keep the main gallery file input enabled so users can re-open it anytime.
 				if (cameraInput) cameraInput.disabled = isBusy;
 				const directEl = document.getElementById('directCameraInput');
 				if (directEl) directEl.disabled = isBusy;
