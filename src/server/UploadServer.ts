@@ -56,9 +56,10 @@ function serveUploadPage(res: ServerResponse): void {
 			border-radius: 12px;
 			padding: 40px;
 			text-align: center;
-			cursor: pointer;
 			transition: all 0.3s ease;
 			background: #252526;
+			position: relative;
+			display: block;
 		}
 		.upload-area:hover {
 			background: #2d2d30;
@@ -159,11 +160,13 @@ function serveUploadPage(res: ServerResponse): void {
 			<!-- Connection banner: shown if polling detects server is unreachable -->
 			<div id="connectionBanner" class="connection-banner" style="display:none;">Connection lost - close tab and scan again</div>
 
-			<label class="upload-area" id="dropZone" role="button" style="position:relative; overflow:hidden;">
-				<div class="upload-icon">📁</div>
-				<p><strong>Tap to select photos</strong></p>
+			<label class="upload-area" id="dropZone" for="fileInput" style="position:relative; overflow:hidden; cursor:pointer;">
+				<div style="position:relative; z-index:1; pointer-events:none;">
+					<div class="upload-icon">📁</div>
+					<p><strong>Tap to select photos</strong></p>
+				</div>
 				<!-- File input positioned over the label for reliable native picker activation -->
-				<input type="file" id="fileInput" accept="image/*" multiple style="display:block; position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; border:0; margin:0; padding:0; z-index:2;">
+				<input type="file" id="fileInput" accept="image/*" multiple style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:10;">
 			</label>
 
 			<!-- Hidden file input for camera capture -->
@@ -229,15 +232,8 @@ function serveUploadPage(res: ServerResponse): void {
 				}
 			}
 
-			// Drop zone click/touch opens gallery
-			dropZone.addEventListener('click', (e) => {
-				e.preventDefault();
-				fileInput.click();
-			});
-			dropZone.addEventListener('touchend', (e) => {
-				e.preventDefault();
-				fileInput.click();
-			});
+			// File input is positioned absolutely over drop zone, so native click handling works.
+			// No need for manual event handlers - the file input captures interactions directly.
 
 
 			// Compress image using createImageBitmap + OffscreenCanvas before upload
