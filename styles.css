@@ -427,6 +427,7 @@
 .napkin-notes-upload-modal .napkin-thumbnail-strip {
   width: 120px;
   min-width: 120px;
+  max-height: 476px;
   display: flex;
   flex-direction: column;
   background: var(--background-primary-alt);
