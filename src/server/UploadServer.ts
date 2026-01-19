@@ -515,11 +515,11 @@ function serveUploadPage(res: ServerResponse): void {
 /**
  * Handle file upload
  */
-async function handleUpload(
+function handleUpload(
   req: IncomingMessage,
   res: ServerResponse,
   onUpload: (event: UploadEvent) => void
-): Promise<void> {
+): void {
   try {
     const busboy = Busboy({ headers: req.headers });
     let fileCount = 0;
