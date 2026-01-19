@@ -1,9 +1,12 @@
-
 import type { IncomingMessage, ServerResponse } from "http";
 import Busboy from "busboy";
 import { UploadEvent } from "../types";
 import { Platform } from "obsidian";
-import { getHttpModule, getCryptoModule, getOsModule } from "../utils/platformModules";
+import {
+  getHttpModule,
+  getCryptoModule,
+  getOsModule,
+} from "../utils/platformModules";
 
 type BusboyFileInfo = { filename: string; encoding: string; mimeType: string };
 
@@ -521,11 +524,15 @@ async function handleUpload(
     const busboy = Busboy({ headers: req.headers });
     let fileCount = 0;
 
-		busboy.on(
-			"file",
-			(_fieldname: string, file: NodeJS.ReadableStream, info: BusboyFileInfo) => {
-				const { filename, encoding, mimeType } = info;
-				fileCount++;
+    busboy.on(
+      "file",
+      (
+        _fieldname: string,
+        file: NodeJS.ReadableStream,
+        info: BusboyFileInfo
+      ) => {
+        const { filename, encoding, mimeType } = info;
+        fileCount++;
 
         console.debug(
           `[Napkin Notes Upload Server] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`
@@ -642,9 +649,11 @@ export class UploadServer {
 
     if (!http || !crypto) {
       const missingModules = [];
-      if (!http) missingModules.push('http');
-      if (!crypto) missingModules.push('crypto');
-      throw new Error(`Required Node.js modules not available: ${missingModules.join(', ')}`);
+      if (!http) missingModules.push("http");
+      if (!crypto) missingModules.push("crypto");
+      throw new Error(
+        `Required Node.js modules not available: ${missingModules.join(", ")}`
+      );
     }
 
     this.token = generateToken();
@@ -685,7 +694,7 @@ export class UploadServer {
 
       this.server.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "EADDRINUSE") {
-          reject(err);
+          reject(err instanceof Error ? err : new Error(String(err)));
         }
       });
 
