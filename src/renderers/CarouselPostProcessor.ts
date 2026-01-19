@@ -215,10 +215,8 @@ function renderCarousel(
           return; // No changes
         }
 
-        const file = plugin.app.vault.getAbstractFileByPath(
-          sourcePath
-        ) as TFile;
-        if (!file) return;
+        const file = plugin.app.vault.getAbstractFileByPath(sourcePath);
+        if (!(file instanceof TFile)) return;
 
         const text = await plugin.app.vault.read(file);
 

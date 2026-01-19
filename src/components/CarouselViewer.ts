@@ -578,10 +578,8 @@ export class CarouselViewer {
       imgEl.src = this.app.vault.getResourcePath(image.vaultFile);
     } else if (image.filepath) {
       // Try to resolve filepath
-      const file = this.app.vault.getAbstractFileByPath(
-        image.filepath
-      ) as TFile;
-      if (file) {
+      const file = this.app.vault.getAbstractFileByPath(image.filepath);
+      if (file instanceof TFile) {
         imgEl.src = this.app.vault.getResourcePath(file);
       } else {
         // Try to find by filename
