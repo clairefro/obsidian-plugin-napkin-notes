@@ -72,7 +72,7 @@ export class QRCodeDisplay {
     });
 
     // Upload counter
-    const counterDiv = this.container.createEl("div", {
+    this.container.createEl("div", {
       text: "0 images received",
       cls: "napkin-qr-upload-count",
     });
