@@ -230,12 +230,12 @@ export class UploadModal extends Modal {
     }
   }
 
-  async onClose() {
+  onClose() {
     const { contentEl } = this;
     contentEl.empty();
 
-    // Stop upload server if running
-    await this.stopUploadServer();
+    // Stop upload server if running (fire-and-forget)
+    void this.stopUploadServer();
 
     // Revoke data URLs
     this.images.forEach((img) => {
