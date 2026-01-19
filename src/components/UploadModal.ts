@@ -1,6 +1,6 @@
 import { App, Modal, Notice, Editor, Platform } from "obsidian";
 import NapkinNotesPlugin from "../../main";
-import { ImageData, UploadEvent, ImageWithFile } from "../types";
+import { ImageData, UploadEvent, ImageWithFile, ImageAnnotation } from "../types";
 import { CarouselViewer, CarouselImage } from "./CarouselViewer";
 import { ImageProcessor } from "../services/ImageProcessor";
 import { MarkdownGenerator } from "../services/MarkdownGenerator";
@@ -42,7 +42,7 @@ export class UploadModal extends Modal {
     plugin: NapkinNotesPlugin,
     editor?: Editor,
     onComplete?: (
-      saved: { vaultFile: import("obsidian").TFile; annotation?: any }[]
+      saved: { vaultFile: import("obsidian").TFile; annotation?: ImageAnnotation }[]
     ) => void
   ) {
     super(app);

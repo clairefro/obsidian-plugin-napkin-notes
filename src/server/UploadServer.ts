@@ -1,8 +1,11 @@
+
 import type { IncomingMessage, ServerResponse } from "http";
 import Busboy from "busboy";
 import { UploadEvent } from "../types";
 import { Platform } from "obsidian";
 import { getHttpModule, getCryptoModule, getOsModule } from "../utils/platformModules";
+
+type BusboyFileInfo = { filename: string; encoding: string; mimeType: string };
 
 // Lazy-loaded modules (desktop only - Node.js built-ins)
 let http: typeof import("http") | null = null;
@@ -518,11 +521,11 @@ async function handleUpload(
     const busboy = Busboy({ headers: req.headers });
     let fileCount = 0;
 
-    busboy.on(
-      "file",
-      (fieldname: string, file: NodeJS.ReadableStream, info: any) => {
-        const { filename, encoding, mimeType } = info;
-        fileCount++;
+		busboy.on(
+			"file",
+			(_fieldname: string, file: NodeJS.ReadableStream, info: BusboyFileInfo) => {
+				const { filename, encoding, mimeType } = info;
+				fileCount++;
 
         console.debug(
           `[Napkin Notes Upload Server] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`
@@ -680,7 +683,7 @@ export class UploadServer {
         this.handleRequest(req, res);
       });
 
-      this.server.on("error", (err: any) => {
+      this.server.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "EADDRINUSE") {
           reject(err);
         }

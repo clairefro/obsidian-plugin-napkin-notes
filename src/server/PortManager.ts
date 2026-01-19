@@ -51,7 +51,7 @@ export class PortManager {
 			}
 			const server = this.http.createServer();
 
-			server.once('error', (err: any) => {
+			server.once('error', (err: NodeJS.ErrnoException) => {
 				if (err.code === 'EADDRINUSE') {
 					resolve(false);
 				} else {
