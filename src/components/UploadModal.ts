@@ -337,7 +337,7 @@ export class UploadModal extends Modal {
     this.carouselViewer.updateImages(carouselImages);
   }
 
-  private async switchTab(tab: "direct" | "camera"): Promise<void> {
+  private  switchTab(tab: "direct" | "camera"): void {
     // Update tab state and UI immediately
     this.currentTab = tab;
     this.renderTabs();
@@ -448,7 +448,7 @@ export class UploadModal extends Modal {
         serverModule.UploadServer as typeof import("../server/UploadServer.js").UploadServer;
       this.uploadServer = new UploadServerClass(
         (event: UploadEvent) => {
-          this.handleServerUpload(event);
+          void this.handleServerUpload(event);
         },
         (info) => {
           this.handleDeviceConnect(info);
