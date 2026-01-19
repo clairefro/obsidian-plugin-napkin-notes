@@ -355,11 +355,11 @@ export class UploadModal extends Modal {
    */
   private async stopUploadServer(): Promise<void> {
     if (this.uploadServer) {
-      console.log("[Napkin Notes] Stopping upload server (tab switch)");
+      console.debug("[Napkin Notes] Stopping upload server (tab switch)");
       await this.uploadServer.stop();
       this.uploadServer = undefined;
       this.qrDisplay = undefined;
-      console.log("[Napkin Notes] Upload server stopped");
+      console.debug("[Napkin Notes] Upload server stopped");
     }
   }
 
@@ -483,7 +483,7 @@ export class UploadModal extends Modal {
       // Convert ArrayBuffer to Blob and File
       const blob = new Blob([event.buffer], { type: "image/jpeg" });
       const file = new File([blob], event.filename, { type: "image/jpeg" });
-      console.log(`[Napkin Notes] Created File object, size: ${file.size}`);
+      console.debug(`[Napkin Notes] Created File object, size: ${file.size}`);
 
       // Process the uploaded file
       const buffer = await this.imageProcessor.fileToArrayBuffer(file);
@@ -500,7 +500,7 @@ export class UploadModal extends Modal {
       };
 
       this.images.push(imageData);
-      console.log(
+      console.debug(
         `[Napkin Notes] Added image, total images: ${this.images.length}`
       );
 
@@ -551,7 +551,7 @@ export class UploadModal extends Modal {
     url?: string;
     timestamp?: number;
   }): void {
-    console.log("[Napkin Notes] Device connected:", info);
+    console.debug("[Napkin Notes] Device connected:", info);
     // Show a brief notification to the user and log details for debugging
     new Notice("[Napkin Notes] Device connected: " + (info.ip || "unknown"));
   }
