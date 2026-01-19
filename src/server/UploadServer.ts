@@ -737,13 +737,14 @@ export class UploadServer {
             ? req.socket.remoteAddress
             : "";
         const userAgent = String(req.headers["user-agent"] || "");
-        this.onConnect &&
+        if (this.onConnect) {
           this.onConnect({
             ip: remoteIP,
             userAgent,
             url: url.toString(),
             timestamp: Date.now(),
           });
+        }
         console.debug(
           `[Napkin Notes Upload Server] Client connected: ${remoteIP} - ${userAgent}`
         );
