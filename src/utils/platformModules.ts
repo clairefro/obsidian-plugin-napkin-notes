@@ -8,7 +8,7 @@ import { Platform } from "obsidian";
 /**
  * Conditionally import http module (desktop only)
  */
-export async function getHttpModule(): Promise<typeof import("http") | null> {
+export function getHttpModule(): typeof import("http") | null {
   if (Platform.isMobileApp) {
     return null;
   }
