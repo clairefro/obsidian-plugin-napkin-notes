@@ -20,7 +20,7 @@ export function registerCarouselPostProcessor(plugin: NapkinNotesPlugin): void {
           renderCarousel(el, images, plugin, ctx.sourcePath, source);
         } else {
           el.createEl("p", {
-            text: "No images found in napkin-notes block",
+            text: "No images found in Napkin Notes block",
             cls: "napkin-notes-error",
           });
         }

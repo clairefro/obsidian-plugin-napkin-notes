@@ -134,7 +134,7 @@ export class UploadModal extends Modal {
     cancelBtn.addEventListener("click", () => this.close());
 
     this.insertBtn = buttonContainer.createEl("button", {
-      text: "Insert into Notes",
+      text: "Insert into notes",
       cls: "napkin-mod-cta",
       attr: {
         "aria-label": "Upload image(s) first",

@@ -12,7 +12,7 @@ export default class NapkinNotesPlugin extends Plugin {
 
     this.addCommand({
       id: "insert",
-      name: "Insert New",
+      name: "Insert new",
       callback: () => {
         this.openUploadModal();
       },
