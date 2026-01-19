@@ -531,7 +531,7 @@ function handleUpload(
         file: NodeJS.ReadableStream,
         info: BusboyFileInfo
       ) => {
-        const { filename, encoding, mimeType } = info;
+        const { filename, mimeType } = info;
         fileCount++;
 
         console.debug(
