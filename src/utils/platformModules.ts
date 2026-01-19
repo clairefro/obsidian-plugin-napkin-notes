@@ -25,7 +25,7 @@ export function getHttpModule(): typeof import("http") | null {
 /**
  * Conditionally import crypto module (desktop only)
  */
-export async function getCryptoModule(): Promise<typeof import("crypto") | null> {
+export function getCryptoModule(): typeof import("crypto") | null {
   if (Platform.isMobileApp) {
     return null;
   }
