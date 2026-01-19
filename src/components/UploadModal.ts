@@ -153,7 +153,7 @@ export class UploadModal extends Modal {
           new Notice("Failed to save images");
         }
       } else {
-        this.insertNotes();
+        void this.insertNotes();
       }
     });
   }
@@ -343,9 +343,8 @@ export class UploadModal extends Modal {
     this.renderTabs();
     this.renderContent();
 
-    // Stop upload server in the background if leaving camera tab
     if (this.uploadServer && tab !== "camera") {
-      this.stopUploadServer(); // don't await
+     void  this.stopUploadServer(); 
     }
   }
 
@@ -370,7 +369,7 @@ export class UploadModal extends Modal {
     if (this.currentTab === "direct") {
       this.renderDirectUpload();
     } else if (this.currentTab === "camera") {
-      this.renderCameraUpload();
+      void this.renderCameraUpload();
     }
   }
 
@@ -408,7 +407,7 @@ export class UploadModal extends Modal {
     fileInput.addEventListener("change", (e: Event) => {
       const files = (e.target as HTMLInputElement).files;
       if (files) {
-        this.handleFiles(Array.from(files));
+        void this.handleFiles(Array.from(files));
       }
     });
 

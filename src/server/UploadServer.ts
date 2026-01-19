@@ -750,7 +750,7 @@ export class UploadServer {
       res.writeHead(204);
       res.end();
     } else if (req.method === "POST" && url.pathname === "/upload") {
-      handleUpload(req, res, this.onUpload);
+      void handleUpload(req, res, this.onUpload);
     } else {
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("Not found");
