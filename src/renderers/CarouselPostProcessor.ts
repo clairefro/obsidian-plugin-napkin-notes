@@ -179,20 +179,15 @@ function renderCarousel(
           const editor = activeView ? activeView.editor : undefined;
 
           let completed = false;
-          const modal = new UploadModal(
-            plugin.app,
-            plugin,
-            editor,
-            (saved) => {
-              // saved: array of {vaultFile, annotation}
-              completed = true;
-              const newImgs: CarouselImage[] = saved.map((s) => ({
-                filepath: s.vaultFile.path,
-                description: s.annotation?.description || "",
-              }));
-              resolve(newImgs);
-            }
-          );
+          const modal = new UploadModal(plugin.app, plugin, editor, (saved) => {
+            // saved: array of {vaultFile, annotation}
+            completed = true;
+            const newImgs: CarouselImage[] = saved.map((s) => ({
+              filepath: s.vaultFile.path,
+              description: s.annotation?.description || "",
+            }));
+            resolve(newImgs);
+          });
 
           const origOnClose = modal.onClose.bind(modal);
           modal.onClose = async () => {
@@ -204,7 +199,7 @@ function renderCarousel(
 
           modal.open();
         } catch (err) {
-          reject(err);
+          reject(err instanceof Error ? err : new Error(String(err)));
         }
       });
     },
