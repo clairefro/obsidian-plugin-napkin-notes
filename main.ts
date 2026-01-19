@@ -11,7 +11,7 @@ export default class NapkinNotesPlugin extends Plugin {
     await this.loadSettings();
 
     this.addCommand({
-      id: "insert-napkin-notes",
+      id: "insert",
       name: "Insert Napkin Notes",
       callback: () => {
         this.openUploadModal();
