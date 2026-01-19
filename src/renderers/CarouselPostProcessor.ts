@@ -183,7 +183,7 @@ function renderCarousel(
             plugin.app,
             plugin,
             editor,
-            async (saved) => {
+            (saved) => {
               // saved: array of {vaultFile, annotation}
               completed = true;
               const newImgs: CarouselImage[] = saved.map((s) => ({
