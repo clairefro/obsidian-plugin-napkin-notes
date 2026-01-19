@@ -735,7 +735,7 @@ export class UploadServer {
         const remoteIP =
           req.socket && req.socket.remoteAddress
             ? req.socket.remoteAddress
-            : (req.connection && req.connection.remoteAddress) || "";
+            : "";
         const userAgent = String(req.headers["user-agent"] || "");
         this.onConnect &&
           this.onConnect({
