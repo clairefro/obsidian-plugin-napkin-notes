@@ -234,7 +234,6 @@ export class UploadModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
 
-    // Stop upload server if running (fire-and-forget)
     void this.stopUploadServer();
 
     // Revoke data URLs
