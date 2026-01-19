@@ -668,7 +668,7 @@ export class UploadServer {
           `[Napkin Notes Upload Server] Server started successfully on ${url}`
         );
         return { port, token: this.token, url };
-      } catch (err) {
+      } catch (_err) {
         // Port in use, try next one
         continue;
       }
