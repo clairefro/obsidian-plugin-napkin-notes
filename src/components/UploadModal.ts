@@ -436,7 +436,7 @@ export class UploadModal extends Modal {
       uploadZone.removeClass("dragover");
       const files = e.dataTransfer?.files;
       if (files) {
-        this.handleFiles(Array.from(files));
+        void this.handleFiles(Array.from(files));
       }
     });
   }
