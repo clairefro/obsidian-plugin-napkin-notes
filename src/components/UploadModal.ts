@@ -1,6 +1,11 @@
 import { App, Modal, Notice, Editor, Platform } from "obsidian";
 import NapkinNotesPlugin from "../../main";
-import { ImageData, UploadEvent, ImageWithFile, ImageAnnotation } from "../types";
+import {
+  ImageData,
+  UploadEvent,
+  ImageWithFile,
+  ImageAnnotation,
+} from "../types";
 import { CarouselViewer, CarouselImage } from "./CarouselViewer";
 import { ImageProcessor } from "../services/ImageProcessor";
 import { MarkdownGenerator } from "../services/MarkdownGenerator";
@@ -42,7 +47,10 @@ export class UploadModal extends Modal {
     plugin: NapkinNotesPlugin,
     editor?: Editor,
     onComplete?: (
-      saved: { vaultFile: import("obsidian").TFile; annotation?: ImageAnnotation }[]
+      saved: {
+        vaultFile: import("obsidian").TFile;
+        annotation?: ImageAnnotation;
+      }[]
     ) => void
   ) {
     super(app);
@@ -337,14 +345,14 @@ export class UploadModal extends Modal {
     this.carouselViewer.updateImages(carouselImages);
   }
 
-  private  switchTab(tab: "direct" | "camera"): void {
+  private switchTab(tab: "direct" | "camera"): void {
     // Update tab state and UI immediately
     this.currentTab = tab;
     this.renderTabs();
     this.renderContent();
 
     if (this.uploadServer && tab !== "camera") {
-     void  this.stopUploadServer(); 
+      void this.stopUploadServer();
     }
   }
 
@@ -549,7 +557,6 @@ export class UploadModal extends Modal {
     url?: string;
     timestamp?: number;
   }): void {
-    console.debug("[Napkin Notes] Device connected:", info);
     // Show a brief notification to the user and log details for debugging
     new Notice("[Napkin Notes] Device connected: " + (info.ip || "unknown"));
   }
