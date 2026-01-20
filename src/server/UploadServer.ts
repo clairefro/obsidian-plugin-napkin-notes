@@ -26,10 +26,10 @@ async function initializeNodeModules(): Promise<void> {
   }
 
   if (!http) {
-    http = await getHttpModule();
+    http = getHttpModule();
   }
   if (!crypto) {
-    crypto = await getCryptoModule();
+    crypto = getCryptoModule();
   }
   // Busboy is bundled and imported at the top, no need to lazy-load
 }
@@ -786,7 +786,7 @@ export class UploadServer {
    * Get local IP address
    */
   private async getLocalIP(): Promise<string> {
-    const os = await getOsModule();
+    const os = getOsModule();
 
     if (!os) {
       return "localhost";

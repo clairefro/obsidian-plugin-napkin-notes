@@ -13,7 +13,7 @@ export class PortManager {
     }
 
     if (!this.http) {
-      this.http = await getHttpModule();
+      this.http = getHttpModule();
     }
   }
   /**
@@ -76,7 +76,7 @@ export class PortManager {
       return "localhost";
     }
 
-    const os = await getOsModule();
+    const os = getOsModule();
 
     if (!os) {
       return "localhost";
