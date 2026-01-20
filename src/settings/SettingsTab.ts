@@ -13,8 +13,6 @@ export class NapkinNotesSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    new Setting(containerEl).setName("Napkin Notes Settings").setHeading();
-
     // Upload folder setting with auto-suggest for valid folder paths
     new Setting(containerEl)
       .setName("Upload folder")

@@ -626,7 +626,7 @@ export class UploadServer {
     timestamp?: number;
   }) => void;
   // Track open sockets for force-close
-  private sockets: Set<any> = new Set();
+  private sockets: Set<import("net").Socket> = new Set();
 
   constructor(
     onUpload: (event: UploadEvent) => void,
