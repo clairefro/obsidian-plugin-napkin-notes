@@ -325,7 +325,7 @@ export class UploadModal extends Modal {
           if (!this.images[index].annotation) {
             this.images[index].annotation = { description: "" };
           }
-          this.images[index].annotation!.description = description;
+          this.images[index].annotation.description = description;
         }
       },
     });
@@ -454,8 +454,7 @@ export class UploadModal extends Modal {
     try {
       // Initialize upload server (lazy-load to avoid Node imports on mobile)
       const serverModule = await import("../server/UploadServer.js");
-      const UploadServerClass =
-        serverModule.UploadServer as typeof import("../server/UploadServer.js").UploadServer;
+      const UploadServerClass = serverModule.UploadServer;
       this.uploadServer = new UploadServerClass(
         (event: UploadEvent) => {
           void this.handleServerUpload(event);

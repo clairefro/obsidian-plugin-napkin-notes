@@ -495,7 +495,7 @@ export class CarouselViewer {
         step: "0.1",
         value: "1",
       },
-    }) as HTMLInputElement;
+    });
 
     const zoomValue = zoomOverlay.createEl("span", {
       cls: "napkin-zoom-value",
@@ -626,7 +626,7 @@ export class CarouselViewer {
             "[Optional] Add a description or keywords for this image to help with search...",
           rows: "3",
         },
-      }) as HTMLTextAreaElement;
+      });
       this.descriptionInput.value = image.description || "";
 
       this.descriptionInput.addEventListener("input", () => {
