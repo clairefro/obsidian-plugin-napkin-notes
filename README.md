@@ -1,4 +1,4 @@
-# Napking Notes
+# Napkin Notes
 
 Minimal Obsidian plugin for turning handwritten notes, sketches, and whiteboard photos into simple, interactive image carousels.
 
