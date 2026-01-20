@@ -190,11 +190,13 @@ function renderCarousel(
           });
 
           const origOnClose = modal.onClose.bind(modal);
-          modal.onClose = async () => {
-            if (!completed) {
-              resolve([]);
-            }
-            await origOnClose();
+          modal.onClose = () => {
+            void (async () => {
+              if (!completed) {
+                resolve([]);
+              }
+              await origOnClose();
+            })();
           };
 
           modal.open();
@@ -203,40 +205,42 @@ function renderCarousel(
         }
       });
     },
-    onSave: async (images: CarouselImage[]) => {
-      try {
-        const newContent = generateCodeBlockContent(images);
-        if (normalizeSource(newContent) === normalizeSource(originalSource)) {
-          return; // No changes
-        }
-
-        const file = plugin.app.vault.getAbstractFileByPath(sourcePath);
-        if (!(file instanceof TFile)) return;
-
-        const text = await plugin.app.vault.read(file);
-
-        const fenceRegex = new RegExp(
-          "```" + CODE_BLOCK_LANGUAGE + "\\s*([\\s\\S]*?)```",
-          "g"
-        );
-
-        let replaced = false;
-        const normalizedOriginal = normalizeSource(originalSource);
-
-        const updatedText = text.replace(fenceRegex, (fullMatch, inner) => {
-          if (!replaced && normalizeSource(inner) === normalizedOriginal) {
-            replaced = true;
-            return `\`\`\`${CODE_BLOCK_LANGUAGE}\n${newContent}\n\`\`\``;
+    onSave: (images: CarouselImage[]) => {
+      void (async () => {
+        try {
+          const newContent = generateCodeBlockContent(images);
+          if (normalizeSource(newContent) === normalizeSource(originalSource)) {
+            return; // No changes
           }
-          return fullMatch;
-        });
 
-        if (!replaced) return; // Couldn't locate the original block
+          const file = plugin.app.vault.getAbstractFileByPath(sourcePath);
+          if (!(file instanceof TFile)) return;
 
-        await plugin.app.vault.modify(file, updatedText);
-      } catch (err) {
-        console.error("Failed to save Napkin Notes block:", err);
-      }
+          const text = await plugin.app.vault.read(file);
+
+          const fenceRegex = new RegExp(
+            "```" + CODE_BLOCK_LANGUAGE + "\\s*([\\s\\S]*?)```",
+            "g"
+          );
+
+          let replaced = false;
+          const normalizedOriginal = normalizeSource(originalSource);
+
+          const updatedText = text.replace(fenceRegex, (fullMatch, inner) => {
+            if (!replaced && normalizeSource(inner) === normalizedOriginal) {
+              replaced = true;
+              return `\`\`\`${CODE_BLOCK_LANGUAGE}\n${newContent}\n\`\`\``;
+            }
+            return fullMatch;
+          });
+
+          if (!replaced) return; // Couldn't locate the original block
+
+          await plugin.app.vault.modify(file, updatedText);
+        } catch (err) {
+          console.error("Failed to save Napkin Notes block:", err);
+        }
+      })();
     },
   });
   viewer.render();
