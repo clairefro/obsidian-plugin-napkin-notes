@@ -8,7 +8,7 @@ import { Platform } from "obsidian";
 /**
  * Conditionally import http module (desktop only)
  */
-export async function getHttpModule(): Promise<typeof import("http") | null> {
+export function getHttpModule(): typeof import("http") | null {
   if (Platform.isMobileApp) {
     return null;
   }
@@ -25,7 +25,7 @@ export async function getHttpModule(): Promise<typeof import("http") | null> {
 /**
  * Conditionally import crypto module (desktop only)
  */
-export async function getCryptoModule(): Promise<typeof import("crypto") | null> {
+export function getCryptoModule(): typeof import("crypto") | null {
   if (Platform.isMobileApp) {
     return null;
   }
@@ -42,7 +42,7 @@ export async function getCryptoModule(): Promise<typeof import("crypto") | null>
 /**
  * Conditionally import os module (desktop only)
  */
-export async function getOsModule(): Promise<typeof import("os") | null> {
+export function getOsModule(): typeof import("os") | null {
   if (Platform.isMobileApp) {
     return null;
   }

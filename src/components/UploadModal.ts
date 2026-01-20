@@ -1,6 +1,11 @@
 import { App, Modal, Notice, Editor, Platform } from "obsidian";
 import NapkinNotesPlugin from "../../main";
-import { ImageData, UploadEvent, ImageWithFile } from "../types";
+import {
+  ImageData,
+  UploadEvent,
+  ImageWithFile,
+  ImageAnnotation,
+} from "../types";
 import { CarouselViewer, CarouselImage } from "./CarouselViewer";
 import { ImageProcessor } from "../services/ImageProcessor";
 import { MarkdownGenerator } from "../services/MarkdownGenerator";
@@ -42,7 +47,10 @@ export class UploadModal extends Modal {
     plugin: NapkinNotesPlugin,
     editor?: Editor,
     onComplete?: (
-      saved: { vaultFile: import("obsidian").TFile; annotation?: any }[]
+      saved: {
+        vaultFile: import("obsidian").TFile;
+        annotation?: ImageAnnotation;
+      }[]
     ) => void
   ) {
     super(app);
@@ -134,7 +142,7 @@ export class UploadModal extends Modal {
     cancelBtn.addEventListener("click", () => this.close());
 
     this.insertBtn = buttonContainer.createEl("button", {
-      text: "Insert into Notes",
+      text: "Insert into notes",
       cls: "napkin-mod-cta",
       attr: {
         "aria-label": "Upload image(s) first",
@@ -153,7 +161,7 @@ export class UploadModal extends Modal {
           new Notice("Failed to save images");
         }
       } else {
-        this.insertNotes();
+        void this.insertNotes();
       }
     });
   }
@@ -230,12 +238,11 @@ export class UploadModal extends Modal {
     }
   }
 
-  async onClose() {
+  onClose() {
     const { contentEl } = this;
     contentEl.empty();
 
-    // Stop upload server if running
-    await this.stopUploadServer();
+    void this.stopUploadServer();
 
     // Revoke data URLs
     this.images.forEach((img) => {
@@ -338,15 +345,14 @@ export class UploadModal extends Modal {
     this.carouselViewer.updateImages(carouselImages);
   }
 
-  private async switchTab(tab: "direct" | "camera"): Promise<void> {
+  private switchTab(tab: "direct" | "camera"): void {
     // Update tab state and UI immediately
     this.currentTab = tab;
     this.renderTabs();
     this.renderContent();
 
-    // Stop upload server in the background if leaving camera tab
     if (this.uploadServer && tab !== "camera") {
-      this.stopUploadServer(); // don't await
+      void this.stopUploadServer();
     }
   }
 
@@ -355,11 +361,11 @@ export class UploadModal extends Modal {
    */
   private async stopUploadServer(): Promise<void> {
     if (this.uploadServer) {
-      console.log("[Napkin Notes] Stopping upload server (tab switch)");
+      console.debug("[Napkin Notes] Stopping upload server (tab switch)");
       await this.uploadServer.stop();
       this.uploadServer = undefined;
       this.qrDisplay = undefined;
-      console.log("[Napkin Notes] Upload server stopped");
+      console.debug("[Napkin Notes] Upload server stopped");
     }
   }
 
@@ -371,7 +377,7 @@ export class UploadModal extends Modal {
     if (this.currentTab === "direct") {
       this.renderDirectUpload();
     } else if (this.currentTab === "camera") {
-      this.renderCameraUpload();
+      void this.renderCameraUpload();
     }
   }
 
@@ -409,7 +415,7 @@ export class UploadModal extends Modal {
     fileInput.addEventListener("change", (e: Event) => {
       const files = (e.target as HTMLInputElement).files;
       if (files) {
-        this.handleFiles(Array.from(files));
+        void this.handleFiles(Array.from(files));
       }
     });
 
@@ -450,7 +456,7 @@ export class UploadModal extends Modal {
         serverModule.UploadServer as typeof import("../server/UploadServer.js").UploadServer;
       this.uploadServer = new UploadServerClass(
         (event: UploadEvent) => {
-          this.handleServerUpload(event);
+          void this.handleServerUpload(event);
         },
         (info) => {
           this.handleDeviceConnect(info);
@@ -483,7 +489,7 @@ export class UploadModal extends Modal {
       // Convert ArrayBuffer to Blob and File
       const blob = new Blob([event.buffer], { type: "image/jpeg" });
       const file = new File([blob], event.filename, { type: "image/jpeg" });
-      console.log(`[Napkin Notes] Created File object, size: ${file.size}`);
+      console.debug(`[Napkin Notes] Created File object, size: ${file.size}`);
 
       // Process the uploaded file
       const buffer = await this.imageProcessor.fileToArrayBuffer(file);
@@ -500,7 +506,7 @@ export class UploadModal extends Modal {
       };
 
       this.images.push(imageData);
-      console.log(
+      console.debug(
         `[Napkin Notes] Added image, total images: ${this.images.length}`
       );
 
@@ -551,7 +557,6 @@ export class UploadModal extends Modal {
     url?: string;
     timestamp?: number;
   }): void {
-    console.log("[Napkin Notes] Device connected:", info);
     // Show a brief notification to the user and log details for debugging
     new Notice("[Napkin Notes] Device connected: " + (info.ip || "unknown"));
   }

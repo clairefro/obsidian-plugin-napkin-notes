@@ -20,7 +20,7 @@ export function registerCarouselPostProcessor(plugin: NapkinNotesPlugin): void {
           renderCarousel(el, images, plugin, ctx.sourcePath, source);
         } else {
           el.createEl("p", {
-            text: "No images found in napkin-notes block",
+            text: "No images found in Napkin Notes block",
             cls: "napkin-notes-error",
           });
         }
@@ -179,20 +179,15 @@ function renderCarousel(
           const editor = activeView ? activeView.editor : undefined;
 
           let completed = false;
-          const modal = new UploadModal(
-            plugin.app,
-            plugin,
-            editor,
-            async (saved) => {
-              // saved: array of {vaultFile, annotation}
-              completed = true;
-              const newImgs: CarouselImage[] = saved.map((s) => ({
-                filepath: s.vaultFile.path,
-                description: s.annotation?.description || "",
-              }));
-              resolve(newImgs);
-            }
-          );
+          const modal = new UploadModal(plugin.app, plugin, editor, (saved) => {
+            // saved: array of {vaultFile, annotation}
+            completed = true;
+            const newImgs: CarouselImage[] = saved.map((s) => ({
+              filepath: s.vaultFile.path,
+              description: s.annotation?.description || "",
+            }));
+            resolve(newImgs);
+          });
 
           const origOnClose = modal.onClose.bind(modal);
           modal.onClose = async () => {
@@ -204,7 +199,7 @@ function renderCarousel(
 
           modal.open();
         } catch (err) {
-          reject(err);
+          reject(err instanceof Error ? err : new Error(String(err)));
         }
       });
     },
@@ -215,10 +210,8 @@ function renderCarousel(
           return; // No changes
         }
 
-        const file = plugin.app.vault.getAbstractFileByPath(
-          sourcePath
-        ) as TFile;
-        if (!file) return;
+        const file = plugin.app.vault.getAbstractFileByPath(sourcePath);
+        if (!(file instanceof TFile)) return;
 
         const text = await plugin.app.vault.read(file);
 

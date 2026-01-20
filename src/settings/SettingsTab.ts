@@ -13,7 +13,7 @@ export class NapkinNotesSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Napkin Notes Settings" });
+    new Setting(containerEl).setName("Napkin Notes Settings").setHeading();
 
     // Upload folder setting with auto-suggest for valid folder paths
     new Setting(containerEl)
@@ -67,7 +67,7 @@ export class NapkinNotesSettingTab extends PluginSettingTab {
 
     // Napkin Mode background
     new Setting(containerEl)
-      .setName("Napkin Mode")
+      .setName("Napkin mode")
       .setDesc(
         "When enabled, the viewer has a paper napkin texture based on your theme (light/dark). Must re-open note to see change"
       )

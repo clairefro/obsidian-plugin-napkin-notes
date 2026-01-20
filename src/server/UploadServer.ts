@@ -2,7 +2,13 @@ import type { IncomingMessage, ServerResponse } from "http";
 import Busboy from "busboy";
 import { UploadEvent } from "../types";
 import { Platform } from "obsidian";
-import { getHttpModule, getCryptoModule, getOsModule } from "../utils/platformModules";
+import {
+  getHttpModule,
+  getCryptoModule,
+  getOsModule,
+} from "../utils/platformModules";
+
+type BusboyFileInfo = { filename: string; encoding: string; mimeType: string };
 
 // Lazy-loaded modules (desktop only - Node.js built-ins)
 let http: typeof import("http") | null = null;
@@ -380,7 +386,7 @@ function serveUploadPage(res: ServerResponse): void {
 					let compressed;
 					try {
 						compressed = await compressImage(file);
-						console.log('[Upload Page] compressed size:', compressed.size);
+						console.debug('[Upload Page] compressed size:', compressed.size);
 					} catch (errCompress) {
 						console.warn('[Upload Page] compressImage failed for camera file, uploading original:', errCompress);
 						compressed = file; // fallback to original
@@ -405,18 +411,18 @@ function serveUploadPage(res: ServerResponse): void {
 			// Upload after gallery selection, compressing each image
 			fileInput.addEventListener('change', async (e) => {
 				const files = e.target.files;
-			console.log('[Upload Page] gallery change event, files:', files && files.length ? files.length : 0);
+			console.debug('[Upload Page] gallery change event, files:', files && files.length ? files.length : 0);
 			if (files && files.length > 0) {
 				try {
 					setBusy(true, 'Compressing...');
 					const urlParams = new URLSearchParams(window.location.search);
 					const token = urlParams.get('token');
 					for (let i = 0; i < files.length; i++) {
-						console.log('[Upload Page] processing file', i, files[i].name, files[i].size);
+						console.debug('[Upload Page] processing file', i, files[i].name, files[i].size);
 						let compressed;
 						try {
 							compressed = await compressImage(files[i]);
-							console.log('[Upload Page] compressed size:', compressed.size);
+							console.debug('[Upload Page] compressed size:', compressed.size);
 						} catch (errCompress) {
 							console.warn('[Upload Page] compressImage failed, will try uploading original file:', errCompress);
 							compressed = files[i];
@@ -424,7 +430,7 @@ function serveUploadPage(res: ServerResponse): void {
 						const formData = new FormData(); formData.append('image', compressed, files[i].name);
 						setBusy(true, 'Uploading... (' + (i+1) + '/' + files.length + ')');
 						const response = await fetch('/upload?token=' + token, { method: 'POST', body: formData });
-						console.log('[Upload Page] upload response status:', response.status);
+						console.debug('[Upload Page] upload response status:', response.status);
 						if (!response.ok) { throw new Error('Upload failed with status ' + response.status); }
 					}
 					showStatus('All images uploaded successfully!', 'success');
@@ -461,35 +467,40 @@ function serveUploadPage(res: ServerResponse): void {
 				}
 				if (!token) return;
 
-				async function check() {
-					const controller = new AbortController();
-					const timeout = setTimeout(() => controller.abort(), 1500);
-					try {
-						const res = await fetch('/ping?token=' + token, { method: 'GET', cache: 'no-cache', signal: controller.signal });
-						clearTimeout(timeout);
-						// 204 No Content is expected
-						if (res.ok) {
-							if (lost) {
-								lost = false;
-								if (banner) banner.style.display = 'none';
-								setBusy(false, '');
-							}
-						} else {
-							if (!lost) {
-								lost = true;
-								if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
-								setBusy(false, '');
+						async function check() {
+							const controller = new AbortController();
+							const timeout = setTimeout(() => controller.abort(), 1500);
+							try {
+								const res = await fetch('/ping?token=' + token, {
+									method: 'GET',
+									cache: 'no-cache',
+									headers: { 'Cache-Control': 'no-cache' },
+									signal: controller.signal
+								});
+								clearTimeout(timeout);
+								// 204 No Content is expected
+								if (res.ok) {
+									if (lost) {
+										lost = false;
+										if (banner) banner.style.display = 'none';
+										setBusy(false, '');
+									}
+								} else {
+									if (!lost) {
+										lost = true;
+										if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
+										setBusy(false, '');
+									}
+								}
+							} catch (e) {
+								clearTimeout(timeout);
+								if (!lost) {
+									lost = true;
+									if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
+									setBusy(false, '');
+								}
 							}
 						}
-					} catch (e) {
-						clearTimeout(timeout);
-						if (!lost) {
-							lost = true;
-							if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
-							setBusy(false, '');
-						}
-					}
-				}
 
 				// Run immediately and then every 2 seconds
 				check();
@@ -509,22 +520,26 @@ function serveUploadPage(res: ServerResponse): void {
 /**
  * Handle file upload
  */
-async function handleUpload(
+function handleUpload(
   req: IncomingMessage,
   res: ServerResponse,
   onUpload: (event: UploadEvent) => void
-): Promise<void> {
+): void {
   try {
     const busboy = Busboy({ headers: req.headers });
     let fileCount = 0;
 
     busboy.on(
       "file",
-      (fieldname: string, file: NodeJS.ReadableStream, info: any) => {
-        const { filename, encoding, mimeType } = info;
+      (
+        _fieldname: string,
+        file: NodeJS.ReadableStream,
+        info: BusboyFileInfo
+      ) => {
+        const { filename, mimeType } = info;
         fileCount++;
 
-        console.log(
+        console.debug(
           `[Napkin Notes Upload Server] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`
         );
 
@@ -536,7 +551,7 @@ async function handleUpload(
 
         file.on("end", () => {
           const buffer = Buffer.concat(chunks);
-          console.log(
+          console.debug(
             `[Napkin Notes Upload Server] File received: ${filename}, size: ${buffer.length} bytes`
           );
 
@@ -565,7 +580,7 @@ async function handleUpload(
     );
 
     busboy.on("finish", () => {
-      console.log(
+      console.debug(
         `[Napkin Notes Upload Server] Upload finished. Total files: ${fileCount}`
       );
       res.writeHead(200, { "Content-Type": "text/plain" });
@@ -610,6 +625,8 @@ export class UploadServer {
     url?: string;
     timestamp?: number;
   }) => void;
+  // Track open sockets for force-close
+  private sockets: Set<any> = new Set();
 
   constructor(
     onUpload: (event: UploadEvent) => void,
@@ -639,9 +656,11 @@ export class UploadServer {
 
     if (!http || !crypto) {
       const missingModules = [];
-      if (!http) missingModules.push('http');
-      if (!crypto) missingModules.push('crypto');
-      throw new Error(`Required Node.js modules not available: ${missingModules.join(', ')}`);
+      if (!http) missingModules.push("http");
+      if (!crypto) missingModules.push("crypto");
+      throw new Error(
+        `Required Node.js modules not available: ${missingModules.join(", ")}`
+      );
     }
 
     this.token = generateToken();
@@ -652,11 +671,11 @@ export class UploadServer {
         this.port = port;
         const localIP = await this.getLocalIP();
         const url = `http://${localIP}:${port}?token=${this.token}`;
-        console.log(
+        console.debug(
           `[Napkin Notes Upload Server] Server started successfully on ${url}`
         );
         return { port, token: this.token, url };
-      } catch (err) {
+      } catch (_err) {
         // Port in use, try next one
         continue;
       }
@@ -680,9 +699,17 @@ export class UploadServer {
         this.handleRequest(req, res);
       });
 
-      this.server.on("error", (err: any) => {
+      // Track sockets for force-close
+      this.server.on("connection", (socket) => {
+        this.sockets.add(socket);
+        socket.on("close", () => {
+          this.sockets.delete(socket);
+        });
+      });
+
+      this.server.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "EADDRINUSE") {
-          reject(err);
+          reject(err instanceof Error ? err : new Error(String(err)));
         }
       });
 
@@ -723,16 +750,17 @@ export class UploadServer {
         const remoteIP =
           req.socket && req.socket.remoteAddress
             ? req.socket.remoteAddress
-            : (req.connection && req.connection.remoteAddress) || "";
+            : "";
         const userAgent = String(req.headers["user-agent"] || "");
-        this.onConnect &&
+        if (this.onConnect) {
           this.onConnect({
             ip: remoteIP,
             userAgent,
             url: url.toString(),
             timestamp: Date.now(),
           });
-        console.log(
+        }
+        console.debug(
           `[Napkin Notes Upload Server] Client connected: ${remoteIP} - ${userAgent}`
         );
       } catch (err) {
@@ -747,7 +775,7 @@ export class UploadServer {
       res.writeHead(204);
       res.end();
     } else if (req.method === "POST" && url.pathname === "/upload") {
-      handleUpload(req, res, this.onUpload);
+      void handleUpload(req, res, this.onUpload);
     } else {
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("Not found");
@@ -787,18 +815,24 @@ export class UploadServer {
   stop(): Promise<void> {
     return new Promise((resolve) => {
       if (this.server) {
-        console.log(
-          `[Napkin Notes Upload Server] Stopping server on port ${this.port}`
-        );
+        // Force-close all open sockets
+        for (const socket of this.sockets) {
+          try {
+            socket.destroy();
+          } catch (e) {
+            // Ignore errors
+          }
+        }
+        this.sockets.clear();
         this.server.close(() => {
-          console.log(
+          console.debug(
             `[Napkin Notes Upload Server] Server stopped successfully`
           );
           this.server = null;
           resolve();
         });
       } else {
-        console.log(`[Napkin Notes Upload Server] No server to stop`);
+        console.debug(`[Napkin Notes Upload Server] No server to stop`);
         resolve();
       }
     });

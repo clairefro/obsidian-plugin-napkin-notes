@@ -11,8 +11,8 @@ export default class NapkinNotesPlugin extends Plugin {
     await this.loadSettings();
 
     this.addCommand({
-      id: "insert-napkin-notes",
-      name: "Insert Napkin Notes",
+      id: "insert",
+      name: "Insert new",
       callback: () => {
         this.openUploadModal();
       },
@@ -26,11 +26,11 @@ export default class NapkinNotesPlugin extends Plugin {
     // Add settings tab
     this.addSettingTab(new NapkinNotesSettingTab(this.app, this));
 
-    console.log("[Napkin Notes] plugin loaded");
+    console.debug("[Napkin Notes] plugin loaded");
   }
 
   onunload() {
-    console.log("[Napkin Notes] plugin unloaded");
+    console.debug("[Napkin Notes] plugin unloaded");
   }
 
   async loadSettings() {

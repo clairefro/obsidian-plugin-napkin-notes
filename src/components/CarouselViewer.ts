@@ -145,7 +145,7 @@ export class CarouselViewer {
           attributeFilter: ["class"],
         });
       }
-    } catch (err) {
+    } catch (_err) {
       // If MutationObserver isn't available, skip silently
     }
 
@@ -562,7 +562,9 @@ export class CarouselViewer {
       // Remove old classes
       this.container.removeClass("napkin-mode-light", "napkin-mode-dark");
       // Add appropriate napkin class
-      this.container.addClass(isDarkTheme ? "napkin-mode-dark" : "napkin-mode-light");
+      this.container.addClass(
+        isDarkTheme ? "napkin-mode-dark" : "napkin-mode-light"
+      );
     } else {
       // Remove napkin classes
       this.container.removeClass("napkin-mode-light", "napkin-mode-dark");
@@ -578,10 +580,8 @@ export class CarouselViewer {
       imgEl.src = this.app.vault.getResourcePath(image.vaultFile);
     } else if (image.filepath) {
       // Try to resolve filepath
-      const file = this.app.vault.getAbstractFileByPath(
-        image.filepath
-      ) as TFile;
-      if (file) {
+      const file = this.app.vault.getAbstractFileByPath(image.filepath);
+      if (file instanceof TFile) {
         imgEl.src = this.app.vault.getResourcePath(file);
       } else {
         // Try to find by filename
