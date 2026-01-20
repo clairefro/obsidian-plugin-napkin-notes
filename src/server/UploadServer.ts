@@ -819,7 +819,7 @@ export class UploadServer {
         for (const socket of this.sockets) {
           try {
             socket.destroy();
-          } catch (e) {
+          } catch (_err) {
             // Ignore errors
           }
         }
