@@ -1,6 +1,6 @@
 {
   "name": "obsidian-plugin-napkin-notes",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Turn handwritten notes, sketches, and whiteboard photos into PDF-style inline image carousels in Obsidian, with direct camera upload and searchable annotations",
   "main": "main.js",
   "scripts": {
