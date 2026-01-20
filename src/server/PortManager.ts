@@ -7,7 +7,7 @@ export class PortManager {
   /**
    * Initialize Node.js modules
    */
-  private async initialize(): Promise<void> {
+  private initialize(): void {
     if (Platform.isMobileApp) {
       return;
     }
@@ -71,7 +71,7 @@ export class PortManager {
    * Get local network IP address
    * @returns Local IP address or 'localhost'
    */
-  async getLocalIP(): Promise<string> {
+  getLocalIP(): string {
     if (Platform.isMobileApp) {
       return "localhost";
     }
