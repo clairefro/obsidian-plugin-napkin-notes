@@ -149,20 +149,22 @@ export class UploadModal extends Modal {
       },
     });
     this.insertBtn.disabled = true;
-    this.insertBtn.addEventListener("click", async () => {
-      if (this.onComplete) {
-        // Save to vault and return saved files to the caller instead of inserting into editor
-        try {
-          const saved = await this.saveImagesToVault();
-          this.onComplete(saved);
-          this.close();
-        } catch (err) {
-          console.error("Failed to save images for onComplete:", err);
-          new Notice("Failed to save images");
+    this.insertBtn.addEventListener("click", () => {
+      void (async () => {
+        if (this.onComplete) {
+          // Save to vault and return saved files to the caller instead of inserting into editor
+          try {
+            const saved = await this.saveImagesToVault();
+            this.onComplete(saved);
+            this.close();
+          } catch (err) {
+            console.error("Failed to save images for onComplete:", err);
+            new Notice("Failed to save images");
+          }
+        } else {
+          void this.insertNotes();
         }
-      } else {
-        void this.insertNotes();
-      }
+      })();
     });
   }
 

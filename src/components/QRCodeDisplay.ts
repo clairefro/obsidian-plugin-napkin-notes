@@ -63,12 +63,14 @@ export class QRCodeDisplay {
       cls: "napkin-qr-copy-btn",
     });
 
-    copyBtn.addEventListener("click", async () => {
-      await navigator.clipboard.writeText(serverInfo.url);
-      copyBtn.setText("Copied!");
-      setTimeout(() => {
-        copyBtn.setText("Copy URL");
-      }, 2000);
+    copyBtn.addEventListener("click", () => {
+      void (async () => {
+        await navigator.clipboard.writeText(serverInfo.url);
+        copyBtn.setText("Copied!");
+        setTimeout(() => {
+          copyBtn.setText("Copy URL");
+        }, 2000);
+      })();
     });
 
     // Upload counter

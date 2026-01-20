@@ -351,7 +351,9 @@ export class CarouselViewer {
           cls: "napkin-carousel-button napkin-carousel-add-btn",
           attr: { title: "Add images after current image" },
         });
-        addBtn.addEventListener("click", () => this.handleAdd());
+        addBtn.addEventListener("click", () => {
+          void this.handleAdd();
+        });
 
         this.cancelBtn = editControls.createEl("button", {
           text: "Confirm changes",
