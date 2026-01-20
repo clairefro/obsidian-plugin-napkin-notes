@@ -467,35 +467,40 @@ function serveUploadPage(res: ServerResponse): void {
 				}
 				if (!token) return;
 
-				async function check() {
-					const controller = new AbortController();
-					const timeout = setTimeout(() => controller.abort(), 1500);
-					try {
-						const res = await fetch('/ping?token=' + token, { method: 'GET', cache: 'no-cache', signal: controller.signal });
-						clearTimeout(timeout);
-						// 204 No Content is expected
-						if (res.ok) {
-							if (lost) {
-								lost = false;
-								if (banner) banner.style.display = 'none';
-								setBusy(false, '');
-							}
-						} else {
-							if (!lost) {
-								lost = true;
-								if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
-								setBusy(false, '');
+						async function check() {
+							const controller = new AbortController();
+							const timeout = setTimeout(() => controller.abort(), 1500);
+							try {
+								const res = await fetch('/ping?token=' + token, {
+									method: 'GET',
+									cache: 'no-cache',
+									headers: { 'Cache-Control': 'no-cache' },
+									signal: controller.signal
+								});
+								clearTimeout(timeout);
+								// 204 No Content is expected
+								if (res.ok) {
+									if (lost) {
+										lost = false;
+										if (banner) banner.style.display = 'none';
+										setBusy(false, '');
+									}
+								} else {
+									if (!lost) {
+										lost = true;
+										if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
+										setBusy(false, '');
+									}
+								}
+							} catch (e) {
+								clearTimeout(timeout);
+								if (!lost) {
+									lost = true;
+									if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
+									setBusy(false, '');
+								}
 							}
 						}
-					} catch (e) {
-						clearTimeout(timeout);
-						if (!lost) {
-							lost = true;
-							if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
-							setBusy(false, '');
-						}
-					}
-				}
 
 				// Run immediately and then every 2 seconds
 				check();
@@ -620,6 +625,8 @@ export class UploadServer {
     url?: string;
     timestamp?: number;
   }) => void;
+  // Track open sockets for force-close
+  private sockets: Set<any> = new Set();
 
   constructor(
     onUpload: (event: UploadEvent) => void,
@@ -690,6 +697,14 @@ export class UploadServer {
       }
       this.server = http.createServer((req, res) => {
         this.handleRequest(req, res);
+      });
+
+      // Track sockets for force-close
+      this.server.on("connection", (socket) => {
+        this.sockets.add(socket);
+        socket.on("close", () => {
+          this.sockets.delete(socket);
+        });
       });
 
       this.server.on("error", (err: NodeJS.ErrnoException) => {
@@ -800,9 +815,15 @@ export class UploadServer {
   stop(): Promise<void> {
     return new Promise((resolve) => {
       if (this.server) {
-        console.debug(
-          `[Napkin Notes Upload Server] Stopping server on port ${this.port}`
-        );
+        // Force-close all open sockets
+        for (const socket of this.sockets) {
+          try {
+            socket.destroy();
+          } catch (e) {
+            // Ignore errors
+          }
+        }
+        this.sockets.clear();
         this.server.close(() => {
           console.debug(
             `[Napkin Notes Upload Server] Server stopped successfully`
