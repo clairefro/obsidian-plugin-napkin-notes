@@ -19,7 +19,7 @@ Does your handwriting suck too much for OCR? No problem - easily sync your physi
 
 ## Usage
 
-1. Open a note and open the command palette (Ctrl+P or Cmd+P) >  **"Insert Napking Notes"**
+1. Open a note and open the command palette (Ctrl+P or Cmd+P) >  **"Insert Napkin Notes"**
 2. Upload images directly or scan the QR code to upload from your phone
 3. Optionally add annotations
 4. Insert into your note
