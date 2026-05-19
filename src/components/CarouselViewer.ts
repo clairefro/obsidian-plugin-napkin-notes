@@ -101,7 +101,7 @@ export class CarouselViewer {
     // Add mode class to container
     this.container.removeClass(
       "napkin-carousel-mode-view",
-      "napkin-carousel-mode-edit"
+      "napkin-carousel-mode-edit",
     );
     this.container.addClass(`napkin-carousel-mode-${this.mode}`);
 
@@ -182,7 +182,7 @@ export class CarouselViewer {
       toggleBtn.addEventListener("click", () => {
         this.thumbnailStrip?.classList.toggle("collapsed");
         toggleIcon.textContent = this.thumbnailStrip?.classList.contains(
-          "collapsed"
+          "collapsed",
         )
           ? "›"
           : "‹";
@@ -437,7 +437,7 @@ export class CarouselViewer {
         } else {
           this.removeImage(this.currentIndex);
         }
-      }
+      },
     );
     modal.open();
   }
@@ -565,7 +565,7 @@ export class CarouselViewer {
       this.container.removeClass("napkin-mode-light", "napkin-mode-dark");
       // Add appropriate napkin class
       this.container.addClass(
-        isDarkTheme ? "napkin-mode-dark" : "napkin-mode-light"
+        isDarkTheme ? "napkin-mode-dark" : "napkin-mode-light",
       );
     } else {
       // Remove napkin classes
@@ -599,7 +599,7 @@ export class CarouselViewer {
 
   private updateThumbnailSelection(): void {
     const thumbs = this.thumbsContainer?.querySelectorAll(
-      ".napkin-thumbnail-wrapper"
+      ".napkin-thumbnail-wrapper",
     );
     thumbs?.forEach((thumb, index) => {
       if (index === this.currentIndex) {
@@ -634,7 +634,7 @@ export class CarouselViewer {
         if (this.options.onDescriptionChange) {
           this.options.onDescriptionChange(
             this.currentIndex,
-            this.descriptionInput!.value
+            this.descriptionInput!.value,
           );
         }
       });
@@ -659,7 +659,7 @@ export class CarouselViewer {
             cls: "napkin-carousel-description-toggle",
           });
           toggleBtn.setText(
-            this.descriptionExpanded ? "Show less" : "Show more..."
+            this.descriptionExpanded ? "Show less" : "Show more...",
           );
 
           toggleBtn.addEventListener("click", () => {
@@ -668,13 +668,13 @@ export class CarouselViewer {
               this.descriptionExpanded ? "expanded" : "collapsed"
             }`;
             toggleBtn.setText(
-              this.descriptionExpanded ? "Show less" : "Show more..."
+              this.descriptionExpanded ? "Show less" : "Show more...",
             );
           });
         }
-        this.metadataDiv.style.display = "";
+        this.metadataDiv.classList.remove("is-hidden");
       } else {
-        this.metadataDiv.style.display = "none";
+        this.metadataDiv.classList.add("is-hidden");
       }
     }
   }
@@ -747,7 +747,7 @@ export class CarouselViewer {
           this.applyZoom();
         }
       },
-      { passive: false }
+      { passive: false },
     );
 
     // Touch pinch zoom
@@ -767,7 +767,7 @@ export class CarouselViewer {
           this.lastPanY = e.touches[0].clientY;
         }
       },
-      { passive: false }
+      { passive: false },
     );
 
     this.imageContainer.addEventListener(
@@ -789,7 +789,7 @@ export class CarouselViewer {
           this.applyZoom();
         }
       },
-      { passive: false }
+      { passive: false },
     );
 
     this.imageContainer.addEventListener("touchend", (e) => {
@@ -807,7 +807,8 @@ export class CarouselViewer {
         this.isPanning = true;
         this.lastPanX = e.clientX;
         this.lastPanY = e.clientY;
-        this.imageContainer!.style.cursor = "grabbing";
+        this.imageContainer!.classList.add("is-grabbing");
+        this.imageContainer!.classList.remove("is-grab", "is-default");
       }
     });
 
@@ -826,8 +827,14 @@ export class CarouselViewer {
     document.addEventListener("mouseup", () => {
       this.isPanning = false;
       if (this.imageContainer) {
-        this.imageContainer.style.cursor =
-          this.zoomLevel > 1 ? "grab" : "default";
+        this.imageContainer.classList.remove("is-grabbing");
+        if (this.zoomLevel > 1) {
+          this.imageContainer.classList.add("is-grab");
+          this.imageContainer.classList.remove("is-default");
+        } else {
+          this.imageContainer.classList.add("is-default");
+          this.imageContainer.classList.remove("is-grab");
+        }
       }
     });
 
@@ -873,8 +880,13 @@ export class CarouselViewer {
     }px, ${this.panY / this.zoomLevel}px)`;
 
     if (this.imageContainer) {
-      this.imageContainer.style.cursor =
-        this.zoomLevel > 1 ? "grab" : "default";
+      if (this.zoomLevel > 1) {
+        this.imageContainer.classList.add("is-grab");
+        this.imageContainer.classList.remove("is-default");
+      } else {
+        this.imageContainer.classList.add("is-default");
+        this.imageContainer.classList.remove("is-grab");
+      }
     }
   }
 
@@ -921,7 +933,7 @@ export class CarouselViewer {
     this.images = [...images];
     this.currentIndex = Math.min(
       this.currentIndex,
-      Math.max(0, this.images.length - 1)
+      Math.max(0, this.images.length - 1),
     );
     this.render();
   }

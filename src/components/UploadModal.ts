@@ -50,8 +50,8 @@ export class UploadModal extends Modal {
       saved: {
         vaultFile: import("obsidian").TFile;
         annotation?: ImageAnnotation;
-      }[]
-    ) => void
+      }[],
+    ) => void,
   ) {
     super(app);
     this.plugin = plugin;
@@ -175,24 +175,35 @@ export class UploadModal extends Modal {
     if (!this.reviewSection) return;
 
     const emptyState = this.reviewSection.querySelector<HTMLElement>(
-      ".review-empty-state"
+      ".review-empty-state",
     );
     const carouselSection = this.reviewSection.querySelector<HTMLElement>(
-      ".napkin-notes-carousel-section"
+      ".napkin-notes-carousel-section",
     );
 
     if (this.images.length === 0) {
       // Hide entire review section when no images
-      this.reviewSection.style.display = "none";
+      this.reviewSection.classList.add("is-hidden");
+      this.reviewSection.classList.remove("is-visible");
 
       // Disable insert button
       if (this.insertBtn) {
         this.insertBtn.disabled = true;
         this.insertBtn.setAttribute("aria-label", "Upload image(s) first");
       }
+      // Hide carousel/empty state if present
+      if (emptyState) {
+        emptyState.classList.add("is-hidden");
+        emptyState.classList.remove("is-visible");
+      }
+      if (carouselSection) {
+        carouselSection.classList.add("is-hidden");
+        carouselSection.classList.remove("is-visible");
+      }
     } else {
       // Show review section
-      this.reviewSection.style.display = "block";
+      this.reviewSection.classList.remove("is-hidden");
+      this.reviewSection.classList.add("is-visible");
 
       // Enable insert button
       if (this.insertBtn) {
@@ -201,8 +212,14 @@ export class UploadModal extends Modal {
       }
 
       // Hide empty state, show carousel
-      if (emptyState) emptyState.style.display = "none";
-      if (carouselSection) carouselSection.style.display = "block";
+      if (emptyState) {
+        emptyState.classList.add("is-hidden");
+        emptyState.classList.remove("is-visible");
+      }
+      if (carouselSection) {
+        carouselSection.classList.remove("is-hidden");
+        carouselSection.classList.add("is-visible");
+      }
       if (this.imageCountEl) {
         this.imageCountEl.textContent = `${this.images.length} image${
           this.images.length !== 1 ? "s" : ""
@@ -312,7 +329,7 @@ export class UploadModal extends Modal {
         const newImages: ImageData[] = [];
         reorderedImages.forEach((carouselImg) => {
           const originalImg = this.images.find(
-            (img) => img.dataUrl === carouselImg.dataUrl
+            (img) => img.dataUrl === carouselImg.dataUrl,
           );
           if (originalImg) {
             newImages.push(originalImg);
@@ -408,7 +425,7 @@ export class UploadModal extends Modal {
         multiple: "true",
       },
     });
-    fileInput.style.display = "none";
+    fileInput.classList.add("is-hidden");
 
     // Click to upload
     uploadZone.addEventListener("click", () => fileInput.click());
@@ -461,12 +478,12 @@ export class UploadModal extends Modal {
         },
         (info) => {
           this.handleDeviceConnect(info);
-        }
+        },
       );
 
       // Start server
       const serverInfo = await this.uploadServer.start(
-        this.plugin.settings.serverPortRange
+        this.plugin.settings.serverPortRange,
       );
 
       // Display QR code
@@ -508,7 +525,7 @@ export class UploadModal extends Modal {
 
       this.images.push(imageData);
       console.debug(
-        `[Napkin Notes] Added image, total images: ${this.images.length}`
+        `[Napkin Notes] Added image, total images: ${this.images.length}`,
       );
 
       // Update carousel
@@ -544,7 +561,7 @@ export class UploadModal extends Modal {
         (await this.imageProcessor.fileToArrayBuffer(imageData.file!));
       const vaultFile = await this.imageProcessor.saveImage(
         buffer,
-        imageData.filename
+        imageData.filename,
       );
       imageWithFiles.push({ vaultFile, annotation: imageData.annotation });
     }

@@ -251,9 +251,11 @@ function serveUploadPage(res: ServerResponse): void {
 					status.textContent = text;
 					status.className = 'status busy';
 					status.style.color = '#ffffff';
-					status.style.display = 'block';
+					status.classList.remove('is-hidden');
+					status.classList.add('is-visible');
 				} else if (!isBusy) {
-					status.style.display = 'none';
+					status.classList.add('is-hidden');
+					status.classList.remove('is-visible');
 					status.style.color = '';
 					status.className = 'status';
 				}
@@ -325,20 +327,26 @@ function serveUploadPage(res: ServerResponse): void {
 				// Feature detect
 				if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 					// Prefer preview flow: hide file-input camera label to prevent high-res camera app flow
-					if (directCameraLabelEl) directCameraLabelEl.style.display = 'none';
-					openCameraPreviewBtn.style.display = 'inline-block';
+					if (directCameraLabelEl) {
+						directCameraLabelEl.classList.add('is-hidden');
+						directCameraLabelEl.classList.remove('is-visible');
+					}
+					openCameraPreviewBtn.classList.remove('is-hidden');
+					openCameraPreviewBtn.classList.add('is-visible');
 					openCameraPreviewBtn.addEventListener('click', async () => {
 						try {
 							previewStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 320 }, height: { ideal: 240 } }, audio: false });
 							cameraPreviewVideo.srcObject = previewStream;
-							cameraPreviewModal.style.display = 'flex';
+							cameraPreviewModal.classList.remove('is-hidden');
+							cameraPreviewModal.classList.add('is-visible');
 						} catch (err) {
 							showStatus('Camera preview unavailable: ' + err.message, 'error');
 						}
 					});
 
 					closePreviewBtn.addEventListener('click', () => {
-						cameraPreviewModal.style.display = 'none';
+						cameraPreviewModal.classList.add('is-hidden');
+						cameraPreviewModal.classList.remove('is-visible');
 						if (previewStream) { previewStream.getTracks().forEach(t => t.stop()); previewStream = null; }
 					});
 
@@ -362,15 +370,20 @@ function serveUploadPage(res: ServerResponse): void {
 								showStatus('Upload failed: ' + error.message, 'error');
 							} finally {
 								setBusy(false, '');
-								cameraPreviewModal.style.display = 'none';
+								cameraPreviewModal.classList.add('is-hidden');
+								cameraPreviewModal.classList.remove('is-visible');
 								if (previewStream) { previewStream.getTracks().forEach(t => t.stop()); previewStream = null; }
 							}
 						}, 'image/jpeg', 0.7);
 					});
 				} else {
 					// Preview not supported: show file-input camera and notice
-					if (directCameraLabelEl) directCameraLabelEl.style.display = 'inline-block';
-					openCameraPreviewBtn.style.display = 'none';
+					if (directCameraLabelEl) {
+						directCameraLabelEl.classList.remove('is-hidden');
+						directCameraLabelEl.classList.add('is-visible');
+					}
+					openCameraPreviewBtn.classList.add('is-hidden');
+					openCameraPreviewBtn.classList.remove('is-visible');
 				}
 			}
 
@@ -445,7 +458,8 @@ function serveUploadPage(res: ServerResponse): void {
 			function showStatus(message, type) {
 				status.textContent = message;
 				status.className = 'status ' + type;
-				status.style.display = 'block';
+				status.classList.remove('is-hidden');
+				status.classList.add('is-visible');
 			}
 
 			function attemptClose(fallbackMessage) {
@@ -482,13 +496,20 @@ function serveUploadPage(res: ServerResponse): void {
 								if (res.ok) {
 									if (lost) {
 										lost = false;
-										if (banner) banner.style.display = 'none';
+										if (banner) {
+											banner.classList.add('is-hidden');
+											banner.classList.remove('is-visible');
+										}
 										setBusy(false, '');
 									}
 								} else {
 									if (!lost) {
 										lost = true;
-										if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
+										if (banner) {
+											banner.classList.remove('is-hidden');
+											banner.classList.add('is-visible');
+											banner.textContent = 'Connection lost';
+										}
 										setBusy(false, '');
 									}
 								}
@@ -496,7 +517,11 @@ function serveUploadPage(res: ServerResponse): void {
 								clearTimeout(timeout);
 								if (!lost) {
 									lost = true;
-									if (banner) { banner.style.display = 'block'; banner.textContent = 'Connection lost'; }
+									if (banner) {
+										banner.classList.remove('is-hidden');
+										banner.classList.add('is-visible');
+										banner.textContent = 'Connection lost';
+									}
 									setBusy(false, '');
 								}
 							}
@@ -523,7 +548,7 @@ function serveUploadPage(res: ServerResponse): void {
 function handleUpload(
   req: IncomingMessage,
   res: ServerResponse,
-  onUpload: (event: UploadEvent) => void
+  onUpload: (event: UploadEvent) => void,
 ): void {
   try {
     const busboy = Busboy({ headers: req.headers });
@@ -534,13 +559,13 @@ function handleUpload(
       (
         _fieldname: string,
         file: NodeJS.ReadableStream,
-        info: BusboyFileInfo
+        info: BusboyFileInfo,
       ) => {
         const { filename, mimeType } = info;
         fileCount++;
 
         console.debug(
-          `[Napkin Notes Upload Server] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`
+          `[Napkin Notes Upload Server] Receiving file #${fileCount}: ${filename}, type: ${mimeType}`,
         );
 
         const chunks: Buffer[] = [];
@@ -552,7 +577,7 @@ function handleUpload(
         file.on("end", () => {
           const buffer = Buffer.concat(chunks);
           console.debug(
-            `[Napkin Notes Upload Server] File received: ${filename}, size: ${buffer.length} bytes`
+            `[Napkin Notes Upload Server] File received: ${filename}, size: ${buffer.length} bytes`,
           );
 
           try {
@@ -560,7 +585,7 @@ function handleUpload(
             const uploadEvent = {
               buffer: buffer.buffer.slice(
                 buffer.byteOffset,
-                buffer.byteOffset + buffer.byteLength
+                buffer.byteOffset + buffer.byteLength,
               ),
               filename: filename || "image.jpg",
             };
@@ -568,7 +593,7 @@ function handleUpload(
           } catch (err) {
             console.error(
               `[Napkin Notes Upload Server] Error in onUpload callback:`,
-              err
+              err,
             );
           }
         });
@@ -576,12 +601,12 @@ function handleUpload(
         file.on("error", (err: Error) => {
           console.error("[Napkin Notes Upload Server] File stream error:", err);
         });
-      }
+      },
     );
 
     busboy.on("finish", () => {
       console.debug(
-        `[Napkin Notes Upload Server] Upload finished. Total files: ${fileCount}`
+        `[Napkin Notes Upload Server] Upload finished. Total files: ${fileCount}`,
       );
       res.writeHead(200, { "Content-Type": "text/plain" });
       res.end("Upload successful");
@@ -635,7 +660,7 @@ export class UploadServer {
       userAgent?: string;
       url?: string;
       timestamp?: number;
-    }) => void
+    }) => void,
   ) {
     this.onUpload = onUpload;
     this.onConnect = onConnect;
@@ -645,7 +670,7 @@ export class UploadServer {
    * Start the server on an available port
    */
   async start(
-    portRange: [number, number]
+    portRange: [number, number],
   ): Promise<{ port: number; token: string; url: string }> {
     if (Platform.isMobileApp) {
       throw new Error("Upload server is disabled on mobile devices.");
@@ -659,7 +684,7 @@ export class UploadServer {
       if (!http) missingModules.push("http");
       if (!crypto) missingModules.push("crypto");
       throw new Error(
-        `Required Node.js modules not available: ${missingModules.join(", ")}`
+        `Required Node.js modules not available: ${missingModules.join(", ")}`,
       );
     }
 
@@ -672,7 +697,7 @@ export class UploadServer {
         const localIP = await this.getLocalIP();
         const url = `http://${localIP}:${port}?token=${this.token}`;
         console.debug(
-          `[Napkin Notes Upload Server] Server started successfully on ${url}`
+          `[Napkin Notes Upload Server] Server started successfully on ${url}`,
         );
         return { port, token: this.token, url };
       } catch (_err) {
@@ -682,7 +707,7 @@ export class UploadServer {
     }
 
     throw new Error(
-      `No available ports in range ${portRange[0]}-${portRange[1]}`
+      `No available ports in range ${portRange[0]}-${portRange[1]}`,
     );
   }
 
@@ -761,12 +786,12 @@ export class UploadServer {
           });
         }
         console.debug(
-          `[Napkin Notes Upload Server] Client connected: ${remoteIP} - ${userAgent}`
+          `[Napkin Notes Upload Server] Client connected: ${remoteIP} - ${userAgent}`,
         );
       } catch (err) {
         console.error(
           "[Napkin Notes Upload Server] Error notifying onConnect:",
-          err
+          err,
         );
       }
       serveUploadPage(res);
@@ -826,7 +851,7 @@ export class UploadServer {
         this.sockets.clear();
         this.server.close(() => {
           console.debug(
-            `[Napkin Notes Upload Server] Server stopped successfully`
+            `[Napkin Notes Upload Server] Server stopped successfully`,
           );
           this.server = null;
           resolve();
