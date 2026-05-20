@@ -5,7 +5,7 @@ import { UploadModal } from "./src/components/UploadModal";
 import { registerCarouselPostProcessor } from "./src/renderers/CarouselPostProcessor";
 
 export default class NapkinNotesPlugin extends Plugin {
-  settings: NapkinNotesSettings;
+  settings!: NapkinNotesSettings;
 
   async onload() {
     await this.loadSettings();
