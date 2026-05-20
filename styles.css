@@ -1,47 +1,47 @@
 /* Utility classes for cursor states */
 .is-grab {
-  cursor: grab !important;
+  cursor: grab;
 }
 .is-grabbing {
-  cursor: grabbing !important;
+  cursor: grabbing;
 }
 .is-default {
-  cursor: default !important;
+  cursor: default;
 }
 /* Utility classes for toggling visibility */
 .is-hidden {
-  display: none !important;
+  display: none;
 }
 .is-visible {
-  display: block !important;
+  display: block;
 }
 .napkin-notes-carousel-reading.napkin-carousel-mode-edit
   .napkin-thumbnail-image {
-  cursor: move !important;
+  cursor: move;
 }
 
 .napkin-notes-carousel-reading .napkin-carousel-delete-btn {
-  background: var(--text-error) !important;
-  color: var(--background-primary) !important;
+  background: var(--text-error);
+  color: var(--background-primary);
   margin-left: 1rem;
   font-size: 0.9rem;
   padding: 0.4rem 0.8rem;
 }
 
 .napkin-notes-carousel-reading .napkin-carousel-add-btn {
-  background: var(--interactive-normal) !important;
-  color: var(--text-normal) !important;
+  background: var(--interactive-normal);
+  color: var(--text-normal);
   margin-right: 0.5rem;
   font-size: 0.9rem;
   padding: 0.4rem 0.8rem;
 }
 .napkin-notes-carousel-reading .napkin-nav-edit-absolute {
-  background: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: var(--text-muted) !important;
-  font-size: 0.85rem !important;
-  padding: 2px 8px !important;
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 2px 8px;
   position: absolute;
   right: 36px;
   top: 22px;
@@ -70,7 +70,7 @@
 
 /* Modal */
 .napkin-notes-upload-modal {
-  max-width: 700px !important;
+  max-width: 700px;
   max-height: 85vh; /* Allow modal to shrink if content is smaller */
   overflow-y: auto;
   overflow-x: hidden;
@@ -143,7 +143,7 @@
 }
 
 .napkin-notes-upload-modal h2 {
-  margin: 0 !important;
+  margin: 0;
   padding: 1rem;
   background: var(--background-primary);
   border-radius: 8px;
@@ -277,7 +277,7 @@
 }
 
 .napkin-notes-upload-modal .napkin-upload-zone-subtext {
-  color: var(--text-muted) !important;
+  color: var(--text-muted);
   font-size: 0.9em;
 }
 
@@ -495,7 +495,7 @@
   transition: all 0.2s ease;
   background: var(--background-primary);
   padding: 4px;
-  width: auto !important;
+  width: auto;
 }
 
 .napkin-notes-upload-modal .napkin-drop-indicator {
@@ -536,7 +536,7 @@
   border-radius: 3px;
   font-weight: 600;
   z-index: 1;
-  width: auto !important;
+  width: auto;
 }
 
 .napkin-notes-upload-modal .napkin-thumbnail-image {
@@ -921,7 +921,7 @@
 
 /* Carousel edit mode: show dotted border on drag-over */
 .napkin-notes-carousel-reading .napkin-thumbnail-wrapper.drag-over {
-  border: 3px dashed var(--text-accent) !important;
+  border: 3px dashed var(--text-accent);
   background: rgba(255, 255, 150, 0.1);
   box-sizing: border-box;
   z-index: 2;
@@ -962,7 +962,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-right: 1rem !important; /* match the tray gap in wide mode */
+  padding-right: 1rem; /* match the tray gap in wide mode */
 }
 
 .napkin-notes-carousel-reading .napkin-carousel-navigation {
@@ -1085,10 +1085,10 @@
 .napkin-notes-carousel-reading .napkin-carousel-description-toggle {
   display: inline;
   color: var(--text-accent);
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
   font-size: 0.85em;
   margin-top: 0.25rem;
   padding: 0;
@@ -1138,49 +1138,49 @@
 @media (max-width: 768px) {
   /* Target Obsidian's modal wrapper */
   .modal-container:has(.napkin-notes-upload-modal) {
-    padding: 0 !important;
+    padding: 0;
   }
 
   .modal:has(.napkin-notes-upload-modal) {
-    padding: 0 !important;
-    margin: 0 !important;
+    padding: 0;
+    margin: 0;
   }
 
   .napkin-notes-upload-modal {
-    /* width: 100vw !important; */
-    max-width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    margin: 0 !important;
-    padding: 0.5rem !important;
-    border-radius: 0 !important;
-    box-sizing: border-box !important;
+    /* width: 100vw ; */
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    margin: 0;
+    padding: 0.5rem;
+    border-radius: 0;
+    box-sizing: border-box;
   }
 
   .napkin-notes-upload-modal .modal-content {
-    padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
   }
 
   .napkin-notes-upload-modal h2 {
-    font-size: 1.2em !important;
-    margin-bottom: 0.5rem !important;
+    font-size: 1.2em;
+    margin-bottom: 0.5rem;
   }
 
   .napkin-notes-upload-modal .napkin-modal-section {
-    padding: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .napkin-notes-upload-modal .napkin-upload-zone {
-    min-height: 120px !important;
-    padding: 0.75rem !important;
+    min-height: 120px;
+    padding: 0.75rem;
   }
 
   .napkin-notes-upload-modal .napkin-upload-zone p {
-    font-size: 0.9em !important;
-    margin: 0.25rem 0 !important;
+    font-size: 0.9em;
+    margin: 0.25rem 0;
   }
 
   .napkin-carousel-image-container {
@@ -1198,19 +1198,19 @@
   }
 
   .napkin-notes-upload-modal .napkin-modal-button-container {
-    padding: 0.75rem 0 !important;
-    gap: 0.5rem !important;
+    padding: 0.75rem 0;
+    gap: 0.5rem;
     flex-wrap: wrap;
   }
 
   .napkin-notes-upload-modal .napkin-modal-button-container button {
-    padding: 0.6rem 1rem !important;
+    padding: 0.6rem 1rem;
     font-size: 0.9em;
   }
 
   .napkin-notes-carousel-reading .napkin-toggle-icon {
-    transform: rotate(90deg) !important;
-    transition: transform 0.2s !important;
+    transform: rotate(90deg);
+    transition: transform 0.2s;
   }
 
   /* Reading view carousel responsive */
@@ -1221,7 +1221,7 @@
   }
 
   .napkin-notes-carousel-reading .napkin-carousel-main-area {
-    padding-right: 0 !important;
+    padding-right: 0;
   }
 
   .napkin-carousel-edit-controls {
@@ -1233,10 +1233,14 @@
   }
 
   .napkin-notes-carousel-reading .napkin-thumbnail-strip.collapsed {
-    width: 100% !important;
+    width: 100%;
     height: 0;
     min-height: 0;
     border-width: 0;
+  }
+
+  .napkin-carousel-image-container {
+    max-height: 100%;
   }
 
   .napkin-notes-carousel-reading .napkin-thumbnail-toggle-btn {
@@ -1261,7 +1265,7 @@
     right: auto;
   }
   .napkin-notes-carousel-reading .napkin-nav-edit-absolute {
-    background: var(--background-primary) !important;
+    background: var(--background-primary);
     top: 16px;
     display: none;
   }
@@ -1275,7 +1279,7 @@
   }
 
   .napkin-notes-carousel-reading .napkin-thumbnail-strip {
-    width: 100% !important;
+    width: 100%;
   }
 
   .napkin-notes-carousel-reading .napkin-thumbnail-header {
@@ -1307,7 +1311,7 @@
   }
 
   .napkin-notes-upload-modal .napkin-thumbnail-strip {
-    width: 100% !important;
+    width: 100%;
     min-width: 100%;
     max-height: 120px;
     flex-direction: column;
@@ -1323,13 +1327,13 @@
   }
 
   .napkin-notes-upload-modal .napkin-thumbnail-content {
-    flex-direction: row !important;
+    flex-direction: row;
     max-height: 100px;
     display: flex;
   }
 
   .napkin-notes-upload-modal .napkin-thumbnails-container {
-    flex-direction: row !important;
+    flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
     padding: 0.5rem;
