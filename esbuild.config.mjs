@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
-import { builtinModules as builtins } from "module-replacements";
+import { builtinModules as builtins } from "module";
 import fs from "fs";
 import path from "path";
 
