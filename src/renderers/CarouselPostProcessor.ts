@@ -31,7 +31,7 @@ export function registerCarouselPostProcessor(plugin: NapkinNotesPlugin): void {
           cls: "napkin-notes-error",
         });
       }
-    }
+    },
   );
 }
 
@@ -127,20 +127,19 @@ function parseCodeBlock(source: string): ParsedImage[] {
 function generateCodeBlockContent(images: CarouselImage[]): string {
   const lines: string[] = [];
 
-  images.forEach((image, index) => {
+  images.forEach((image) => {
     // Add wikilink
     lines.push(`[[${image.filepath}]]`);
 
     // Add description if present
     if (image.description) {
-      lines.push(image.description);
+      // Trim leading/trailing newlines and collapse multiple blank lines
+      const desc = image.description
+        .replace(/(^\s+|\s+$)/g, "")
+        .replace(/\n{2,}/g, "\n");
+      lines.push(desc);
     }
-
-    // Add separator between images (two blank lines)
-    if (index < images.length - 1) {
-      lines.push("");
-      lines.push("");
-    }
+    // No blank lines between images for compactness
   });
 
   return lines.join("\n");
@@ -151,7 +150,7 @@ function renderCarousel(
   parsedImages: ParsedImage[],
   plugin: NapkinNotesPlugin,
   sourcePath: string,
-  originalSource: string
+  originalSource: string,
 ): void {
   container.empty();
   container.addClass("napkin-notes-carousel-reading");
@@ -220,7 +219,7 @@ function renderCarousel(
 
           const fenceRegex = new RegExp(
             "```" + CODE_BLOCK_LANGUAGE + "\\s*([\\s\\S]*?)```",
-            "g"
+            "g",
           );
 
           let replaced = false;
