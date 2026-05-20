@@ -24,7 +24,6 @@
     "@types/qrcode": "^1.5.6",
     "@typescript-eslint/eslint-plugin": "5.29.0",
     "@typescript-eslint/parser": "5.29.0",
-    "builtin-modules": "3.3.0",
     "esbuild": "0.17.3",
     "esbuild-plugin-inline-image": "^0.0.9",
     "obsidian": "latest",
@@ -33,6 +32,7 @@
   },
   "dependencies": {
     "busboy": "^1.6.0",
+    "module-replacements": "^2.11.0",
     "qrcode": "^1.5.3"
   }
 }
